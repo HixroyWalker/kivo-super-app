@@ -1,0 +1,9 @@
+Kivo is the ultimate premium multi-currency digital wallet and shoppable social platform. Designed with a gorgeous dark-mode glassmorphic aesthetic, Kivo brings tactile control and state-of-the-art security to your daily financial activities.
+
+FEATURING:
+- **Multi-Currency Balances**: Manage and exchange USD, CAD, GBP, JMD instantly with real-time conversion rates and clean dynamic micro-charts.
+- **Biometric Double-Lock Security**: Secure high-value transactions with advanced secondary biometric authorization, matching hardware-bound identifiers for seamless yet impenetrable protection.
+- **Shoppable Review Feed**: Discover, purchase, and review curated merchant products directly inside your wallet with our integrated social feed.
+- **Tactile Send & Receive**: Transfer funds globally with a highly-polished interactive custom keypad.
+
+Take absolute control of your global digital assets with Kivo.

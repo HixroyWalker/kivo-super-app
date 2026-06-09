@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "199273784188",
+    "project_id": "kivoapp-a83cf",
+    "storage_bucket": "kivoapp-a83cf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:199273784188:android:1d14c071f8b19a00b67af9",
+        "android_client_info": {
+          "package_name": "com.kivowebb.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKHIwEVOJZUavXbsEi5keO7X9wGsb61Uw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

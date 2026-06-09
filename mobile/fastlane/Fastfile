@@ -1,0 +1,129 @@
+# Fastfile
+# For more information about the Fastfile, see: https://docs.fastlane.tools/actions/
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Locally build the iOS app and upload to Apple TestFlight"
+  lane :beta do
+    UI.message("🚀 Starting iOS Beta deployment to TestFlight...")
+
+    # 1. Run Expo prebuild to generate native /ios folder
+    UI.message("🛠️ Generating native iOS project files via Expo Prebuild...")
+    sh("cd .. && npx expo prebuild --platform ios --no-install")
+
+    # 2. Update code signing credentials and profile
+    # Match is the standard fastlane utility, but we will utilize local manual provisioning or API keys
+    # setup_ci if ENV["CI"]
+
+    # 3. Retrieve Apple App Store Connect API Key
+    # Assumes key_id, issuer_id, and key_content (or key_filepath) are configured in the environment
+    if ENV["APP_STORE_CONNECT_KEY_ID"] && ENV["APP_STORE_CONNECT_ISSUER_ID"]
+      UI.message("🔑 Authenticating App Store Connect API Key...")
+      api_key = app_store_connect_api_key(
+        key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+        issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+        key_content: ENV["APP_STORE_CONNECT_KEY_CONTENT"],
+        in_house: false
+      )
+    else
+      UI.important("⚠️ App Store Connect API keys not set in environment. Falling back to interactive session.")
+    end
+
+    # 4. Build native app store ipa
+    UI.message("📦 Building iOS App Store Release Binary (.ipa)...")
+    begin
+      # Install provisioning profile into standard folder
+      UI.message("📝 Installing provisioning profile...")
+      install_provisioning_profile(path: "AppStore_com.kivowebb.app.mobileprovision")
+
+      # Update Xcode project team ID and code signing settings
+      UI.message("🛠️ Updating project code signing settings...")
+      update_code_signing_settings(
+        path: "ios/KIVO.xcodeproj",
+        use_automatic_signing: false,
+        team_id: "Z5W8VPPS7U",
+        code_sign_identity: "Apple Distribution",
+        profile_name: "com.kivowebb.app AppStore",
+        profile_uuid: "cb854740-2a11-4395-a7ee-48949962a9e7"
+      )
+
+      build_app(
+        workspace: "ios/KIVO.xcworkspace",
+        scheme: "KIVO",
+        clean: true,
+        output_directory: "./build",
+        output_name: "kivo.ipa",
+        export_method: "app-store",
+        export_options: {
+          signingStyle: "manual",
+          provisioningProfiles: {
+            "com.kivowebb.app" => "com.kivowebb.app AppStore"
+          }
+        }
+      )
+
+      # 5. Upload to TestFlight
+      UI.message("📤 Uploading binary to TestFlight...")
+      upload_to_testflight(
+        api_key: api_key,
+        ipa: "./build/kivo.ipa",
+        skip_waiting_for_build_processing: true
+      )
+      UI.success("🎉 iOS Beta Build successfully uploaded to TestFlight!")
+    rescue => e
+      UI.error("⚠️ iOS compilation/signing failed or skipped: #{e.message}")
+      UI.important("💡 Dynamic signing certificates are required for App Store export. Open ios/KIVO.xcworkspace in Xcode to configure automatic signing.")
+      raise e
+    end
+  end
+end
+
+platform :android do
+  desc "Locally build the Android app and upload to Google Play Beta Track"
+  lane :beta do
+    UI.message("🚀 Starting Android Beta deployment to Google Play...")
+
+    # 1. Run Expo prebuild to generate native /android folder
+    UI.message("🛠️ Generating native Android project files via Expo Prebuild...")
+    sh("cd .. && npx expo prebuild --platform android --no-install")
+
+    # 2. Build Release Bundle (Android App Bundle - AAB)
+    UI.message("📦 Compiling Android Release App Bundle (.aab)...")
+    gradle(
+      task: "bundle",
+      build_type: "Release",
+      project_dir: "./android"
+    )
+
+    # 3. Upload to Google Play Console with resilient local fallback
+    UI.message("📤 Attempting upload to Google Play Internal/Beta track...")
+    begin
+      upload_to_play_store(
+        track: "internal",
+        package_name: "com.kivowebb.app",
+        aab: "./android/app/build/outputs/bundle/release/app-release.aab"
+      )
+      UI.success("🎉 Android Release Bundle successfully uploaded to Google Play!")
+    rescue => e
+      UI.error("⚠️ Google Play upload skipped/failed: #{e.message}")
+      UI.important("📦 Release package compiled successfully on your local machine!")
+      UI.success("💾 Path to local AAB asset: ./android/app/build/outputs/bundle/release/app-release.aab")
+    end
+  end
+
+  desc "List all registered App IDs and bundle identifiers on Apple"
+  lane :list_apps do
+    require 'spaceship'
+    UI.message("=== Portal App IDs ===")
+    Spaceship::Portal.login("walkerha2@icloud.com")
+    Spaceship::Portal.app.all.each do |app|
+      UI.message(" - #{app.name}: #{app.bundle_id}")
+    end
+    UI.message("=== App Store Connect Apps ===")
+    Spaceship::Tunes.login("walkerha2@icloud.com")
+    Spaceship::Tunes::Application.all.each do |app|
+      UI.message(" - #{app.name}: #{app.bundle_id}")
+    end
+  end
+end

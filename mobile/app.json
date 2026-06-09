@@ -1,0 +1,70 @@
+{
+  "expo": {
+    "name": "KIVO",
+    "slug": "kivo",
+    "version": "1.0.2",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F0F1E"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kivowebb.app",
+      "buildNumber": "3",
+      "infoPlist": {
+        "NSCameraUsageDescription": "KIVO needs camera access for KYC liveness checks and scanning QR codes.",
+        "NSFaceIDUsageDescription": "KIVO uses FaceID to secure your wallet transactions."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F0F1E"
+      },
+      "package": "com.kivowebb.app",
+      "versionCode": 3,
+      "permissions": [
+        "CAMERA",
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "VIBRATE",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
+      "googleServicesFile": "./google-services.json"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      },
+      "admobAppIdAndroid": "ca-app-pub-3940256099942544~3347511713",
+      "admobAppIdIos": "ca-app-pub-3940256099942544~1458002511"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "barcodeScannerEnabled": true,
+          "cameraPermission": "KIVO needs camera access for KYC liveness checks and scanning QR codes."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow KIVO to use FaceID for secure payments."
+        }
+      ],
+      "react-native-google-mobile-ads"
+    ]
+  }
+}
