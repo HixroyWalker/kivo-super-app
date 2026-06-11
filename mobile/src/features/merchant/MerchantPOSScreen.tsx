@@ -188,7 +188,13 @@ const MerchantPOSScreen = () => {
       <SafeAreaView style={styles.pinContainer}>
         {/* Header with exit option */}
         <View style={styles.pinHeader}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.backButton} onPress={() => {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace('/');
+          }
+        }}>
             <Ionicons name="chevron-back" size={24} color="#FFF" />
             <Text style={styles.backButtonText}>Exit</Text>
           </TouchableOpacity>
@@ -260,7 +266,13 @@ const MerchantPOSScreen = () => {
     <SafeAreaView style={styles.container}>
       {/* Premium Navigation Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backButton} onPress={() => {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace('/');
+          }
+        }}>
           <Ionicons name="chevron-back" size={24} color="#FFF" />
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>

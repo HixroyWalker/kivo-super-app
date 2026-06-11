@@ -77,6 +77,26 @@ platform :ios do
       raise e
     end
   end
+
+  desc "Check TestFlight builds"
+  lane :check_testflight_builds do
+    require 'spaceship'
+    Spaceship::ConnectAPI.login("walkerha2@icloud.com", "Phot@2014")
+    app = Spaceship::ConnectAPI::App.find("com.kivowebb.app")
+    if app.nil?
+      UI.message("App com.kivowebb.app not found on App Store Connect")
+    else
+      UI.message("Found App: #{app.name}")
+      builds = app.get_builds
+      if builds.empty?
+        UI.message("No builds found for this app.")
+      else
+        builds.each do |b|
+          UI.message("Build version: #{b.version} - State: #{b.processing_state}")
+        end
+      end
+    end
+  end
 end
 
 platform :android do
@@ -102,7 +122,10 @@ platform :android do
       upload_to_play_store(
         track: "internal",
         package_name: "com.kivowebb.app",
-        aab: "./android/app/build/outputs/bundle/release/app-release.aab"
+        aab: "./android/app/build/outputs/bundle/release/app-release.aab",
+        skip_upload_metadata: true,
+        skip_upload_images: true,
+        skip_upload_screenshots: true
       )
       UI.success("🎉 Android Release Bundle successfully uploaded to Google Play!")
     rescue => e

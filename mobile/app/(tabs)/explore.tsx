@@ -10,8 +10,8 @@ import {
   ActivityIndicator, 
   Alert,
   Dimensions,
-  SafeAreaView
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import FeedScreen from '@/src/features/social/FeedScreen';
 import axios from 'axios';

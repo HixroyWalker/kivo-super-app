@@ -23,6 +23,14 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 Locally build the iOS app and upload to Apple TestFlight
 
+### ios check_testflight_builds
+
+```sh
+[bundle exec] fastlane ios check_testflight_builds
+```
+
+Check TestFlight builds
+
 ----
 
 

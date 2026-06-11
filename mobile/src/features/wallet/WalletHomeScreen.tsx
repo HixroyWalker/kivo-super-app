@@ -48,6 +48,17 @@ const WalletHomeScreen = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Shop & Tickets Banner */}
+      <TouchableOpacity onPress={() => router.push('/ShopTickets')} activeOpacity={0.9} style={styles.shopBanner}>
+        <LinearGradient colors={['#FF9900', '#FF5500']} style={styles.shopBannerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+          <View>
+            <Text style={styles.shopBannerTitle}>Shop & Tickets</Text>
+            <Text style={styles.shopBannerSub}>Buy products, event passes, and more!</Text>
+          </View>
+          <Ionicons name="cart" size={36} color="#FFF" />
+        </LinearGradient>
+      </TouchableOpacity>
+
       {/* Currency Balances */}
       <Text style={styles.sectionTitle}>Global Accounts</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.currencyScroll}>
@@ -101,7 +112,11 @@ const styles = StyleSheet.create({
   safetyLabel: { color: '#FF6B6B', fontWeight: 'bold' },
   safetyValue: { color: '#FFF', fontSize: 14 },
   repayButton: { backgroundColor: '#FF6B6B', paddingVertical: 8, paddingHorizontal: 15, borderRadius: 10 },
-  repayText: { color: '#FFF', fontWeight: 'bold' }
+  repayText: { color: '#FFF', fontWeight: 'bold' },
+  shopBanner: { marginBottom: 30, borderRadius: 20, overflow: 'hidden', shadowColor: '#FF9900', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 5 },
+  shopBannerGradient: { padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  shopBannerTitle: { color: '#FFF', fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
+  shopBannerSub: { color: 'rgba(255,255,255,0.9)', fontSize: 13 }
 });
 
 export default WalletHomeScreen;

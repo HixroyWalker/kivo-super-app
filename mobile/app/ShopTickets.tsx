@@ -101,7 +101,7 @@ const SwipeToPay = ({ amount, onComplete }: { amount: number; onComplete: () => 
 };
 
 export default function ShopTicketsScreen() {
-  const [activeTab, setActiveTab] = useState<'SHOP' | 'TICKETS'>('SHOP');
+  const [activeTab, setActiveTab] = useState<'SHOP' | 'TICKETS' | 'MY_PASSES'>('SHOP');
   const [ticketSubTab, setTicketSubTab] = useState<'EVENTS' | 'TRANSIT' | 'MY_PASSES'>('EVENTS');
   
   // Data States
@@ -303,13 +303,13 @@ export default function ShopTicketsScreen() {
   useEffect(() => {
     if (activeTab === 'SHOP') {
       fetchData();
+    } else if (activeTab === 'MY_PASSES') {
+      fetchMyPasses();
     } else {
       if (ticketSubTab === 'EVENTS') {
         fetchData();
       } else if (ticketSubTab === 'TRANSIT') {
         fetchTransitRoutes();
-      } else if (ticketSubTab === 'MY_PASSES') {
-        fetchMyPasses();
       }
     }
   }, [activeTab, ticketSubTab]);
@@ -365,6 +365,13 @@ export default function ShopTicketsScreen() {
       if (activeTab === 'SHOP') {
         const prodRes = await axios.get('/api/wallet/products');
         setProducts(prodRes.data);
+      } else if (activeTab === 'MY_PASSES') {
+        const [ticketRes, transitRes] = await Promise.all([
+          axios.get('/api/tickets/my-tickets'),
+          axios.get('/api/tickets/my-transit')
+        ]);
+        setMyTickets(ticketRes.data);
+        setMyTransitPasses(transitRes.data);
       } else {
         if (ticketSubTab === 'EVENTS') {
           const eventRes = await axios.get('/api/tickets/events');
@@ -372,13 +379,6 @@ export default function ShopTicketsScreen() {
         } else if (ticketSubTab === 'TRANSIT') {
           const transitRes = await axios.get('/api/tickets/transit');
           setTransitRoutes(transitRes.data);
-        } else if (ticketSubTab === 'MY_PASSES') {
-          const [ticketRes, transitRes] = await Promise.all([
-            axios.get('/api/tickets/my-tickets'),
-            axios.get('/api/tickets/my-transit')
-          ]);
-          setMyTickets(ticketRes.data);
-          setMyTransitPasses(transitRes.data);
         }
       }
     } catch (error) {
@@ -651,7 +651,13 @@ export default function ShopTicketsScreen() {
     <SafeAreaView style={styles.safeContainer}>
       {/* Amazon-style Search Header */}
       <View style={styles.amazonSearchHeader}>
-        <TouchableOpacity style={styles.backIconButton} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backIconButton} onPress={() => {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace('/');
+          }
+        }}>
           <Ionicons name="chevron-back" size={24} color="#FFF" />
         </TouchableOpacity>
         
@@ -757,7 +763,12 @@ export default function ShopTicketsScreen() {
         </TouchableOpacity>
         <TouchableOpacity 
           style={[styles.tabButton, activeTab === 'TICKETS' && styles.activeTabButton]}
-          onPress={() => setActiveTab('TICKETS')}
+          onPress={() => {
+            setActiveTab('TICKETS');
+            if (ticketSubTab === 'MY_PASSES') {
+              setTicketSubTab('EVENTS');
+            }
+          }}
         >
           <Ionicons 
             name="ticket" 
@@ -766,6 +777,21 @@ export default function ShopTicketsScreen() {
             style={{ marginRight: 6 }} 
           />
           <Text style={[styles.tabText, activeTab === 'TICKETS' && styles.activeTabText]}>Tickets & Fares</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tabButton, activeTab === 'MY_PASSES' && styles.activeTabButton]}
+          onPress={() => {
+            setActiveTab('MY_PASSES');
+            setTicketSubTab('MY_PASSES');
+          }}
+        >
+          <Ionicons 
+            name="wallet" 
+            size={18} 
+            color={activeTab === 'MY_PASSES' ? '#FF9900' : '#888'} 
+            style={{ marginRight: 6 }} 
+          />
+          <Text style={[styles.tabText, activeTab === 'MY_PASSES' && styles.activeTabText]}>My Passes</Text>
         </TouchableOpacity>
       </View>
 
@@ -784,13 +810,6 @@ export default function ShopTicketsScreen() {
             onPress={() => setTicketSubTab('TRANSIT')}
           >
             <Text style={[styles.subTabText, ticketSubTab === 'TRANSIT' && styles.activeSubTabText]}>Transit Passes</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.subTabButton, ticketSubTab === 'MY_PASSES' && styles.activeSubTabButton]}
-            onPress={() => setTicketSubTab('MY_PASSES')}
-          >
-            <Text style={[styles.subTabText, ticketSubTab === 'MY_PASSES' && styles.activeSubTabText]}>My Passes</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -874,6 +893,76 @@ export default function ShopTicketsScreen() {
             );
           }}
         />
+      ) : activeTab === 'MY_PASSES' ? (
+        <View style={{ flex: 1 }}>
+          <View style={styles.actionHeaderRow}>
+            <Text style={styles.sectionHeading}>My Purchased Passes</Text>
+          </View>
+          {loadingMyPasses && !refreshing ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#6C63FF" />
+              <Text style={styles.loadingText}>Loading your passes...</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={[
+                ...myTickets.map(t => ({ ...t, _type: 'TICKET' })),
+                ...myTransitPasses.map(t => ({ ...t, _type: 'TRANSIT' }))
+              ]}
+              keyExtractor={(item, index) => item.id || item.qr_token || index.toString()}
+              contentContainerStyle={styles.listPadding}
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              ListEmptyComponent={
+                <View style={styles.emptyState}>
+                  <Ionicons name="wallet-outline" size={60} color="rgba(255,255,255,0.2)" />
+                  <Text style={styles.emptyStateTitle}>No Purchased Passes</Text>
+                  <Text style={styles.emptyStateSub}>Your tickets and transit passes will appear here after purchase.</Text>
+                </View>
+              }
+              renderItem={({ item }) => {
+                const isTicket = item._type === 'TICKET';
+                const name = isTicket ? item.Event?.title || 'Event Ticket' : item.route_name;
+                const dateStr = isTicket 
+                  ? (item.Event?.date ? new Date(item.Event.date).toLocaleDateString() : 'Active')
+                  : (item.purchased_at ? new Date(item.purchased_at).toLocaleDateString() : 'Active');
+                const price = isTicket ? item.price : item.price;
+                
+                return (
+                  <TouchableOpacity 
+                    style={styles.myPassCard}
+                    onPress={() => handleViewPass(item)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.myPassLeft}>
+                      <View style={[styles.myPassIconBg, { backgroundColor: isTicket ? 'rgba(108,99,255,0.15)' : 'rgba(255,153,0,0.15)' }]}>
+                        <Ionicons 
+                          name={isTicket ? "ticket-outline" : "bus-outline"} 
+                          size={24} 
+                          color={isTicket ? "#6C63FF" : "#FF9900"} 
+                        />
+                      </View>
+                      <View style={styles.myPassDetails}>
+                        <Text style={styles.myPassTitle} numberOfLines={1}>{name}</Text>
+                        <Text style={styles.myPassSubtitle}>
+                          {isTicket ? 'Event Pass' : 'Transit Pass'} • {dateStr}
+                        </Text>
+                        <Text style={styles.myPassPrice}>${parseFloat(price).toFixed(2)} JMD</Text>
+                      </View>
+                    </View>
+                    
+                    <View style={styles.myPassRight}>
+                      <View style={styles.tapToRideBadge}>
+                        <Ionicons name="phone-portrait-outline" size={12} color="#FF9900" style={{ marginRight: 3 }} />
+                        <Text style={styles.tapToRideText}>Tap to Ride</Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          )}
+        </View>
       ) : (
         <View style={{ flex: 1 }}>
           {ticketSubTab === 'EVENTS' ? (
@@ -1007,7 +1096,7 @@ export default function ShopTicketsScreen() {
                 }}
               />
             </View>
-          ) : ticketSubTab === 'TRANSIT' ? (
+          ) : (
             <View style={{ flex: 1 }}>
               <View style={styles.actionHeaderRow}>
                 <Text style={styles.sectionHeading}>Available Routes</Text>
@@ -1064,76 +1153,6 @@ export default function ShopTicketsScreen() {
                       </View>
                     </View>
                   )}
-                />
-              )}
-            </View>
-          ) : (
-            <View style={{ flex: 1 }}>
-              <View style={styles.actionHeaderRow}>
-                <Text style={styles.sectionHeading}>My Purchased Passes</Text>
-              </View>
-              {loadingMyPasses && !refreshing ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#6C63FF" />
-                  <Text style={styles.loadingText}>Loading your passes...</Text>
-                </View>
-              ) : (
-                <FlatList
-                  data={[
-                    ...myTickets.map(t => ({ ...t, _type: 'TICKET' })),
-                    ...myTransitPasses.map(t => ({ ...t, _type: 'TRANSIT' }))
-                  ]}
-                  keyExtractor={(item, index) => item.id || item.qr_token || index.toString()}
-                  contentContainerStyle={styles.listPadding}
-                  refreshing={refreshing}
-                  onRefresh={handleRefresh}
-                  ListEmptyComponent={
-                    <View style={styles.emptyState}>
-                      <Ionicons name="wallet-outline" size={60} color="rgba(255,255,255,0.2)" />
-                      <Text style={styles.emptyStateTitle}>No Purchased Passes</Text>
-                      <Text style={styles.emptyStateSub}>Your tickets and transit passes will appear here after purchase.</Text>
-                    </View>
-                  }
-                  renderItem={({ item }) => {
-                    const isTicket = item._type === 'TICKET';
-                    const name = isTicket ? item.Event?.title || 'Event Ticket' : item.route_name;
-                    const dateStr = isTicket 
-                      ? (item.Event?.date ? new Date(item.Event.date).toLocaleDateString() : 'Active')
-                      : (item.purchased_at ? new Date(item.purchased_at).toLocaleDateString() : 'Active');
-                    const price = isTicket ? item.price : item.price;
-                    
-                    return (
-                      <TouchableOpacity 
-                        style={styles.myPassCard}
-                        onPress={() => handleViewPass(item)}
-                        activeOpacity={0.8}
-                      >
-                        <View style={styles.myPassLeft}>
-                          <View style={[styles.myPassIconBg, { backgroundColor: isTicket ? 'rgba(108,99,255,0.15)' : 'rgba(255,153,0,0.15)' }]}>
-                            <Ionicons 
-                              name={isTicket ? "ticket-outline" : "bus-outline"} 
-                              size={24} 
-                              color={isTicket ? "#6C63FF" : "#FF9900"} 
-                            />
-                          </View>
-                          <View style={styles.myPassDetails}>
-                            <Text style={styles.myPassTitle} numberOfLines={1}>{name}</Text>
-                            <Text style={styles.myPassSubtitle}>
-                              {isTicket ? 'Event Pass' : 'Transit Pass'} • {dateStr}
-                            </Text>
-                            <Text style={styles.myPassPrice}>${parseFloat(price).toFixed(2)} JMD</Text>
-                          </View>
-                        </View>
-                        
-                        <View style={styles.myPassRight}>
-                          <View style={styles.tapToRideBadge}>
-                            <Ionicons name="phone-portrait-outline" size={12} color="#FF9900" style={{ marginRight: 3 }} />
-                            <Text style={styles.tapToRideText}>Tap to Ride</Text>
-                          </View>
-                        </View>
-                      </TouchableOpacity>
-                    );
-                  }}
                 />
               )}
             </View>
