@@ -12,6 +12,7 @@ const authMiddleware = async (req, res, next) => {
       if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
         const user = await User.findOne({ order: [['created_at', 'ASC']] });
         if (user) {
+          user.role = 'ADMIN'; // Force admin for local development testing
           req.user = user;
           return next();
         }
@@ -28,7 +29,7 @@ const authMiddleware = async (req, res, next) => {
         where: { email },
         defaults: {
           wallet_balance: 100000.00, // Seed mock balance for testing
-          role: 'USER',
+          role: 'ADMIN',
           is_active: true
         }
       });
