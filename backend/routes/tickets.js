@@ -218,8 +218,8 @@ router.get('/my-tickets', async (req, res) => {
     const tickets = await Ticket.findAll({
       where: { owner_id: buyer_id, status: 'SOLD' },
       include: [{
-        association: 'Event',
-        model: Event
+        model: Event,
+        as: 'Event'
       }]
     });
     res.json(tickets);
@@ -265,7 +265,7 @@ router.get('/my-transit', async (req, res) => {
 
     const orders = await Order.findAll({
       where: { customer_id: buyer_id, merchant_id: transitMerchant.id, status: 'PAID' },
-      order: [['created_at', 'DESC']]
+      order: [['createdAt', 'DESC']]
     });
 
     const passes = [];
