@@ -186,6 +186,13 @@ const AdminSetting = sequelize.define('AdminSetting', {
   value: { type: DataTypes.STRING, allowNull: false }
 }, { tableName: 'admin_settings', underscored: true });
 
+// ── Associations ──────────────────────────────────────────────
+Ticket.belongsTo(Event, { foreignKey: 'event_id', as: 'Event' });
+Event.hasMany(Ticket, { foreignKey: 'event_id' });
+
+Order.belongsTo(Merchant, { foreignKey: 'merchant_id' });
+Merchant.hasMany(Order, { foreignKey: 'merchant_id' });
+
 module.exports = {
   sequelize,
   User, Transaction, Mandate, Merchant, MerchantStaff,

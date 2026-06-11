@@ -13,9 +13,9 @@ export default function TabLayout() {
 
   useEffect(() => {
     // Check if user is an admin
-    axios.get('/api/auth/me')
+    axios.get('/auth/me')
       .then(response => {
-        if (response.data && response.data.role === 'ADMIN') {
+        if (response.data && response.data.user && response.data.user.role === 'ADMIN') {
           setIsAdmin(true);
         }
       })
@@ -63,7 +63,7 @@ export default function TabLayout() {
         name="admin"
         options={{
           title: 'Admin',
-          href: isAdmin ? '/admin' : null,
+          href: isAdmin ? undefined : null,
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="star.fill" color={color} />,
         }}
       />

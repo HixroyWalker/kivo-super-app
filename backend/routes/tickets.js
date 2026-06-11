@@ -224,6 +224,7 @@ router.get('/my-tickets', async (req, res) => {
     });
     res.json(tickets);
   } catch (error) {
+    console.error('[Tickets API] Error fetching my-tickets:', error);
     res.status(500).json({ error: error.message });
   }
 });
