@@ -28,7 +28,13 @@ const startServer = async () => {
     console.log('Database connected.');
     
     // Sync schemas using alter: true to preserve data in persistent sqlite
+    if (sequelize.options.dialect === 'sqlite') {
+      await sequelize.query("PRAGMA foreign_keys = OFF;");
+    }
     await sequelize.sync({ alter: true });
+    if (sequelize.options.dialect === 'sqlite') {
+      await sequelize.query("PRAGMA foreign_keys = ON;");
+    }
     console.log('Database schema synchronized.');
     
     // Seed initial admin settings and fallback user if SQLite or database is empty

@@ -33,7 +33,7 @@ axios.defaults.baseURL = getBackendUrl();
 console.log('[KIVO] Global Axios baseURL configured dynamically:', axios.defaults.baseURL);
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  initialRouteName: '(tabs)',
 };
 
 
