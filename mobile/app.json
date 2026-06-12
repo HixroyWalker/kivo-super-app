@@ -21,6 +21,7 @@
       "infoPlist": {
         "NSCameraUsageDescription": "KIVO needs camera access for KYC liveness checks and scanning QR codes.",
         "NSFaceIDUsageDescription": "KIVO uses FaceID to secure your wallet transactions.",
+        "NSPhotoLibraryUsageDescription": "KIVO needs access to your photo library to upload profile pictures and receipts.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -90,12 +91,6 @@
       "expo-router",
       "expo-secure-store"
     ],
-    "owner": "walkerha",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/75a49a50-d92c-4ce6-bf92-94037ef68c01"
-    }
+    "owner": "walkerha"
   }
 }
