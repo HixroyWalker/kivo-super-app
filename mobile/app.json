@@ -19,7 +19,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kivowebb.app",
-      "buildNumber": "35",
+      "buildNumber": "36",
       "infoPlist": {
         "NSCameraUsageDescription": "KIVO needs camera access for KYC liveness checks and scanning QR codes.",
         "NSFaceIDUsageDescription": "KIVO uses FaceID to secure your wallet transactions.",
@@ -33,7 +33,7 @@
         "backgroundColor": "#0F0F1E"
       },
       "package": "com.kivowebb.app",
-      "versionCode": 29,
+      "versionCode": 30,
       "permissions": [
         "CAMERA",
         "USE_BIOMETRIC",

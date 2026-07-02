@@ -5,17 +5,22 @@ import { router } from 'expo-router';
 import api from '@/src/utils/api';
 
 const AdminDashboardScreen = () => {
-  const [activeTab, setActiveTab] = useState('overview'); // overview, settings, merchants
+  const [activeTab, setActiveTab] = useState('overview'); // overview, settings, merchants, users
   
   // Data States
   const [stats, setStats] = useState({ users: 0, merchants: 0, transactionCount: 0, transactionVolume: 0 });
   const [settings, setSettings] = useState<any[]>([]);
   const [pendingMerchants, setPendingMerchants] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Edit Setting State
   const [editingSetting, setEditingSetting] = useState<any>(null);
   const [editValue, setEditValue] = useState('');
+
+  // Edit User Balance State
+  const [editingUser, setEditingUser] = useState<string | null>(null);
+  const [balanceAmount, setBalanceAmount] = useState('');
 
   const fetchData = async () => {
     setLoading(true);
@@ -29,6 +34,9 @@ const AdminDashboardScreen = () => {
       } else if (activeTab === 'merchants') {
         const res = await api.get('/api/admin/merchants/pending');
         setPendingMerchants(res.data);
+      } else if (activeTab === 'users') {
+        const res = await api.get('/api/admin/users');
+        setUsers(res.data);
       }
     } catch (err: any) {
       Alert.alert('Error', err.response?.data?.error || 'Failed to fetch admin data.');
@@ -62,6 +70,26 @@ const AdminDashboardScreen = () => {
     }
   };
 
+  const handleAdjustBalance = async (userId: string, action: 'add' | 'subtract') => {
+    if (!balanceAmount || isNaN(Number(balanceAmount)) || Number(balanceAmount) <= 0) {
+      Alert.alert('Invalid Amount', 'Please enter a valid number greater than 0');
+      return;
+    }
+    
+    try {
+      await api.post(`/api/admin/users/${userId}/balance`, {
+        amount: balanceAmount,
+        action
+      });
+      Alert.alert('Success', `Balance updated successfully.`);
+      setEditingUser(null);
+      setBalanceAmount('');
+      fetchData();
+    } catch (err: any) {
+      Alert.alert('Error', err.response?.data?.error || 'Failed to adjust balance');
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -78,6 +106,9 @@ const AdminDashboardScreen = () => {
       <View style={styles.tabContainer}>
         <TouchableOpacity style={[styles.tab, activeTab === 'overview' && styles.activeTab]} onPress={() => setActiveTab('overview')}>
           <Text style={[styles.tabText, activeTab === 'overview' && styles.activeTabText]}>Overview</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.tab, activeTab === 'users' && styles.activeTab]} onPress={() => setActiveTab('users')}>
+          <Text style={[styles.tabText, activeTab === 'users' && styles.activeTabText]}>Users</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.tab, activeTab === 'settings' && styles.activeTab]} onPress={() => setActiveTab('settings')}>
           <Text style={[styles.tabText, activeTab === 'settings' && styles.activeTabText]}>Fees</Text>
@@ -172,6 +203,50 @@ const AdminDashboardScreen = () => {
                 )}
               </View>
             )}
+
+            {activeTab === 'users' && (
+              <View>
+                {users.map(u => (
+                  <View key={u.id} style={styles.listItem}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.listTitle}>@{u.lynk_handle || 'Unknown'}</Text>
+                      <Text style={styles.listSubtitle}>{u.phone} | Bal: ${Number(u.wallet_balance).toFixed(2)}</Text>
+                      
+                      {editingUser === u.id ? (
+                        <View style={{ marginTop: 10 }}>
+                          <TextInput 
+                            style={styles.input} 
+                            placeholder="Amount (e.g. 500)"
+                            placeholderTextColor="#666"
+                            value={balanceAmount} 
+                            onChangeText={setBalanceAmount} 
+                            keyboardType="decimal-pad" 
+                            autoFocus 
+                          />
+                          <View style={{ flexDirection: 'row', marginTop: 10, gap: 10 }}>
+                            <TouchableOpacity style={styles.btnAdd} onPress={() => handleAdjustBalance(u.id, 'add')}>
+                              <Text style={styles.btnText}>+ Add</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.btnSubtract} onPress={() => handleAdjustBalance(u.id, 'subtract')}>
+                              <Text style={styles.btnText}>- Subtract</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.btnCancel} onPress={() => setEditingUser(null)}>
+                              <Text style={styles.btnText}>Cancel</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      ) : null}
+                    </View>
+                    
+                    {editingUser !== u.id && (
+                      <TouchableOpacity style={styles.btnEdit} onPress={() => { setEditingUser(u.id); setBalanceAmount(''); }}>
+                        <Text style={styles.btnText}>Adjust Bal</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))}
+              </View>
+            )}
           </>
         )}
       </ScrollView>
@@ -185,10 +260,10 @@ const styles = StyleSheet.create({
   backButton: { flexDirection: 'row', alignItems: 'center' },
   backButtonText: { color: '#FFF', fontSize: 16, marginLeft: 5 },
   headerTitle: { color: '#FFF', fontSize: 20, fontWeight: 'bold' },
-  tabContainer: { flexDirection: 'row', paddingHorizontal: 20, marginBottom: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.1)' },
+  tabContainer: { flexDirection: 'row', paddingHorizontal: 10, marginBottom: 20, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.1)' },
   tab: { flex: 1, paddingVertical: 10, alignItems: 'center' },
   activeTab: { borderBottomWidth: 2, borderBottomColor: '#6C63FF' },
-  tabText: { color: '#888', fontWeight: 'bold' },
+  tabText: { color: '#888', fontWeight: 'bold', fontSize: 13 },
   activeTabText: { color: '#FFF' },
   content: { flex: 1, paddingHorizontal: 20 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
@@ -200,8 +275,10 @@ const styles = StyleSheet.create({
   listSubtitle: { color: '#888', fontSize: 13, marginTop: 4 },
   btnEdit: { backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 8 },
   btnSave: { backgroundColor: '#6C63FF', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 8 },
-  btnCancel: { backgroundColor: '#FF6B6B', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 8 },
-  btnText: { color: '#FFF', fontWeight: 'bold', fontSize: 12 },
+  btnAdd: { backgroundColor: '#00FFCC', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
+  btnSubtract: { backgroundColor: '#FF9900', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
+  btnCancel: { backgroundColor: '#FF6B6B', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 },
+  btnText: { color: '#111', fontWeight: 'bold', fontSize: 12 },
   input: { backgroundColor: 'rgba(255,255,255,0.1)', color: '#FFF', padding: 10, borderRadius: 8, marginTop: 10 }
 });
 

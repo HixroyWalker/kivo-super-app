@@ -93,4 +93,52 @@ router.post('/merchants/:id/approve', async (req, res) => {
   }
 });
 
+// ── GET Users ────────────────────────────────────────────────────────────────
+router.get('/users', async (req, res) => {
+  try {
+    const users = await User.findAll({
+      attributes: ['id', 'email', 'phone', 'lynk_handle', 'wallet_balance', 'role'],
+      order: [['created_at', 'DESC']],
+      limit: 100
+    });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ── POST Adjust User Balance ─────────────────────────────────────────────────
+router.post('/users/:id/balance', async (req, res) => {
+  try {
+    const { amount, action } = req.body; // action: 'add' or 'subtract'
+    if (!amount || isNaN(amount) || amount <= 0) {
+      return res.status(400).json({ error: 'Valid amount is required' });
+    }
+    
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    let newBalance = parseFloat(user.wallet_balance);
+    const parsedAmount = parseFloat(amount);
+
+    if (action === 'add') {
+      newBalance += parsedAmount;
+    } else if (action === 'subtract') {
+      newBalance -= parsedAmount;
+      if (newBalance < 0) newBalance = 0;
+    } else {
+      return res.status(400).json({ error: 'Invalid action. Use "add" or "subtract".' });
+    }
+
+    user.wallet_balance = newBalance;
+    await user.save();
+    
+    res.json({ status: 'SUCCESS', balance: user.wallet_balance });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

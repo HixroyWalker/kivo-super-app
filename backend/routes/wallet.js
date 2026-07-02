@@ -115,10 +115,13 @@ router.post('/checkout', hwBinding, doubleLock, async (req, res) => {
 
     for (const item of cart_items) {
       let product = await Product.findByPk(item.product_id, { transaction: t });
+      let isTransitFare = false;
+
       if (!product) {
         // Fallback for Transit Passes
         const transitFare = await TransitFare.findByPk(item.product_id, { transaction: t });
         if (transitFare) {
+          isTransitFare = true;
           let transitMerchant = await Merchant.findOne({ where: { business_name: 'Transit Authority' }, transaction: t });
           if (!transitMerchant) {
             const defaultUser = await User.findOne({ order: [['created_at', 'ASC']], transaction: t });
@@ -143,12 +146,12 @@ router.post('/checkout', hwBinding, doubleLock, async (req, res) => {
       }
 
       // Check stock
-      if (!transitFare && product.stock_quantity < item.quantity) {
+      if (!isTransitFare && product.stock_quantity < item.quantity) {
         throw new Error(`Item ${product.name} is out of stock (Requested: ${item.quantity}, Available: ${product.stock_quantity}).`);
       }
       
       // Decrement stock
-      if (!transitFare) {
+      if (!isTransitFare) {
         product.stock_quantity -= item.quantity;
         await product.save({ transaction: t });
       }
@@ -545,7 +548,7 @@ router.post('/safety-net/repay', async (req, res) => {
 
 // ── Merchant Registration ──────────────────────────────────────────────────
 router.post('/merchant/register', async (req, res) => {
-  const { business_name } = req.body;
+  const { business_name, kyc_document_url, business_registration_url, additional_docs_url } = req.body;
   if (!business_name) {
     return res.status(400).json({ error: 'Business name is required.' });
   }
@@ -563,6 +566,9 @@ router.post('/merchant/register', async (req, res) => {
     const merchant = await Merchant.create({
       owner_id: req.user.id,
       business_name,
+      kyc_document_url: kyc_document_url || null,
+      business_registration_url: business_registration_url || null,
+      additional_docs_url: additional_docs_url || null,
       is_approved: false
     });
 

@@ -66,7 +66,10 @@ const Merchant = sequelize.define('Merchant', {
   business_name: { type: DataTypes.STRING, allowNull: false },
   bridge_loan_limit: { type: DataTypes.DECIMAL(15, 2), defaultValue: 0.00 },
   loyalty_rate: { type: DataTypes.INTEGER, defaultValue: 1 },
-  is_approved: { type: DataTypes.BOOLEAN, defaultValue: false }
+  is_approved: { type: DataTypes.BOOLEAN, defaultValue: false },
+  kyc_document_url: { type: DataTypes.STRING },
+  business_registration_url: { type: DataTypes.STRING },
+  additional_docs_url: { type: DataTypes.STRING }
 }, { tableName: 'merchants', underscored: true });
 
 // ── MerchantStaff ─────────────────────────────────────────────
