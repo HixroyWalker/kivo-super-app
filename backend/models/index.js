@@ -65,6 +65,7 @@ const Merchant = sequelize.define('Merchant', {
   owner_id: { type: DataTypes.UUID, allowNull: false },
   business_name: { type: DataTypes.STRING, allowNull: false },
   bridge_loan_limit: { type: DataTypes.DECIMAL(15, 2), defaultValue: 0.00 },
+  loyalty_rate: { type: DataTypes.INTEGER, defaultValue: 1 },
   is_approved: { type: DataTypes.BOOLEAN, defaultValue: false }
 }, { tableName: 'merchants', underscored: true });
 
@@ -85,6 +86,8 @@ const Product = sequelize.define('Product', {
   name: { type: DataTypes.STRING, allowNull: false },
   price: { type: DataTypes.DECIMAL(15, 2), allowNull: false },
   image_url: DataTypes.TEXT,
+  barcode: DataTypes.STRING,
+  stock_quantity: { type: DataTypes.INTEGER, defaultValue: 0 },
   is_active: { type: DataTypes.BOOLEAN, defaultValue: true }
 }, { tableName: 'products', underscored: true });
 

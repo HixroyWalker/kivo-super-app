@@ -56,4 +56,4 @@ async def verify_kyc(req: KYCVerifyRequest, x_aiv_secret: str = Header(None)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host="0.0.0.0", port=8090)

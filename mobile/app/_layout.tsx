@@ -1,8 +1,8 @@
+import 'react-native-reanimated';
 import 'react-native-gesture-handler';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
 import axios from 'axios';
 import Constants from 'expo-constants';
 
@@ -31,6 +31,7 @@ const getBackendUrl = () => {
 };
 
 axios.defaults.baseURL = getBackendUrl();
+axios.defaults.headers.common['Authorization'] = 'Bearer mock_testuser@kivo.com';
 console.log('[KIVO] Global Axios baseURL configured dynamically:', axios.defaults.baseURL);
 
 export const unstable_settings = {

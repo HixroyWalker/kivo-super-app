@@ -17,7 +17,8 @@ import QRCode from 'react-native-qrcode-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import axios from 'axios';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import api from '@/src/utils/api';
 
 const { width } = Dimensions.get('window');
 
@@ -26,6 +27,7 @@ interface Product {
   name: string;
   price: string;
   image_url: string;
+  barcode?: string;
 }
 
 const MerchantPOSScreen = () => {
@@ -49,13 +51,34 @@ const MerchantPOSScreen = () => {
   const [newItemName, setNewItemName] = useState('');
   const [newItemPrice, setNewItemPrice] = useState('');
   const [newItemImage, setNewItemImage] = useState<string | null>(null);
+  const [newItemBarcode, setNewItemBarcode] = useState('');
   const [creatingItem, setCreatingItem] = useState(false);
+
+  // Camera & Barcode States
+  const [permission, requestPermission] = useCameraPermissions();
+  const [scanningMode, setScanningMode] = useState<'NONE' | 'POS' | 'INVENTORY'>('NONE');
+
+  const handleBarcodeScanned = ({ type, data }: any) => {
+    if (scanningMode === 'POS') {
+      const prod = products.find(p => p.barcode === data);
+      if (prod) {
+        handleProductTap(prod);
+        Alert.alert('Scanned', `Added ${prod.name} to cart.`);
+      } else {
+        Alert.alert('Not Found', 'Product with this barcode not found in inventory.');
+      }
+      setScanningMode('NONE');
+    } else if (scanningMode === 'INVENTORY') {
+      setNewItemBarcode(data);
+      setScanningMode('NONE');
+    }
+  };
 
   const handleVerifyPin = async (pinValue: string) => {
     setVerifyingPin(true);
     setPinError('');
     try {
-      const res = await axios.post('/api/wallet/staff/verify-pin', { pin: pinValue });
+      const res = await api.post('/api/wallet/staff/verify-pin', { pin: pinValue });
       if (res.data.success) {
         setIsPinVerified(true);
       }
@@ -84,7 +107,7 @@ const MerchantPOSScreen = () => {
   const fetchProducts = async () => {
     setLoadingProducts(true);
     try {
-      const res = await axios.get('/api/wallet/products');
+      const res = await api.get('/api/wallet/products');
       setProducts(res.data);
     } catch (err) {
       console.error('Error fetching catalog:', err);
@@ -145,16 +168,18 @@ const MerchantPOSScreen = () => {
       const payload = {
         name: newItemName,
         price: parseFloat(newItemPrice),
-        image_url: newItemImage || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80'
+        image_url: newItemImage || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80',
+        barcode: newItemBarcode || undefined
       };
 
-      await axios.post('/api/wallet/products', payload);
+      await api.post('/api/wallet/products', payload);
       Alert.alert('Success', 'Product successfully created and added to inventory catalog.');
       
       // Reset & Refresh
       setNewItemName('');
       setNewItemPrice('');
       setNewItemImage(null);
+      setNewItemBarcode('');
       setShowInventoryModal(false);
       fetchProducts();
     } catch (err: any) {
@@ -343,6 +368,13 @@ const MerchantPOSScreen = () => {
 
       {/* Action Row */}
       <View style={styles.actionSection}>
+        <TouchableOpacity style={styles.scanButton} onPress={() => {
+          if (!permission?.granted) requestPermission();
+          else setScanningMode('POS');
+        }}>
+          <Ionicons name="barcode-outline" size={24} color="#FFF" />
+          <Text style={styles.scanButtonText}>Scan Barcode</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.payButton} onPress={generatePaymentQR}>
           <Ionicons name="qr-code-outline" size={24} color="#000" />
           <Text style={styles.payButtonText}>Generate Payment QR</Text>
@@ -403,6 +435,23 @@ const MerchantPOSScreen = () => {
             </View>
 
             {/* Inputs */}
+            <Text style={styles.label}>Barcode (Optional)</Text>
+            <View style={styles.barcodeInputRow}>
+              <TextInput
+                style={[styles.drawerInput, { flex: 1, marginBottom: 0 }]}
+                value={newItemBarcode}
+                onChangeText={setNewItemBarcode}
+                placeholder="Scan or type..."
+                placeholderTextColor="#555"
+              />
+              <TouchableOpacity style={styles.scanIconBtn} onPress={() => {
+                if (!permission?.granted) requestPermission();
+                else setScanningMode('INVENTORY');
+              }}>
+                <Ionicons name="barcode" size={22} color="#00FFCC" />
+              </TouchableOpacity>
+            </View>
+
             <Text style={styles.label}>Item Name</Text>
             <TextInput
               style={styles.drawerInput}
@@ -444,6 +493,28 @@ const MerchantPOSScreen = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Full Screen Scanner */}
+      {scanningMode !== 'NONE' && permission?.granted && (
+        <Modal visible transparent animationType="slide">
+          <View style={styles.scannerOverlay}>
+            <CameraView 
+              style={StyleSheet.absoluteFillObject} 
+              facing="back"
+              onBarcodeScanned={handleBarcodeScanned}
+              barcodeScannerSettings={{
+                barcodeTypes: ["qr", "ean13", "ean8", "upc_a", "upc_e", "code39", "code128"],
+              }}
+            />
+            <SafeAreaView style={styles.scannerHeader}>
+              <TouchableOpacity onPress={() => setScanningMode('NONE')} style={styles.closeScannerBtn}>
+                <Ionicons name="close" size={28} color="#FFF" />
+              </TouchableOpacity>
+              <Text style={styles.scannerTitle}>Scan Barcode</Text>
+            </SafeAreaView>
+          </View>
+        </Modal>
+      )}
     </SafeAreaView>
   );
 };
@@ -518,9 +589,11 @@ const styles = StyleSheet.create({
   emptyCatalogContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 40 },
   emptyCatalogText: { color: '#555', fontSize: 11, textAlign: 'center', marginTop: 6, paddingHorizontal: 20 },
 
-  actionSection: { padding: 15, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' },
-  payButton: { backgroundColor: '#00FFCC', flexDirection: 'row', padding: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  payButtonText: { color: '#000', fontSize: 16, fontWeight: 'bold', marginLeft: 8 },
+  actionSection: { padding: 15, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)', flexDirection: 'row', justifyContent: 'space-between' },
+  scanButton: { backgroundColor: 'rgba(255,255,255,0.1)', flexDirection: 'row', padding: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flex: 0.45 },
+  scanButtonText: { color: '#FFF', fontSize: 14, fontWeight: 'bold', marginLeft: 8 },
+  payButton: { backgroundColor: '#00FFCC', flexDirection: 'row', padding: 16, borderRadius: 12, alignItems: 'center', justifyContent: 'center', flex: 0.5 },
+  payButtonText: { color: '#000', fontSize: 14, fontWeight: 'bold', marginLeft: 8 },
 
   modalBgContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 20 },
   
@@ -593,6 +666,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.05)',
     marginBottom: 8
   },
+  barcodeInputRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  scanIconBtn: { backgroundColor: 'rgba(0,255,204,0.1)', padding: 12, borderRadius: 12, marginLeft: 10, borderWidth: 1, borderColor: 'rgba(0,255,204,0.2)' },
   createBtn: { 
     backgroundColor: '#00FFCC', 
     borderRadius: 12, 
@@ -630,7 +705,12 @@ const styles = StyleSheet.create({
   keypadGrid: { width: 280, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 20 },
   keypadButton: { width: 80, height: 80, borderRadius: 40, backgroundColor: 'rgba(255,255,255,0.03)', justifyContent: 'center', alignItems: 'center', margin: 6, borderWidth: 1, borderColor: 'rgba(255,255,255,0.04)' },
   keypadButtonText: { color: '#FFF', fontSize: 26, fontWeight: 'bold' },
-  keypadActionText: { color: '#FF6B6B', fontSize: 20, fontWeight: 'bold' }
+  keypadActionText: { color: '#FF6B6B', fontSize: 20, fontWeight: 'bold' },
+
+  scannerOverlay: { flex: 1, backgroundColor: '#000' },
+  scannerHeader: { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', padding: 20, backgroundColor: 'rgba(0,0,0,0.5)' },
+  closeScannerBtn: { marginRight: 20 },
+  scannerTitle: { color: '#FFF', fontSize: 18, fontWeight: 'bold' }
 });
 
 export default MerchantPOSScreen;

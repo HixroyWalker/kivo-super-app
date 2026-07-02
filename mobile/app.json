@@ -3,6 +3,8 @@
     "name": "KIVO",
     "slug": "kivo",
     "version": "1.0.2",
+    "runtimeVersion": "1.0.2",
+    "newArchEnabled": true,
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -17,7 +19,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kivowebb.app",
-      "buildNumber": "3",
+      "buildNumber": "35",
       "infoPlist": {
         "NSCameraUsageDescription": "KIVO needs camera access for KYC liveness checks and scanning QR codes.",
         "NSFaceIDUsageDescription": "KIVO uses FaceID to secure your wallet transactions.",
@@ -92,5 +94,9 @@
       "expo-secure-store"
     ],
     "owner": "walkerha"
+  },
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-3940256099942544~3347511713",
+    "ios_app_id": "ca-app-pub-3940256099942544~1458002511"
   }
 }

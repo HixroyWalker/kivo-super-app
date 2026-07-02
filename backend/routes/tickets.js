@@ -286,7 +286,7 @@ router.get('/my-transit', async (req, res) => {
             route_name: item.name || 'Transit Route Pass',
             price: item.price,
             quantity: item.quantity,
-            purchased_at: order.created_at,
+            purchased_at: order.created_at || order.createdAt,
             qr_token: `transit-pass-${order.id}-${item.product_id}`
           });
         });

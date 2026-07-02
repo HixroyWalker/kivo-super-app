@@ -20,7 +20,7 @@ router.post('/transfer', hwBinding, doubleLock, async (req, res) => {
 
   try {
     // Check idempotency
-    const existingTx = await Transaction.findOne({ where: { idempotency_key } }, { transaction: t });
+    const existingTx = await Transaction.findOne({ where: { idempotency_key }, transaction: t });
     if (existingTx) {
       await t.rollback();
       return res.status(200).json(existingTx); // Already processed
@@ -119,9 +119,9 @@ router.post('/checkout', hwBinding, doubleLock, async (req, res) => {
         // Fallback for Transit Passes
         const transitFare = await TransitFare.findByPk(item.product_id, { transaction: t });
         if (transitFare) {
-          let transitMerchant = await Merchant.findOne({ where: { business_name: 'Transit Authority' } }, { transaction: t });
+          let transitMerchant = await Merchant.findOne({ where: { business_name: 'Transit Authority' }, transaction: t });
           if (!transitMerchant) {
-            const defaultUser = await User.findOne({ order: [['created_at', 'ASC']] }, { transaction: t });
+            const defaultUser = await User.findOne({ order: [['created_at', 'ASC']], transaction: t });
             transitMerchant = await Merchant.create({
               id: uuidv4(),
               owner_id: defaultUser.id,
@@ -140,6 +140,17 @@ router.post('/checkout', hwBinding, doubleLock, async (req, res) => {
 
       if (!product) {
         throw new Error(`Item ${item.product_id} not found in inventory.`);
+      }
+
+      // Check stock
+      if (!transitFare && product.stock_quantity < item.quantity) {
+        throw new Error(`Item ${product.name} is out of stock (Requested: ${item.quantity}, Available: ${product.stock_quantity}).`);
+      }
+      
+      // Decrement stock
+      if (!transitFare) {
+        product.stock_quantity -= item.quantity;
+        await product.save({ transaction: t });
       }
 
       const itemTotal = parseFloat(product.price) * item.quantity;
@@ -171,10 +182,18 @@ router.post('/checkout', hwBinding, doubleLock, async (req, res) => {
       const fee = split.amount * feePct;
       const netAmount = split.amount - fee;
 
-      merchantUser.wallet_balance = parseFloat(merchantUser.wallet_balance) + netAmount;
+      // Loyalty calculation
+      const rewardPoints = Math.floor(split.amount / 100) * (merchant.loyalty_rate || 1);
+      
+      // Debit merchant for loyalty points ($1 JMD per point cost assumption)
+      merchantUser.wallet_balance = parseFloat(merchantUser.wallet_balance) + netAmount - rewardPoints;
       await merchantUser.save({ transaction: t });
+      
+      // Credit customer points
+      customer.unity_score = (customer.unity_score || 0) + rewardPoints;
+      await customer.save({ transaction: t });
 
-      await Order.create({
+      const order = await Order.create({
         customer_id,
         merchant_id,
         items: split.items,
@@ -191,7 +210,7 @@ router.post('/checkout', hwBinding, doubleLock, async (req, res) => {
         fee,
         type: 'ORDER',
         status: 'COMPLETED',
-        metadata: { merchant_id }
+        metadata: { merchant_id, order_id: order.id, reward_points: rewardPoints }
       }, { transaction: t });
     }
 
@@ -215,7 +234,7 @@ router.get('/products', async (req, res) => {
 
 // ── Create a Product ───────────────────────────────────────────
 router.post('/products', async (req, res) => {
-  const { name, price, image_url } = req.body;
+  const { name, price, image_url, barcode, stock_quantity } = req.body;
   const merchant_id = req.user ? req.user.id : uuidv4();
   try {
     const product = await Product.create({
@@ -224,6 +243,8 @@ router.post('/products', async (req, res) => {
       name,
       price: parseFloat(price) || 0.00,
       image_url: image_url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80',
+      barcode: barcode || null,
+      stock_quantity: parseInt(stock_quantity, 10) || 0,
       is_active: true
     });
     res.status(201).json(product);

@@ -1,38 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { View, ActivityIndicator, StyleSheet, Text } from 'react-native';
 import FeedScreen from '@/src/features/social/FeedScreen';
+import api from '@/src/utils/api';
 
 export default function FeedTab() {
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [posts, setPosts] = useState([
-    {
-      id: 'post1',
-      user_id: 'u1',
-      author: { lynk_handle: 'kivo_official' },
-      content: 'Welcome to the Kivo Feed! Tap the Buy button to quick-purchase items you see here.',
-      post_type: 'TEXT',
-      youtube_link: ''
-    },
-    {
-      id: 'post2',
-      user_id: 'u2',
-      author: { lynk_handle: 'shop_ja' },
-      content: 'New arrivals just landed in the store! Check them out.',
-      post_type: 'PRODUCT',
-      youtube_link: '',
-      Product: {
-        id: 'prod1',
-        name: 'Kivo Snapback Hat',
-        price: '2500.00',
-        merchant_id: 'merchant123',
-        image_url: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=400&q=80'
-      }
-    }
-  ]);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+  const fetchPosts = async () => {
+    try {
+      const res = await api.get('/api/wallet/posts');
+      setPosts(res.data);
+    } catch (error) {
+      console.error('Error fetching feed:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchPosts();
+    setRefreshing(false);
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#6C63FF" />
+        <Text style={styles.loadingText}>Loading feed...</Text>
+      </View>
+    );
+  }
 
   return <FeedScreen posts={posts} refreshing={refreshing} onRefresh={onRefresh} />;
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#090915' },
+  loadingText: { color: '#888', marginTop: 12 },
+});

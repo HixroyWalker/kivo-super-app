@@ -20,7 +20,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useCartStore } from '@/src/store/cartStore';
 import { router } from 'expo-router';
-import axios from 'axios';
+import api from '@/src/utils/api';
 import QRCode from 'react-native-qrcode-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as LocalAuthentication from 'expo-local-authentication';
@@ -218,7 +218,7 @@ export default function ShopTicketsScreen() {
         return;
       }
 
-      const response = await axios.post('/api/tickets/buy', {
+      const response = await api.post('/api/tickets/buy', {
         event_id: selectedEventForTiers.id,
         quantity: ticketQuantity,
         tier: selectedTier
@@ -260,8 +260,8 @@ export default function ShopTicketsScreen() {
     setLoading(true);
     try {
       const [prodRes, eventRes] = await Promise.all([
-        axios.get('/api/wallet/products'),
-        axios.get('/api/tickets/events')
+        api.get('/api/wallet/products'),
+        api.get('/api/tickets/events')
       ]);
       setProducts(prodRes.data);
       setEvents(eventRes.data);
@@ -275,7 +275,7 @@ export default function ShopTicketsScreen() {
   const fetchTransitRoutes = async () => {
     setLoadingTransit(true);
     try {
-      const res = await axios.get('/api/tickets/transit');
+      const res = await api.get('/api/tickets/transit');
       setTransitRoutes(res.data);
     } catch (error) {
       console.error('Error fetching transit routes:', error);
@@ -288,8 +288,8 @@ export default function ShopTicketsScreen() {
     setLoadingMyPasses(true);
     try {
       const [ticketRes, transitRes] = await Promise.all([
-        axios.get('/api/tickets/my-tickets'),
-        axios.get('/api/tickets/my-transit')
+        api.get('/api/tickets/my-tickets'),
+        api.get('/api/tickets/my-transit')
       ]);
       setMyTickets(ticketRes.data);
       setMyTransitPasses(transitRes.data);
@@ -363,21 +363,21 @@ export default function ShopTicketsScreen() {
     setRefreshing(true);
     try {
       if (activeTab === 'SHOP') {
-        const prodRes = await axios.get('/api/wallet/products');
+        const prodRes = await api.get('/api/wallet/products');
         setProducts(prodRes.data);
       } else if (activeTab === 'MY_PASSES') {
         const [ticketRes, transitRes] = await Promise.all([
-          axios.get('/api/tickets/my-tickets'),
-          axios.get('/api/tickets/my-transit')
+          api.get('/api/tickets/my-tickets'),
+          api.get('/api/tickets/my-transit')
         ]);
         setMyTickets(ticketRes.data);
         setMyTransitPasses(transitRes.data);
       } else {
         if (ticketSubTab === 'EVENTS') {
-          const eventRes = await axios.get('/api/tickets/events');
+          const eventRes = await api.get('/api/tickets/events');
           setEvents(eventRes.data);
         } else if (ticketSubTab === 'TRANSIT') {
-          const transitRes = await axios.get('/api/tickets/transit');
+          const transitRes = await api.get('/api/tickets/transit');
           setTransitRoutes(transitRes.data);
         }
       }
@@ -461,7 +461,7 @@ export default function ShopTicketsScreen() {
     
     setSavingEdit(true);
     try {
-      const res = await axios.put(`/api/tickets/events/${selectedEventId}`, {
+      const res = await api.put(`/api/tickets/events/${selectedEventId}`, {
         price: parseFloat(editPrice),
         title: editTitle,
         description: editDesc
@@ -491,7 +491,7 @@ export default function ShopTicketsScreen() {
 
     setCreatingEvent(true);
     try {
-      const res = await axios.post('/api/tickets/events', {
+      const res = await api.post('/api/tickets/events', {
         title: createTitle,
         description: createDesc,
         price: parseFloat(createPrice),
@@ -556,7 +556,7 @@ export default function ShopTicketsScreen() {
         merchantId = 'Transit Authority';
       }
 
-      const response = await axios.post('/api/wallet/checkout', {
+      const response = await api.post('/api/wallet/checkout', {
         cart_items: [{
           product_id: productId,
           name: itemName,

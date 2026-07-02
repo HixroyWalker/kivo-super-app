@@ -21,9 +21,9 @@ gcloud scheduler jobs create http kivo-credit-due \
   --headers="X-Scheduler-Secret=$SECRET" \
   --time-zone="America/Jamaica"
 
-# 3. Poll Lynk (Every minute)
+# 3. Poll Lynk (Every 15 minutes)
 gcloud scheduler jobs create http kivo-poll-lynk \
-  --schedule="* * * * *" \
+  --schedule="*/15 * * * *" \
   --uri="$BACKEND_URL/internal/poll-lynk" \
   --http-method=POST \
   --headers="X-Scheduler-Secret=$SECRET" \

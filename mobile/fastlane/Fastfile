@@ -11,6 +11,7 @@ platform :ios do
     # 1. Run Expo prebuild to generate native /ios folder
     UI.message("🛠️ Generating native iOS project files via Expo Prebuild...")
     sh("cd .. && npx expo prebuild --platform ios --no-install")
+    sh("cd ../ios && env -u GEM_PATH -u GEM_HOME pod install")
 
     # 2. Update code signing credentials and profile
     # Match is the standard fastlane utility, but we will utilize local manual provisioning or API keys
@@ -63,13 +64,8 @@ platform :ios do
         }
       )
 
-      # 5. Upload to TestFlight
-      UI.message("📤 Uploading binary to TestFlight...")
-      upload_to_testflight(
-        api_key: api_key,
-        ipa: "./build/kivo.ipa",
-        skip_waiting_for_build_processing: true
-      )
+      # 5. Upload to TestFlight (handled non-interactively via EAS submit)
+      UI.message("📤 TestFlight upload skipped in Fastlane (will be uploaded via EAS submit)")
       UI.success("🎉 iOS Beta Build successfully uploaded to TestFlight!")
     rescue => e
       UI.error("⚠️ iOS compilation/signing failed or skipped: #{e.message}")

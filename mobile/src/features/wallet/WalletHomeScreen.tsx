@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, Link } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
@@ -30,22 +30,30 @@ const WalletHomeScreen = () => {
 
       {/* Quick Actions */}
       <View style={styles.actionsRow}>
-        <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/SendMoney')}>
-          <View style={styles.iconCircle}><Ionicons name="send" size={24} color="#FFF" /></View>
-          <Text style={styles.actionText}>Send</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/ScanToPay')}>
-          <View style={[styles.iconCircle, { backgroundColor: '#00FFCC' }]}><Ionicons name="qr-code" size={24} color="#000" /></View>
-          <Text style={styles.actionText}>Scan</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/Exchange')}>
-          <View style={[styles.iconCircle, { backgroundColor: '#FFD700' }]}><Ionicons name="swap-horizontal" size={24} color="#000" /></View>
-          <Text style={styles.actionText}>Exchange</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/MerchantPOS')}>
-          <View style={[styles.iconCircle, { backgroundColor: '#A020F0' }]}><Ionicons name="calculator-outline" size={24} color="#FFF" /></View>
-          <Text style={styles.actionText}>POS</Text>
-        </TouchableOpacity>
+        <Link href="/SendMoney" asChild>
+          <TouchableOpacity style={styles.actionButton}>
+            <View style={styles.iconCircle}><Ionicons name="send" size={24} color="#FFF" /></View>
+            <Text style={styles.actionText}>Send</Text>
+          </TouchableOpacity>
+        </Link>
+        <Link href="/ScanToPay" asChild>
+          <TouchableOpacity style={styles.actionButton}>
+            <View style={[styles.iconCircle, { backgroundColor: '#00FFCC' }]}><Ionicons name="qr-code" size={24} color="#000" /></View>
+            <Text style={styles.actionText}>Scan</Text>
+          </TouchableOpacity>
+        </Link>
+        <Link href="/Exchange" asChild>
+          <TouchableOpacity style={styles.actionButton}>
+            <View style={[styles.iconCircle, { backgroundColor: '#FFD700' }]}><Ionicons name="swap-horizontal" size={24} color="#000" /></View>
+            <Text style={styles.actionText}>Exchange</Text>
+          </TouchableOpacity>
+        </Link>
+        <Link href="/MerchantPOS" asChild>
+          <TouchableOpacity style={styles.actionButton}>
+            <View style={[styles.iconCircle, { backgroundColor: '#A020F0' }]}><Ionicons name="calculator-outline" size={24} color="#FFF" /></View>
+            <Text style={styles.actionText}>POS</Text>
+          </TouchableOpacity>
+        </Link>
       </View>
 
       {/* Shop & Tickets Banner */}

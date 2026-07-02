@@ -14,11 +14,16 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pre-download and cache model weights during Docker image build
+ENV EASYOCR_DOWNLOAD_PATH=/root/.EasyOCR
+RUN python -c "import easyocr; easyocr.Reader(['en'])"
+RUN python -c "from deepface import DeepFace; DeepFace.build_model('Facenet512')"
+
 # Copy source code
 COPY . .
 
 # Expose port
-EXPOSE 8080
+EXPOSE 8090
 
 # Start the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8090"]

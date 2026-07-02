@@ -57,7 +57,7 @@ const FeedScreen = ({ posts, refreshing, onRefresh }: FeedScreenProps) => {
     } else if (url.includes('embed/')) {
       videoId = url.split('embed/')[1]?.split('?')[0];
     }
-    return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1`;
+    return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&playsinline=1&origin=https://kivo.com`;
   };
 
   const renderItem = ({ item }: { item: any }) => {
@@ -76,7 +76,10 @@ const FeedScreen = ({ posts, refreshing, onRefresh }: FeedScreenProps) => {
         {hasVideo ? (
           <View style={styles.backgroundVideoContainer}>
             <WebView
-              source={{ uri: getYoutubeEmbedUrl(item.youtube_link) }}
+              source={{ 
+                uri: getYoutubeEmbedUrl(item.youtube_link),
+                headers: { 'Referer': 'https://kivo.com/' }
+              }}
               style={styles.webview}
               javaScriptEnabled={true}
               domStorageEnabled={true}
@@ -108,7 +111,7 @@ const FeedScreen = ({ posts, refreshing, onRefresh }: FeedScreenProps) => {
           <View style={styles.profileContainer}>
             <View style={styles.avatarCircle}>
               <Text style={styles.avatarText}>
-                {item.author.lynk_handle ? item.author.lynk_handle.slice(0, 2).toUpperCase() : 'KV'}
+                {item?.author?.lynk_handle ? item.author.lynk_handle.slice(0, 2).toUpperCase() : 'KV'}
               </Text>
             </View>
             <TouchableOpacity 
@@ -156,7 +159,7 @@ const FeedScreen = ({ posts, refreshing, onRefresh }: FeedScreenProps) => {
 
         {/* Floating Bottom Left Details Overlay */}
         <View style={styles.bottomOverlay}>
-          <Text style={styles.authorHandle}>@{item.author.lynk_handle}</Text>
+          <Text style={styles.authorHandle}>@{item?.author?.lynk_handle || 'kivo'}</Text>
           
           {/* Only render text description on bottom left if it has a video background */}
           {hasVideo && (

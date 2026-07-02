@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '@/src/utils/api';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -13,9 +13,9 @@ export default function TabLayout() {
 
   useEffect(() => {
     // Check if user is an admin
-    axios.get('/auth/me')
+    api.get('/auth/me')
       .then(response => {
-        if (response.data && response.data.user && response.data.user.role === 'ADMIN') {
+        if (response?.data?.user?.role === 'ADMIN') {
           setIsAdmin(true);
         }
       })

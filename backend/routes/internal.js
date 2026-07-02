@@ -43,4 +43,14 @@ router.post('/poll-lynk', async (req, res) => {
   }
 });
 
+router.post('/safety-net-repay', async (req, res) => {
+  console.log('[KIVO Internal] Received safety-net-repay trigger');
+  res.json({ status: 'SUCCESS', message: 'Safety net repayment check completed (stub).' });
+});
+
+router.post('/credit-due', async (req, res) => {
+  console.log('[KIVO Internal] Received credit-due trigger');
+  res.json({ status: 'SUCCESS', message: 'Credit due check completed (stub).' });
+});
+
 module.exports = router;

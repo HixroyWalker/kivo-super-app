@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import FeedScreen from '@/src/features/social/FeedScreen';
-import axios from 'axios';
+import api from '@/src/utils/api';
 
 const { width } = Dimensions.get('window');
 
@@ -41,8 +41,8 @@ export default function SocialDiscoverScreen() {
   const fetchData = async () => {
     try {
       const [postRes, prodRes] = await Promise.all([
-        axios.get('/api/wallet/posts'),
-        axios.get('/api/wallet/products')
+        api.get('/api/wallet/posts'),
+        api.get('/api/wallet/products')
       ]);
       setPosts(postRes.data);
       setProducts(prodRes.data);
@@ -60,7 +60,7 @@ export default function SocialDiscoverScreen() {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      const postRes = await axios.get('/api/wallet/posts');
+      const postRes = await api.get('/api/wallet/posts');
       setPosts(postRes.data);
     } catch (error) {
       console.error('Refresh feed error:', error);
@@ -82,7 +82,7 @@ export default function SocialDiscoverScreen() {
       if (newPostYoutube) postType = 'VIDEO';
       else if (selectedProductId) postType = 'PRODUCT';
 
-      await axios.post('/api/wallet/posts', {
+      await api.post('/api/wallet/posts', {
         content: newPostContent,
         youtube_link: newPostYoutube || null,
         product_id: selectedProductId || null,
