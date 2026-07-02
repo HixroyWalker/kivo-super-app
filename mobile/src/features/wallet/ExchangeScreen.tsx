@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 const RATES: Record<string, number> = {
   USD: 155.20,
@@ -11,6 +12,7 @@ const RATES: Record<string, number> = {
 };
 
 const ExchangeScreen = ({ navigation }: any) => {
+  const router = useRouter();
   const [fromCurrency, setFromCurrency] = useState('USD');
   const [toCurrency, setToCurrency] = useState('JMD');
   const [amount, setAmount] = useState('');
@@ -43,7 +45,7 @@ const ExchangeScreen = ({ navigation }: any) => {
       Alert.alert(
         'Exchange Completed',
         `Successfully converted ${amount} ${fromCurrency} into ${calculateConversion()} ${toCurrency}!`,
-        [{ text: 'OK', onPress: () => navigation.navigate('(tabs)') }]
+        [{ text: 'OK', onPress: () => router.push('/(tabs)') }]
       );
     }, 1500);
   };
@@ -51,7 +53,7 @@ const ExchangeScreen = ({ navigation }: any) => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Global Exchange</Text>

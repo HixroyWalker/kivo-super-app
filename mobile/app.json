@@ -82,21 +82,10 @@
           "faceIDPermission": "Allow KIVO to use FaceID for secure payments."
         }
       ],
-      [
-        "react-native-google-mobile-ads",
-        {
-          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
-          "iosAppId": "ca-app-pub-3940256099942544~1458002511"
-        }
-      ],
       "expo-font",
       "expo-router",
       "expo-secure-store"
     ],
     "owner": "walkerha"
-  },
-  "react-native-google-mobile-ads": {
-    "android_app_id": "ca-app-pub-3940256099942544~3347511713",
-    "ios_app_id": "ca-app-pub-3940256099942544~1458002511"
   }
 }

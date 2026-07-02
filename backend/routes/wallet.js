@@ -497,7 +497,7 @@ router.post('/staff/verify-pin', async (req, res) => {
 });
 
 // ── POST Repay Safety Net ───────────────────────────────────────────────────
-router.post('/safety-net/repay', authMiddleware, async (req, res) => {
+router.post('/safety-net/repay', async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const user = await User.findByPk(req.user.id, { lock: t.LOCK.UPDATE, transaction: t });
@@ -539,6 +539,164 @@ router.post('/safety-net/repay', authMiddleware, async (req, res) => {
     });
   } catch (error) {
     await t.rollback();
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ── Merchant Registration ──────────────────────────────────────────────────
+router.post('/merchant/register', async (req, res) => {
+  const { business_name } = req.body;
+  if (!business_name) {
+    return res.status(400).json({ error: 'Business name is required.' });
+  }
+
+  try {
+    // Check if the user already has a merchant profile
+    const existing = await Merchant.findOne({ where: { owner_id: req.user.id } });
+    if (existing) {
+      if (existing.is_approved) {
+        return res.status(400).json({ error: 'You already have an approved merchant account.' });
+      }
+      return res.status(400).json({ error: 'Your merchant application is already pending.' });
+    }
+
+    const merchant = await Merchant.create({
+      owner_id: req.user.id,
+      business_name,
+      is_approved: false
+    });
+
+    res.json({
+      status: 'SUCCESS',
+      message: 'Application submitted successfully. Awaiting admin approval.',
+      merchant
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ── Merchant Staff Management ────────────────────────────────────────────────
+// Get all staff for the logged in user's merchant account
+router.get('/merchant/staff', async (req, res) => {
+  try {
+    const merchant = await Merchant.findOne({ where: { owner_id: req.user.id } });
+    if (!merchant) return res.status(404).json({ error: 'Merchant account not found.' });
+
+    const staffList = await MerchantStaff.findAll({ where: { merchant_id: merchant.id } });
+    
+    // Enrich with user details (email/handle)
+    const enrichedStaff = [];
+    for (const staff of staffList) {
+      const u = await User.findByPk(staff.user_id);
+      enrichedStaff.push({
+        id: staff.id,
+        user_id: staff.user_id,
+        role: staff.role,
+        is_active: staff.is_active,
+        email: u ? u.email : 'Unknown',
+        lynk_handle: u ? u.lynk_handle : 'Unknown'
+      });
+    }
+
+    res.json({ status: 'SUCCESS', staff: enrichedStaff });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add new staff member
+router.post('/merchant/staff', async (req, res) => {
+  const { identifier, role, pin } = req.body; // identifier can be email or lynk_handle
+  if (!identifier || !role || !pin) return res.status(400).json({ error: 'Missing required fields.' });
+
+  try {
+    const merchant = await Merchant.findOne({ where: { owner_id: req.user.id } });
+    if (!merchant) return res.status(404).json({ error: 'Merchant account not found.' });
+
+    // Look up user by email or handle
+    const targetUser = await User.findOne({
+      where: {
+        [require('sequelize').Op.or]: [
+          { email: identifier.toLowerCase() },
+          { lynk_handle: identifier.toLowerCase() }
+        ]
+      }
+    });
+
+    if (!targetUser) return res.status(404).json({ error: 'Kivo user not found. They must sign up first.' });
+
+    // Check if already staff
+    const existing = await MerchantStaff.findOne({ where: { merchant_id: merchant.id, user_id: targetUser.id } });
+    if (existing) return res.status(400).json({ error: 'User is already a staff member.' });
+
+    const newStaff = await MerchantStaff.create({
+      merchant_id: merchant.id,
+      user_id: targetUser.id,
+      role: role.toUpperCase(),
+      activation_pin: pin,
+      is_active: true
+    });
+
+    res.json({ status: 'SUCCESS', message: 'Staff added successfully', staff: newStaff });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Remove staff member
+router.delete('/merchant/staff/:id', async (req, res) => {
+  try {
+    const merchant = await Merchant.findOne({ where: { owner_id: req.user.id } });
+    if (!merchant) return res.status(404).json({ error: 'Merchant account not found.' });
+
+    const staff = await MerchantStaff.findOne({ where: { id: req.params.id, merchant_id: merchant.id } });
+    if (!staff) return res.status(404).json({ error: 'Staff record not found.' });
+
+    await staff.destroy();
+    res.json({ status: 'SUCCESS', message: 'Staff removed.' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ── Multi-Location Overview ──────────────────────────────────────────────────
+router.get('/merchant/locations', async (req, res) => {
+  try {
+    const { MerchantStaff, Order } = require('../models');
+
+    // Find all merchants owned by this user
+    const locations = await Merchant.findAll({ where: { owner_id: req.user.id } });
+    
+    const enrichedLocations = [];
+    let totalNetworkSales = 0;
+
+    for (const loc of locations) {
+      // Get staff count
+      const staffCount = await MerchantStaff.count({ where: { merchant_id: loc.id } });
+      
+      // Calculate total sales from PAID orders
+      const salesResult = await Order.sum('total_amount', { 
+        where: { merchant_id: loc.id, status: 'PAID' } 
+      });
+      const totalSales = parseFloat(salesResult) || 0;
+      totalNetworkSales += totalSales;
+
+      enrichedLocations.push({
+        id: loc.id,
+        business_name: loc.business_name,
+        is_approved: loc.is_approved,
+        staff_count: staffCount,
+        total_sales: totalSales
+      });
+    }
+
+    res.json({
+      status: 'SUCCESS',
+      total_network_sales: totalNetworkSales,
+      locations: enrichedLocations
+    });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });

@@ -364,6 +364,12 @@ const MerchantPOSScreen = () => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Merchant Terminal</Text>
         <View style={{ flexDirection: 'row', gap: 10 }}>
+          <TouchableOpacity style={styles.addInventoryBtn} onPress={() => router.push('/MerchantLocations')}>
+            <Ionicons name="business-outline" size={22} color="#FF9900" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.addInventoryBtn} onPress={() => router.push('/MerchantStaff')}>
+            <Ionicons name="people-outline" size={22} color="#6C63FF" />
+          </TouchableOpacity>
           <TouchableOpacity style={styles.addInventoryBtn} onPress={() => setShowLoyaltyModal(true)}>
             <Ionicons name="star" size={22} color="#00FFCC" />
             <Text style={styles.addInventoryBtnText}>Loyalty</Text>

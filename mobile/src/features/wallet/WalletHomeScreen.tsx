@@ -15,7 +15,7 @@ const WalletHomeScreen = () => {
   
   const fetchMe = async () => {
     try {
-      const res = await api.get('/api/auth/me');
+      const res = await api.get('/auth/me');
       if (res.data && res.data.user) {
         setUnityScore(res.data.user.unity_score || 0);
         setUser(res.data.user);
@@ -85,6 +85,17 @@ const WalletHomeScreen = () => {
           </TouchableOpacity>
         </Link>
       </View>
+
+      {/* Become a Merchant Banner */}
+      <TouchableOpacity onPress={() => router.push('/MerchantRegistration')} activeOpacity={0.9} style={styles.merchantBanner}>
+        <LinearGradient colors={['#1D1D35', '#2A2A4A']} style={styles.merchantBannerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+          <View>
+            <Text style={styles.merchantBannerTitle}>Become a Merchant</Text>
+            <Text style={styles.merchantBannerSub}>Start accepting payments today!</Text>
+          </View>
+          <Ionicons name="briefcase-outline" size={32} color="#6C63FF" />
+        </LinearGradient>
+      </TouchableOpacity>
 
       {/* Shop & Tickets Banner */}
       <TouchableOpacity onPress={() => router.push('/ShopTickets')} activeOpacity={0.9} style={styles.shopBanner}>
@@ -160,6 +171,10 @@ const styles = StyleSheet.create({
   safetyValue: { color: '#FFF', fontSize: 14 },
   repayButton: { backgroundColor: '#FF6B6B', paddingVertical: 8, paddingHorizontal: 15, borderRadius: 10 },
   repayText: { color: '#FFF', fontWeight: 'bold' },
+  merchantBanner: { marginBottom: 15, borderRadius: 20, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 5, borderWidth: 1, borderColor: 'rgba(108, 99, 255, 0.2)' },
+  merchantBannerGradient: { padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  merchantBannerTitle: { color: '#FFF', fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
+  merchantBannerSub: { color: 'rgba(255,255,255,0.7)', fontSize: 13 },
   shopBanner: { marginBottom: 30, borderRadius: 20, overflow: 'hidden', shadowColor: '#FF9900', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 5 },
   shopBannerGradient: { padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   shopBannerTitle: { color: '#FFF', fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
