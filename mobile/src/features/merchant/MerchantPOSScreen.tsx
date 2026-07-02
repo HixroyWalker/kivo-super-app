@@ -20,7 +20,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import api from '@/src/utils/api';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 interface Product {
   id: string;
@@ -28,6 +28,14 @@ interface Product {
   price: string;
   image_url: string;
   barcode?: string;
+  stock_quantity?: number;
+}
+
+interface Transaction {
+  id: string;
+  amount: string;
+  status: string;
+  created_at: string;
 }
 
 const MerchantPOSScreen = () => {
@@ -52,11 +60,22 @@ const MerchantPOSScreen = () => {
   const [newItemPrice, setNewItemPrice] = useState('');
   const [newItemImage, setNewItemImage] = useState<string | null>(null);
   const [newItemBarcode, setNewItemBarcode] = useState('');
+  const [newItemStock, setNewItemStock] = useState('');
   const [creatingItem, setCreatingItem] = useState(false);
 
   // Camera & Barcode States
   const [permission, requestPermission] = useCameraPermissions();
   const [scanningMode, setScanningMode] = useState<'NONE' | 'POS' | 'INVENTORY'>('NONE');
+
+  // Order History & Refunds
+  const [showOrderHistoryModal, setShowOrderHistoryModal] = useState(false);
+  const [orders, setOrders] = useState<Transaction[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [refundingTx, setRefundingTx] = useState<string | null>(null);
+
+  // Loyalty Settings
+  const [showLoyaltyModal, setShowLoyaltyModal] = useState(false);
+  const [loyaltyRate, setLoyaltyRate] = useState('1');
 
   const handleBarcodeScanned = ({ type, data }: any) => {
     if (scanningMode === 'POS') {
@@ -116,6 +135,46 @@ const MerchantPOSScreen = () => {
     }
   };
 
+  const fetchOrders = async () => {
+    setLoadingOrders(true);
+    try {
+      const res = await api.get('/api/wallet/transactions');
+      setOrders(res.data);
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+    } finally {
+      setLoadingOrders(false);
+    }
+  };
+
+  const handleRefund = async (txId: string) => {
+    setRefundingTx(txId);
+    try {
+      await api.post(`/api/wallet/transactions/${txId}/refund`);
+      Alert.alert('Success', 'Transaction successfully refunded.');
+      fetchOrders();
+      fetchProducts(); // Refresh stock
+    } catch (err: any) {
+      Alert.alert('Refund Error', err.response?.data?.error || 'Failed to refund transaction.');
+    } finally {
+      setRefundingTx(null);
+    }
+  };
+
+  const [updatingLoyalty, setUpdatingLoyalty] = useState(false);
+  const handleUpdateLoyalty = async () => {
+    setUpdatingLoyalty(true);
+    try {
+      await api.post('/api/wallet/merchant/loyalty', { loyalty_rate: loyaltyRate });
+      Alert.alert('Success', `Loyalty rate updated to ${loyaltyRate} points per $100`);
+      setShowLoyaltyModal(false);
+    } catch (err: any) {
+      Alert.alert('Error', err.response?.data?.error || 'Failed to update loyalty rate.');
+    } finally {
+      setUpdatingLoyalty(false);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -169,7 +228,8 @@ const MerchantPOSScreen = () => {
         name: newItemName,
         price: parseFloat(newItemPrice),
         image_url: newItemImage || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=300&q=80',
-        barcode: newItemBarcode || undefined
+        barcode: newItemBarcode || undefined,
+        stock_quantity: parseInt(newItemStock, 10) || 0
       };
 
       await api.post('/api/wallet/products', payload);
@@ -180,6 +240,7 @@ const MerchantPOSScreen = () => {
       setNewItemPrice('');
       setNewItemImage(null);
       setNewItemBarcode('');
+      setNewItemStock('');
       setShowInventoryModal(false);
       fetchProducts();
     } catch (err: any) {
@@ -302,10 +363,20 @@ const MerchantPOSScreen = () => {
           <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Merchant Terminal</Text>
-        <TouchableOpacity style={styles.addInventoryBtn} onPress={() => setShowInventoryModal(true)}>
-          <Ionicons name="add" size={22} color="#00FFCC" />
-          <Text style={styles.addInventoryBtnText}>Add Item</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <TouchableOpacity style={styles.addInventoryBtn} onPress={() => setShowLoyaltyModal(true)}>
+            <Ionicons name="star" size={22} color="#00FFCC" />
+            <Text style={styles.addInventoryBtnText}>Loyalty</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.addInventoryBtn} onPress={() => { setShowOrderHistoryModal(true); fetchOrders(); }}>
+            <Ionicons name="list" size={22} color="#00FFCC" />
+            <Text style={styles.addInventoryBtnText}>Orders</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.addInventoryBtn} onPress={() => setShowInventoryModal(true)}>
+            <Ionicons name="add" size={22} color="#00FFCC" />
+            <Text style={styles.addInventoryBtnText}>Item</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* POS Amount Display Panel */}
@@ -397,6 +468,100 @@ const MerchantPOSScreen = () => {
         </View>
       </Modal>
 
+      {/* Order History & Refunds Modal */}
+      <Modal visible={showOrderHistoryModal} transparent animationType="slide">
+        <View style={styles.modalBgContainer}>
+          <View style={styles.inventoryDrawer}>
+            <View style={styles.drawerHeader}>
+              <Text style={styles.drawerTitle}>Order History & Refunds</Text>
+              <TouchableOpacity 
+                style={styles.drawerCloseIconButton} 
+                onPress={() => setShowOrderHistoryModal(false)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close-circle" size={32} color="#FF6B6B" />
+              </TouchableOpacity>
+            </View>
+
+            {loadingOrders ? (
+              <ActivityIndicator size="large" color="#6C63FF" style={{ marginVertical: 20 }} />
+            ) : (
+              <FlatList
+                data={orders}
+                keyExtractor={(item) => item.id}
+                style={{ maxHeight: height * 0.6 }}
+                ListEmptyComponent={<Text style={{ color: '#888', textAlign: 'center', marginTop: 20 }}>No recent orders found.</Text>}
+                renderItem={({ item }) => (
+                  <View style={{ backgroundColor: 'rgba(255,255,255,0.05)', padding: 15, borderRadius: 12, marginBottom: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <View>
+                      <Text style={{ color: '#FFF', fontWeight: 'bold' }}>${parseFloat(item.amount).toFixed(2)} JMD</Text>
+                      <Text style={{ color: '#888', fontSize: 12, marginTop: 4 }}>{new Date(item.created_at).toLocaleString()}</Text>
+                      <Text style={{ color: item.status === 'COMPLETED' ? '#00FFCC' : '#FF6B6B', fontSize: 12, marginTop: 4, fontWeight: 'bold' }}>{item.status}</Text>
+                    </View>
+                    {item.status === 'COMPLETED' && (
+                      <TouchableOpacity 
+                        style={{ backgroundColor: 'rgba(255, 107, 107, 0.2)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8 }}
+                        onPress={() => handleRefund(item.id)}
+                        disabled={refundingTx === item.id}
+                      >
+                        {refundingTx === item.id ? (
+                          <ActivityIndicator size="small" color="#FF6B6B" />
+                        ) : (
+                          <Text style={{ color: '#FF6B6B', fontWeight: 'bold', fontSize: 12 }}>REFUND</Text>
+                        )}
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                )}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Loyalty Settings Modal */}
+      <Modal visible={showLoyaltyModal} transparent animationType="slide">
+        <View style={styles.modalBgContainer}>
+          <View style={styles.inventoryDrawer}>
+            <View style={styles.drawerHeader}>
+              <Text style={styles.drawerTitle}>Loyalty Settings</Text>
+              <TouchableOpacity 
+                style={styles.drawerCloseIconButton} 
+                onPress={() => setShowLoyaltyModal(false)}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close-circle" size={32} color="#FF6B6B" />
+              </TouchableOpacity>
+            </View>
+            <Text style={{ color: '#888', marginBottom: 15 }}>
+              Set how many Unity Points customers earn per $100 spent. Remember, you will be debited $1 JMD for each point awarded to fund the program.
+            </Text>
+
+            <Text style={styles.label}>Points per $100 Spent</Text>
+            <TextInput
+              style={styles.drawerInput}
+              value={loyaltyRate}
+              onChangeText={setLoyaltyRate}
+              keyboardType="number-pad"
+              placeholder="1"
+              placeholderTextColor="#555"
+            />
+            
+            <TouchableOpacity 
+              style={[styles.createBtn, updatingLoyalty && styles.disabled]}
+              onPress={handleUpdateLoyalty}
+              disabled={updatingLoyalty}
+            >
+              {updatingLoyalty ? (
+                <ActivityIndicator size="small" color="#000" />
+              ) : (
+                <Text style={styles.createBtnText}>Save Settings</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {/* Inventory Input Drawer / Modal */}
       <Modal visible={showInventoryModal} transparent animationType="slide">
         <View style={styles.modalBgContainer}>
@@ -468,6 +633,16 @@ const MerchantPOSScreen = () => {
               onChangeText={setNewItemPrice}
               keyboardType="decimal-pad"
               placeholder="0.00"
+              placeholderTextColor="#555"
+            />
+
+            <Text style={styles.label}>Initial Stock Quantity</Text>
+            <TextInput
+              style={styles.drawerInput}
+              value={newItemStock}
+              onChangeText={setNewItemStock}
+              keyboardType="number-pad"
+              placeholder="0"
               placeholderTextColor="#555"
             />
 

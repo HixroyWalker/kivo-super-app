@@ -222,6 +222,114 @@ router.post('/checkout', hwBinding, doubleLock, async (req, res) => {
   }
 });
 
+// ── Update Merchant Loyalty Rate ───────────────────────────────
+router.post('/merchant/loyalty', hwBinding, async (req, res) => {
+  try {
+    const { loyalty_rate } = req.body;
+    let merchant = await Merchant.findOne({ where: { owner_id: req.user.id } });
+    if (!merchant) {
+      return res.status(404).json({ error: 'Merchant profile not found' });
+    }
+    merchant.loyalty_rate = parseInt(loyalty_rate, 10) || 1;
+    await merchant.save();
+    res.json({ status: 'SUCCESS', loyalty_rate: merchant.loyalty_rate });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ── Fetch Merchant Transactions ────────────────────────────────
+router.get('/transactions', hwBinding, async (req, res) => {
+  try {
+    const transactions = await Transaction.findAll({
+      where: { recipient_id: req.user.id, type: 'ORDER' },
+      order: [['created_at', 'DESC']],
+      limit: 50
+    });
+    res.json(transactions);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ── Refund an Order Transaction ────────────────────────────────
+router.post('/transactions/:id/refund', hwBinding, doubleLock, async (req, res) => {
+  const transactionId = req.params.id;
+  const merchantUserId = req.user.id;
+
+  const t = await sequelize.transaction();
+  try {
+    const tx = await Transaction.findByPk(transactionId, { transaction: t });
+    
+    if (!tx || tx.type !== 'ORDER') {
+      throw new Error('Invalid transaction or not an order.');
+    }
+    
+    if (tx.status !== 'COMPLETED') {
+      throw new Error(`Transaction cannot be refunded. Current status: ${tx.status}`);
+    }
+
+    // Optional: Validate that the requester is the merchant who received the funds
+    // (Assuming simple auth where merchant owner requests refund)
+    if (tx.recipient_id !== merchantUserId) {
+      throw new Error('Unauthorized to refund this transaction.');
+    }
+
+    const orderId = tx.metadata && tx.metadata.order_id;
+    if (!orderId) {
+      throw new Error('No linked order found for this transaction.');
+    }
+
+    const order = await Order.findByPk(orderId, { transaction: t });
+    if (!order) {
+      throw new Error('Linked order not found.');
+    }
+
+    const customer = await User.findByPk(tx.sender_id, { lock: t.LOCK.UPDATE, transaction: t });
+    const merchantUser = await User.findByPk(merchantUserId, { lock: t.LOCK.UPDATE, transaction: t });
+    
+    // Reverse balances
+    const amount = parseFloat(tx.amount);
+    const fee = parseFloat(tx.fee);
+    const rewardPoints = (tx.metadata && tx.metadata.reward_points) ? parseInt(tx.metadata.reward_points, 10) : 0;
+    const netAmount = amount - fee;
+
+    // Customer gets full amount back
+    customer.wallet_balance = parseFloat(customer.wallet_balance) + amount;
+    // Customer loses the loyalty points earned from this order
+    customer.unity_score = Math.max(0, (customer.unity_score || 0) - rewardPoints);
+    await customer.save({ transaction: t });
+
+    // Merchant pays back what they received (netAmount) minus the reward points cost they funded
+    merchantUser.wallet_balance = parseFloat(merchantUser.wallet_balance) - (netAmount - rewardPoints);
+    await merchantUser.save({ transaction: t });
+
+    // Restore stock
+    if (order.items && Array.isArray(order.items)) {
+      for (const item of order.items) {
+        const product = await Product.findByPk(item.product_id, { transaction: t });
+        if (product && product.stock_quantity !== null) {
+          product.stock_quantity += item.quantity;
+          await product.save({ transaction: t });
+        }
+      }
+    }
+
+    // Update statuses
+    tx.status = 'REVERSED';
+    await tx.save({ transaction: t });
+
+    order.status = 'CANCELLED';
+    await order.save({ transaction: t });
+
+    await t.commit();
+    res.json({ status: 'SUCCESS', message: 'Refund processed successfully.' });
+  } catch (error) {
+    await t.rollback();
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // ── Fetch All Products ─────────────────────────────────────────
 router.get('/products', async (req, res) => {
   try {
@@ -384,6 +492,53 @@ router.post('/staff/verify-pin', async (req, res) => {
 
     return res.status(400).json({ error: 'Invalid PIN. Try entering 1234.' });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ── POST Repay Safety Net ───────────────────────────────────────────────────
+router.post('/safety-net/repay', authMiddleware, async (req, res) => {
+  const t = await sequelize.transaction();
+  try {
+    const user = await User.findByPk(req.user.id, { lock: t.LOCK.UPDATE, transaction: t });
+
+    const usedAmount = parseFloat(user.safety_net_used);
+    const balance = parseFloat(user.wallet_balance);
+
+    if (usedAmount <= 0) {
+      await t.rollback();
+      return res.status(400).json({ error: 'No safety net balance to repay.' });
+    }
+
+    // Repay the full amount if there is enough balance, otherwise repay whatever we can
+    const amountToRepay = Math.min(usedAmount, balance);
+
+    if (amountToRepay <= 0) {
+      await t.rollback();
+      return res.status(400).json({ error: 'Insufficient funds to make a repayment.' });
+    }
+
+    user.wallet_balance = balance - amountToRepay;
+    user.safety_net_used = usedAmount - amountToRepay;
+    await user.save({ transaction: t });
+
+    await Transaction.create({
+      sender_id: user.id,
+      amount: amountToRepay,
+      type: 'REPAYMENT',
+      status: 'COMPLETED',
+      metadata: { description: 'Safety Net Repayment' }
+    }, { transaction: t });
+
+    await t.commit();
+    res.json({
+      status: 'SUCCESS',
+      message: `Successfully repaid $${amountToRepay.toFixed(2)}`,
+      wallet_balance: user.wallet_balance,
+      safety_net_used: user.safety_net_used
+    });
+  } catch (error) {
+    await t.rollback();
     res.status(500).json({ error: error.message });
   }
 });

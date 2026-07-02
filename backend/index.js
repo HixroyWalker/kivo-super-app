@@ -5,6 +5,7 @@ const authRouter = require('./routes/auth');
 const walletRouter = require('./routes/wallet');
 const internalRouter = require('./routes/internal');
 const ticketsRouter = require('./routes/tickets');
+const adminRouter = require('./routes/admin');
 const authMiddleware = require('./middleware/auth');
 
 const app = express();
@@ -15,6 +16,7 @@ app.use('/auth', authRouter);
 app.use('/api/wallet', authMiddleware, walletRouter);
 app.use('/internal', internalRouter);
 app.use('/api/tickets', authMiddleware, ticketsRouter);
+app.use('/api/admin', adminRouter);
 
 app.get('/', (req, res) => {
   res.send('KIVO Backend API is running.');
@@ -68,7 +70,7 @@ const startServer = async () => {
         phone: '18765550100',
         lynk_handle: 'hixroy',
         wallet_balance: 10000.00,
-        role: 'USER'
+        role: 'ADMIN'
       });
       console.log('Default user seeded:', defaultUser.lynk_handle);
       
@@ -88,6 +90,14 @@ const startServer = async () => {
         fare: 150.00
       });
       console.log('Default transit fare seeded.');
+    } else {
+      // Upgrade existing dev user to ADMIN for testing
+      const existingUser = await User.findOne({ where: { email: 'user@kivo.app' } });
+      if (existingUser && existingUser.role !== 'ADMIN') {
+        existingUser.role = 'ADMIN';
+        await existingUser.save();
+        console.log('Upgraded dev user to ADMIN');
+      }
     }
   } catch (error) {
     console.error('Unable to connect to the database or sync:', error);

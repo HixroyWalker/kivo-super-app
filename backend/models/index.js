@@ -196,6 +196,9 @@ Event.hasMany(Ticket, { foreignKey: 'event_id' });
 Order.belongsTo(Merchant, { foreignKey: 'merchant_id' });
 Merchant.hasMany(Order, { foreignKey: 'merchant_id' });
 
+Merchant.belongsTo(User, { as: 'owner', foreignKey: 'owner_id' });
+User.hasMany(Merchant, { foreignKey: 'owner_id', as: 'merchants' });
+
 module.exports = {
   sequelize,
   User, Transaction, Mandate, Merchant, MerchantStaff,

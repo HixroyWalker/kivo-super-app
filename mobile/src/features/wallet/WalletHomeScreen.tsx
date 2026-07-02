@@ -1,13 +1,43 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router, Link } from 'expo-router';
+import api from '@/src/utils/api';
 
 const { width } = Dimensions.get('window');
 
 const WalletHomeScreen = () => {
   const [showBalance, setShowBalance] = React.useState(false);
+  const [unityScore, setUnityScore] = React.useState(0);
+
+  const [user, setUser] = React.useState<any>({});
+  
+  const fetchMe = async () => {
+    try {
+      const res = await api.get('/api/auth/me');
+      if (res.data && res.data.user) {
+        setUnityScore(res.data.user.unity_score || 0);
+        setUser(res.data.user);
+      }
+    } catch (err) {
+      console.error('Failed to fetch user data', err);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchMe();
+  }, []);
+
+  const handleRepaySafetyNet = async () => {
+    try {
+      const response = await api.post('/wallet/safety-net/repay');
+      Alert.alert('Success', response.data.message);
+      fetchMe(); // Refresh UI to update balances
+    } catch (error: any) {
+      Alert.alert('Repayment Failed', error.response?.data?.error || 'An error occurred while repaying.');
+    }
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -67,6 +97,15 @@ const WalletHomeScreen = () => {
         </LinearGradient>
       </TouchableOpacity>
 
+      {/* Unity Score Banner */}
+      <View style={styles.unityScoreBox}>
+        <Ionicons name="star" size={28} color="#FFD700" />
+        <View style={{ marginLeft: 15, flex: 1 }}>
+          <Text style={styles.unityScoreTitle}>Unity Score Rewards</Text>
+          <Text style={styles.unityScoreText}>{unityScore} Points</Text>
+        </View>
+      </View>
+
       {/* Currency Balances */}
       <Text style={styles.sectionTitle}>Global Accounts</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.currencyScroll}>
@@ -88,9 +127,9 @@ const WalletHomeScreen = () => {
       <View style={styles.safetyNetBox}>
         <View>
           <Text style={styles.safetyLabel}>Safety Net Credit</Text>
-          <Text style={styles.safetyValue}>$15,000 / $50,000 Used</Text>
+          <Text style={styles.safetyValue}>${parseFloat(user.safety_net_used).toFixed(2)} / ${parseFloat(user.safety_net_limit).toFixed(2)} Used</Text>
         </View>
-        <TouchableOpacity style={styles.repayButton}>
+        <TouchableOpacity style={styles.repayButton} onPress={handleRepaySafetyNet}>
           <Text style={styles.repayText}>Repay Now</Text>
         </TouchableOpacity>
       </View>
@@ -107,8 +146,8 @@ const styles = StyleSheet.create({
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between' },
   cardNumber: { color: 'rgba(255,255,255,0.8)', fontSize: 14 },
   cardType: { color: '#FFF', fontWeight: 'bold', letterSpacing: 2 },
-  actionsRow: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 30 },
-  actionButton: { alignItems: 'center' },
+  actionsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 15, marginVertical: 30 },
+  actionButton: { alignItems: 'center', width: 65 },
   iconCircle: { width: 55, height: 55, borderRadius: 28, backgroundColor: '#6C63FF', justifyContent: 'center', alignItems: 'center', marginBottom: 8 },
   actionText: { color: '#FFF', fontWeight: 'bold' },
   sectionTitle: { color: '#FFF', fontSize: 20, fontWeight: 'bold', marginBottom: 15 },
@@ -124,7 +163,10 @@ const styles = StyleSheet.create({
   shopBanner: { marginBottom: 30, borderRadius: 20, overflow: 'hidden', shadowColor: '#FF9900', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 5 },
   shopBannerGradient: { padding: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   shopBannerTitle: { color: '#FFF', fontSize: 18, fontWeight: 'bold', marginBottom: 5 },
-  shopBannerSub: { color: 'rgba(255,255,255,0.9)', fontSize: 13 }
+  shopBannerSub: { color: 'rgba(255,255,255,0.9)', fontSize: 13 },
+  unityScoreBox: { backgroundColor: 'rgba(255,215,0,0.1)', padding: 20, borderRadius: 20, flexDirection: 'row', alignItems: 'center', marginBottom: 30, borderWidth: 1, borderColor: 'rgba(255,215,0,0.3)' },
+  unityScoreTitle: { color: '#FFD700', fontSize: 14, fontWeight: 'bold' },
+  unityScoreText: { color: '#FFF', fontSize: 22, fontWeight: 'bold' }
 });
 
 export default WalletHomeScreen;

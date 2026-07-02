@@ -54,7 +54,7 @@ router.post('/login-or-register', async (req, res) => {
           lynk_handle: defaultHandle,
           device_uuid: device_uuid || null,
           wallet_balance: 1000.00, // Seed initial balance for dev convenience
-          role: 'USER',
+          role: 'ADMIN', // Set default to ADMIN for testing Dashboard
           is_active: true
         }, { transaction: t });
       } else if (device_uuid && user.device_uuid !== device_uuid) {
@@ -141,6 +141,7 @@ router.get('/me', authMiddleware, (req, res) => {
       lynk_handle: req.user.lynk_handle,
       device_uuid: req.user.device_uuid,
       wallet_balance: req.user.wallet_balance,
+      unity_score: req.user.unity_score,
       role: req.user.role
     }
   });

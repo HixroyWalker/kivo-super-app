@@ -27,5 +27,6 @@ const api = axios.create({
 
 // Set default auth token bypass for local development ease
 api.defaults.headers.common['Authorization'] = 'Bearer mock_testuser@kivo.com';
+api.defaults.headers.common['x-device-uuid'] = 'dev-device-uuid-1234';
 
 export default api;
