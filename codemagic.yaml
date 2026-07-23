@@ -5,14 +5,12 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       groups:
+        - apple_credentials
+        - google_credentials
         - android_keystore
       flutter: stable
       xcode: latest
       cocoapods: default
-    integrations:
-      # Replace these with the actual Integration Names you set in Codemagic Team Settings
-      app_store_connect: "Apple Connect"
-      google_play: "Google Connect"
     scripts:
       - name: Set up local.properties
         script: |
@@ -43,9 +41,12 @@ workflows:
         notify:
           success: true
           failure: true
-      # Uploads to TestFlight using the Team Integration
+      # Uploads to TestFlight using the keys from the 'apple_credentials' group
       app_store_connect:
-        auth: integration
-      # Uploads to Google Play using the Team Integration
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+      # Uploads to Google Play using the keys from the 'google_credentials' group
       google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
         track: internal
