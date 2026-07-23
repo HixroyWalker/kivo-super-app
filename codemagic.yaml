@@ -1,0 +1,54 @@
+workflows:
+  flutter-ios-android-release:
+    name: Kivo Super App Release Pipeline
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    environment:
+      groups:
+        # You MUST configure these Environment Variable groups in the Codemagic UI:
+        # 1. "apple_credentials" containing your App Store Connect API keys
+        # 2. "google_credentials" containing your Google Play Service Account JSON
+        # 3. "android_keystore" containing your keystore file and passwords
+        - apple_credentials
+        - google_credentials
+        - android_keystore
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Set up local.properties
+        script: |
+          echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/mobile/android/local.properties"
+      - name: Get Flutter packages
+        script: |
+          cd mobile
+          flutter packages pub get
+      - name: Install iOS Pods
+        script: |
+          cd mobile/ios
+          pod install
+      - name: Build iOS App (IPA)
+        script: |
+          cd mobile
+          flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
+      - name: Build Android App Bundle (AAB)
+        script: |
+          cd mobile
+          flutter build appbundle --release
+    artifacts:
+      - mobile/build/ios/ipa/*.ipa
+      - mobile/build/app/outputs/bundle/release/*.aab
+    publishing:
+      email:
+        recipients:
+          - yourmail@example.com # Update this in Codemagic UI
+        notify:
+          success: true
+          failure: true
+      # Uploads to TestFlight using the keys from the 'apple_credentials' group
+      app_store_connect:
+        auth: integration
+      # Uploads to Google Play using the keys from the 'google_credentials' group
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
