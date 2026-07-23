@@ -12,6 +12,10 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
+      - name: Generate Flutter Native Boilerplate
+        script: |
+          cd mobile
+          flutter create .
       - name: Set up local.properties
         script: |
           echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/mobile/android/local.properties"
