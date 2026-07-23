@@ -47,7 +47,9 @@ workflows:
           failure: true
       # Uploads to TestFlight using the keys from the 'apple_credentials' group
       app_store_connect:
-        auth: integration
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
       # Uploads to Google Play using the keys from the 'google_credentials' group
       google_play:
         credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
