@@ -1,9 +1,0 @@
-# Appfile
-# For more information about the Appfile, see: https://docs.fastlane.tools/advanced/#appfile
-
-app_identifier("com.kivowebb.app") # Your Apple App Bundle ID
-apple_id("walkerha2@icloud.com") # Your Apple ID Email Address
-
-# Android configuration
-json_key_file("./fastlane/fastlane-google-key.json") # Path to Google Play API service account key
-package_name("com.kivowebb.app") # Your Android Package Name

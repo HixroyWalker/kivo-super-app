@@ -1,0 +1,81 @@
+name: Deploy to TestFlight & Play Store
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers when a release tag is pushed (e.g., v1.0.0)
+
+jobs:
+  deploy_ios:
+    name: Deploy to TestFlight
+    runs-on: macos-latest
+    
+    defaults:
+      run:
+        working-directory: ./mobile
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          
+      - name: Install Dependencies
+        run: flutter pub get
+        
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+          working-directory: ./mobile/ios
+          
+      - name: Deploy via Fastlane
+        run: cd ios && bundle exec fastlane beta
+        env:
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+
+  deploy_android:
+    name: Deploy to Google Play
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./mobile
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          
+      - name: Install Dependencies
+        run: flutter pub get
+        
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+          working-directory: ./mobile/android
+          
+      - name: Create Google Play Service Account Key
+        run: echo '${{ secrets.PLAY_STORE_CONFIG_JSON }}' > ./android/service-account.json
+        
+      - name: Create Android Keystore
+        run: echo '${{ secrets.ANDROID_KEYSTORE_BASE64 }}' | base64 --decode > ./android/app/upload-keystore.jks
+        
+      - name: Deploy via Fastlane
+        run: cd android && bundle exec fastlane beta
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}

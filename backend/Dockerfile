@@ -1,42 +1,18 @@
-# Use Node.js 20
-FROM node:20-slim
+FROM node:20-alpine
 
-# Install dependencies for Puppeteer (Chrome)
-RUN apt-get update && apt-get install -y \
-    wget \
-    gnupg \
-    ca-certificates \
-    procps \
-    libxss1 \
-    libxtst6 \
-    libnss3 \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libcups2 \
-    libdrm2 \
-    libgbm1 \
-    libgtk-3-0 \
-    libnspr4 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
-    xdg-utils \
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+# Create app directory
+WORKDIR /usr/src/app
 
-# Set working directory
-WORKDIR /app
-
-# Copy package files and install
+# Install app dependencies
 COPY package*.json ./
-RUN npm install --production
+RUN npm install --only=production
 
-# Copy source code
+# Bundle app source
 COPY . .
 
-# Expose port
+# Cloud Run enforces a PORT environment variable, defaults to 8080
+ENV PORT=8080
 EXPOSE 8080
 
-# Start the application
-CMD ["node", "index.js"]
+# Start the Node.js Express server
+CMD [ "npm", "start" ]

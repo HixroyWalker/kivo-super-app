@@ -1,0 +1,2 @@
+json_key_file("service-account.json") # Path to the json secret file
+package_name("com.kivo.app") # e.g. com.krausefx.app

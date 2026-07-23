@@ -1,7 +1,0 @@
-node_modules
-npm-debug.log
-.expo
-.git
-.DS_Store
-dist
-build
