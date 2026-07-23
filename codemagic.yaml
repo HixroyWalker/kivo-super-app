@@ -5,8 +5,6 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       groups:
-        - apple_credentials
-        - google_credentials
         - android_keystore
       flutter: stable
       xcode: latest
@@ -38,19 +36,3 @@ workflows:
     artifacts:
       - mobile/build/ios/ipa/*.ipa
       - mobile/build/app/outputs/bundle/release/*.aab
-    publishing:
-      email:
-        recipients:
-          - yourmail@example.com # Update this in Codemagic UI
-        notify:
-          success: true
-          failure: true
-      # Uploads to TestFlight using the keys from the 'apple_credentials' group
-      app_store_connect:
-        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
-        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
-        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-      # Uploads to Google Play using the keys from the 'google_credentials' group
-      google_play:
-        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-        track: internal
