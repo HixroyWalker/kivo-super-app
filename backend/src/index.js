@@ -28,6 +28,7 @@ const messagingRoutes = require('./routes/messaging');
 const accountingRoutes = require('./routes/accounting');
 const adsRoutes = require('./routes/ads');
 const notificationRoutes = require('./routes/notifications');
+const offlineSettlementRoutes = require('./routes/offline_settlement');
 
 app.use('/api/wallet', requireAuth, walletRoutes(db));
 app.use('/api/admin', requireAuth, adminRoutes(db));
@@ -35,6 +36,7 @@ app.use('/api/messaging', requireAuth, messagingRoutes(db));
 app.use('/api/accounting', requireAuth, accountingRoutes(db));
 app.use('/api/ads', requireAuth, adsRoutes(db));
 app.use('/api/notifications', requireAuth, notificationRoutes(db));
+app.use('/api/offline', requireAuth, offlineSettlementRoutes(db));
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {

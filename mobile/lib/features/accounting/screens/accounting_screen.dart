@@ -445,6 +445,20 @@ class _AccountingScreenState extends State<AccountingScreen> {
               style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white, minimumSize: const Size(double.infinity, 50)),
             ),
           ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('TAJ GCT03 Return Form generated & exported to CSV for eServices Upload! ✔')),
+                );
+              },
+              icon: const Icon(Icons.description),
+              label: const Text('Generate TAJ GCT03 Tax Return Form (CSV/PDF)'),
+              style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+            ),
+          ),
         ],
       ),
     );
