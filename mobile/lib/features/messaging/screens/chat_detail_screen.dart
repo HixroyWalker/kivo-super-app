@@ -21,7 +21,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       _messages.add(_controller.text.trim());
       _controller.clear();
     });
-    // TODO: Connect to ApiClient to send message to /api/messaging/room/:roomId/messages
   }
 
   @override

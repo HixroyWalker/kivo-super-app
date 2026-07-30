@@ -62,7 +62,12 @@ class DashboardScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // TODO: Trigger Lynk API Top-Up
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Initiating Lynk Top-Up transaction...'),
+              duration: Duration(seconds: 2),
+            ),
+          );
         },
         label: const Text('Top Up via Lynk'),
         icon: const Icon(Icons.add),

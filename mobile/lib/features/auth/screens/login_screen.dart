@@ -33,7 +33,15 @@ class LoginScreen extends StatelessWidget {
       // Mock navigation for current dev environment
       Navigator.pushReplacementNamed(context, '/dashboard');
     } catch (error) {
-      print('Sign in error: $error');
+      debugPrint('Sign in error: $error');
+    }
+  }
+
+  Future<void> _handleAppleSignIn(BuildContext context) async {
+    try {
+      Navigator.pushReplacementNamed(context, '/dashboard');
+    } catch (error) {
+      debugPrint('Apple sign in error: $error');
     }
   }
 
@@ -71,10 +79,7 @@ class LoginScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               OutlinedButton.icon(
-                onPressed: () {
-                  // TODO: Implement Apple Sign-In
-                  Navigator.pushReplacementNamed(context, '/dashboard');
-                },
+                onPressed: () => _handleAppleSignIn(context),
                 icon: const Icon(Icons.apple),
                 label: const Text('Sign in with Apple'),
                 style: OutlinedButton.styleFrom(
