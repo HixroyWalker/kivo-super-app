@@ -26,6 +26,12 @@ workflows:
             echo "Building un-signed IPA for distribution..."
             flutter build ipa --release --no-codesign
           fi
+      - name: Fastlane TestFlight Auto-Publishing
+        script: |
+          cd mobile/ios
+          if [ -d "Runner.xcodeproj" ]; then
+            fastlane beta || true
+          fi
     artifacts:
       - mobile/build/app/outputs/bundle/release/*.aab
       - mobile/build/ios/ipa/*.ipa
