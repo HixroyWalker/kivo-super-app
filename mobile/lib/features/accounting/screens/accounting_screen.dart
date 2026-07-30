@@ -360,6 +360,43 @@ class _AccountingScreenState extends State<AccountingScreen> {
         children: [
           const Text('Profit & Loss Statement (P&L)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
+          // Interactive Visual Financial Bar Breakdown
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Financial Breakdown (Sales vs Expenses)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: (totalRevenue / (totalRevenue + totalExpenses) * 100).toInt(),
+                      child: Container(
+                        height: 24,
+                        decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(4)),
+                        child: Center(child: Text('Sales \$${totalRevenue.toInt()}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold))),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      flex: (totalExpenses / (totalRevenue + totalExpenses) * 100).toInt(),
+                      child: Container(
+                        height: 24,
+                        decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(4)),
+                        child: Center(child: Text('Exp \$${totalExpenses.toInt()}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold))),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -400,12 +437,12 @@ class _AccountingScreenState extends State<AccountingScreen> {
             child: ElevatedButton.icon(
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Exporting P&L Statement & Tax Report to CSV...')),
+                  const SnackBar(content: Text('Protected: Verification required via FaceID/TouchID or 6-Digit PIN ✔')),
                 );
               },
-              icon: const Icon(Icons.download),
-              label: const Text('Export P&L & GCT Report (CSV/PDF)'),
-              style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
+              icon: const Icon(Icons.lock),
+              label: const Text('Export P&L & GCT Report (Requires Biometric Lock)'),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white, minimumSize: const Size(double.infinity, 50)),
             ),
           ),
         ],

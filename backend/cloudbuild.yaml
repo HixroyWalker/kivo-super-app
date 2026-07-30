@@ -21,6 +21,9 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated' # The endpoints handle authentication internally via JWT middleware
+      - '--concurrency=80' # Cost Optimization: 80 requests per instance
+      - '--cpu-throttling' # Cost Optimization: Bill CPU only during active request processing
+      - '--min-instances=0' # Cost Optimization: Scale to zero when idle
       - '--set-env-vars'
       - 'NODE_ENV=production'
 
