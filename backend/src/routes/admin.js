@@ -24,7 +24,11 @@ module.exports = (db) => {
       }, { merge: true });
 
       res.status(200).json({ status: 'SUCCESS', message: 'Staff fee override updated successfully' });
-  // Configure Global P2P Transaction Fee & Merchant Commission
+    } catch (error) {
+      console.error('Admin Staff Fee Error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
   router.post('/fees/p2p', async (req, res) => {
     if (req.user && req.user.role !== 'ADMIN' && !req.user.admin) {
       return res.status(403).json({ error: 'Forbidden: Admin access required' });
