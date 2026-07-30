@@ -31,7 +31,9 @@ module.exports = (db) => {
   router.post('/send', async (req, res) => {
     const { recipientId, title, body, data } = req.body;
 
-    // TODO: Ideally check if the sender has ADMIN claims here
+    if (req.user && req.user.role !== 'ADMIN' && !req.user.admin) {
+        return res.status(403).json({ error: 'Forbidden: Admin access required to send notifications' });
+    }
     if (!recipientId || !title || !body) {
         return res.status(400).json({ error: 'recipientId, title, and body are required' });
     }

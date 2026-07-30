@@ -7,8 +7,9 @@ module.exports = (db) => {
   router.post('/staff-fee', async (req, res) => {
     const { merchantId, staffId, feePercentage } = req.body;
 
-    // TODO: Add Admin Authorization Middleware here
-    // if (req.user.role !== 'ADMIN') return res.status(403).json({error: 'Forbidden'});
+    if (req.user && req.user.role !== 'ADMIN' && !req.user.admin) {
+      return res.status(403).json({ error: 'Forbidden: Admin access required' });
+    }
 
     if (!merchantId || !staffId || feePercentage == null) {
       return res.status(400).json({ error: 'Missing required parameters' });
