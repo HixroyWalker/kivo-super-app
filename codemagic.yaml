@@ -28,11 +28,17 @@ workflows:
       - name: Build iOS App (IPA)
         script: |
           cd mobile
-          flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
+          if [ -f "/Users/builder/export_options.plist" ]; then
+            flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
+          else
+            echo "No export options plist found, building un-signed IPA for TestFlight preparation..."
+            flutter build ipa --release --no-codesign
+          fi
       - name: Build Android App Bundle (AAB)
         script: |
           cd mobile
           flutter build appbundle --release
     artifacts:
       - mobile/build/ios/ipa/*.ipa
+      - mobile/build/ios/archive/Runner.xcarchive
       - mobile/build/app/outputs/bundle/release/*.aab
