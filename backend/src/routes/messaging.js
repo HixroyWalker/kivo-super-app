@@ -30,10 +30,10 @@ module.exports = (db) => {
     }
   });
 
-  // Send a message in a room
+  // Send a message in a room (TEXT, VOICE, IMAGE, MONEY_TRANSFER)
   router.post('/room/:roomId/messages', async (req, res) => {
     const { roomId } = req.params;
-    const { text } = req.body;
+    const { text, type, mediaUrl, audioDuration, transferAmount } = req.body;
     const senderId = req.user.uid;
 
     try {
@@ -45,19 +45,70 @@ module.exports = (db) => {
       }
 
       const messageRef = roomRef.collection('messages').doc();
-      await messageRef.set({
+      const msgType = type || 'TEXT'; // TEXT, VOICE, IMAGE, MONEY_TRANSFER
+
+      const payload = {
+        id: messageRef.id,
         senderId: senderId,
-        text: text,
+        type: msgType,
+        text: text || '',
+        mediaUrl: mediaUrl || '',
+        audioDuration: audioDuration || 0,
+        transferAmount: transferAmount || 0,
+        status: 'SENT', // SENT, DELIVERED, READ
         timestamp: admin.firestore.FieldValue.serverTimestamp()
+      };
+
+      await messageRef.set(payload);
+
+      // Update room last message preview
+      await roomRef.update({
+        lastMessage: text || (msgType === 'VOICE' ? '🎤 Voice Note' : msgType === 'IMAGE' ? '📷 Photo' : '💸 Money Transfer'),
+        lastMessageType: msgType,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
 
-      // Update room timestamp for sorting
-      await roomRef.update({ updatedAt: admin.firestore.FieldValue.serverTimestamp() });
-
-      res.status(200).json({ status: 'SUCCESS' });
+      res.status(200).json({ status: 'SUCCESS', message: payload });
     } catch (error) {
       console.error('Message Send Error:', error);
       res.status(500).json({ error: 'Failed to send message' });
+    }
+  });
+
+  // Mark message as read (Blue Ticks)
+  router.post('/room/:roomId/messages/:messageId/read', async (req, res) => {
+    const { roomId, messageId } = req.params;
+    const userId = req.user.uid;
+
+    try {
+      const msgRef = db.collection('chats').doc(roomId).collection('messages').doc(messageId);
+      await msgRef.update({ status: 'READ', readAt: admin.firestore.FieldValue.serverTimestamp() });
+      res.status(200).json({ status: 'SUCCESS' });
+    } catch (error) {
+      console.error('Read Receipt Error:', error);
+      res.status(500).json({ error: 'Failed to mark message as read' });
+    }
+  });
+
+  // Initiate Audio Voice Call
+  router.post('/room/:roomId/calls/audio', async (req, res) => {
+    const { roomId } = req.params;
+    const callerId = req.user.uid;
+
+    try {
+      const callRef = db.collection('chats').doc(roomId).collection('calls').doc();
+      const callData = {
+        callId: callRef.id,
+        callerId,
+        type: 'AUDIO',
+        status: 'RINGING', // RINGING, CONNECTED, ENDED
+        startedAt: admin.firestore.FieldValue.serverTimestamp()
+      };
+      await callRef.set(callData);
+      res.status(200).json({ status: 'SUCCESS', call: callData });
+    } catch (error) {
+      console.error('Voice Call Error:', error);
+      res.status(500).json({ error: 'Failed to initiate audio call' });
     }
   });
 
