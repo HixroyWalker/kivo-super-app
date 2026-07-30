@@ -8,9 +8,10 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Get Flutter packages
+      - name: Generate Flutter Native Boilerplate & Config
         script: |
           cd mobile
+          flutter create . --org com.kivo.app
           flutter pub get
       - name: Build Android App Bundle (AAB)
         script: |
