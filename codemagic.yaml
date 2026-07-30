@@ -32,6 +32,12 @@ workflows:
           if [ -d "Runner.xcodeproj" ]; then
             fastlane beta || true
           fi
+      - name: Fastlane Google Play Auto-Publishing
+        script: |
+          cd mobile/android
+          if [ -f "../build/app/outputs/bundle/release/app-release.aab" ]; then
+            fastlane beta || true
+          fi
     artifacts:
       - mobile/build/app/outputs/bundle/release/*.aab
       - mobile/build/ios/ipa/*.ipa
