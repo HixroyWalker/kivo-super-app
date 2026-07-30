@@ -4,41 +4,28 @@ workflows:
     max_build_duration: 120
     instance_type: mac_mini_m2
     environment:
-      groups:
-        - android_keystore
       flutter: stable
       xcode: latest
       cocoapods: default
     scripts:
-      - name: Generate Flutter Native Boilerplate
-        script: |
-          cd mobile
-          flutter create .
-      - name: Set up local.properties
-        script: |
-          echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/mobile/android/local.properties"
       - name: Get Flutter packages
         script: |
           cd mobile
-          flutter packages pub get
-      - name: Install iOS Pods
+          flutter pub get
+      - name: Build Android App Bundle (AAB)
         script: |
-          cd mobile/ios
-          pod install
+          cd mobile
+          flutter build appbundle --release
       - name: Build iOS App (IPA)
         script: |
           cd mobile
           if [ -f "/Users/builder/export_options.plist" ]; then
             flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
           else
-            echo "No export options plist found, building un-signed IPA for TestFlight preparation..."
+            echo "Building un-signed IPA for distribution..."
             flutter build ipa --release --no-codesign
           fi
-      - name: Build Android App Bundle (AAB)
-        script: |
-          cd mobile
-          flutter build appbundle --release
     artifacts:
+      - mobile/build/app/outputs/bundle/release/*.aab
       - mobile/build/ios/ipa/*.ipa
       - mobile/build/ios/archive/Runner.xcarchive
-      - mobile/build/app/outputs/bundle/release/*.aab
