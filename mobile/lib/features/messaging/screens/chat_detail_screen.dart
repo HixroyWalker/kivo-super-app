@@ -11,6 +11,13 @@ class ChatDetailScreen extends StatefulWidget {
 class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final TextEditingController _controller = TextEditingController();
   bool _isRecordingVoice = false;
+  bool _showQuickReplySuggestions = false;
+
+  final List<Map<String, dynamic>> _quickReplies = [
+    {'shortcut': '/hours', 'text': 'We are open Mon-Fri: 8:00 AM - 6:00 PM, Sat: 9:00 AM - 4:00 PM.'},
+    {'shortcut': '/thanks', 'text': 'Thank you for choosing Kivo! Let us know if you need anything else.'},
+    {'shortcut': '/delivery', 'text': 'We deliver nationwide across Jamaica via Knutsford Express & Zipmail!'},
+  ];
 
   final List<Map<String, dynamic>> _messages = [
     {
@@ -24,8 +31,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     {
       'id': 'm2',
       'sender': 'me',
-      'type': 'TEXT',
-      'content': 'Yes! Freshly roasted batch arrived today. JMD \$3,200/kg.',
+      'type': 'PRODUCT',
+      'productTitle': 'Blue Mountain Coffee (1kg)',
+      'price': 3200.0,
+      'content': 'Freshly roasted batch in stock!',
       'time': '2:16 PM',
       'status': 'READ',
     },
@@ -49,7 +58,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     },
   ];
 
-  void _sendMessage({String type = 'TEXT', String? content, double? amount, String? duration}) {
+  void _sendMessage({String type = 'TEXT', String? content, double? amount, String? duration, String? productTitle}) {
     final text = content ?? _controller.text.trim();
     if (type == 'TEXT' && text.isEmpty) return;
 
@@ -60,13 +69,81 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         'type': type,
         'content': text,
         'amount': amount,
+        'productTitle': productTitle,
+        'price': amount ?? 3200.0,
         'duration': duration ?? '0:10',
         'isPlaying': false,
         'time': 'Just now',
         'status': 'READ',
       });
-      if (type == 'TEXT') _controller.clear();
+      if (type == 'TEXT') {
+        _controller.clear();
+        _showQuickReplySuggestions = false;
+      }
     });
+  }
+
+  void _showBusinessProfileSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 28,
+                  backgroundColor: Colors.green.shade700,
+                  child: Text(widget.merchantName[0], style: const TextStyle(color: Colors.white, fontSize: 24)),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(widget.merchantName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.verified, color: Colors.blue, size: 18),
+                        ],
+                      ),
+                      const Text('Official Verified Kivo Merchant', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 32),
+            const ListTile(
+              leading: Icon(Icons.schedule, color: Colors.green),
+              title: Text('Business Hours'),
+              subtitle: Text('Mon - Sat: 8:00 AM - 6:00 PM'),
+            ),
+            const ListTile(
+              leading: Icon(Icons.location_on, color: Colors.red),
+              title: Text('Location'),
+              subtitle: Text('Half Way Tree, Kingston, Jamaica'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.storefront, color: Colors.orange),
+              title: const Text('View Full Store Catalog'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/marketplace');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showAttachmentMenu() {
@@ -85,6 +162,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             _buildAttachmentOption(Icons.attach_money, Colors.green, 'Send Money', () {
               Navigator.pop(context);
               _showSendMoneyDialog();
+            }),
+            _buildAttachmentOption(Icons.shopping_bag, Colors.orange, 'Catalog Product', () {
+              Navigator.pop(context);
+              _sendMessage(type: 'PRODUCT', productTitle: 'Appleton Estate Rum 750ml', amount: 4500.0, content: 'Special Reserve Rum');
             }),
             _buildAttachmentOption(Icons.camera_alt, Colors.pink, 'Camera', () {
               Navigator.pop(context);
@@ -190,22 +271,31 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: Colors.green.shade700,
-              child: Text(widget.merchantName[0], style: const TextStyle(color: Colors.white)),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(widget.merchantName, style: const TextStyle(fontSize: 16)),
-                const Text('Online', style: TextStyle(fontSize: 12, color: Colors.greenAccent)),
-              ],
-            ),
-          ],
+        title: InkWell(
+          onTap: _showBusinessProfileSheet,
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: Colors.green.shade700,
+                child: Text(widget.merchantName[0], style: const TextStyle(color: Colors.white)),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(widget.merchantName, style: const TextStyle(fontSize: 16)),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.verified, color: Colors.blue, size: 16),
+                    ],
+                  ),
+                  const Text('Business Account • Online', style: TextStyle(fontSize: 11, color: Colors.greenAccent)),
+                ],
+              ),
+            ],
+          ),
         ),
         actions: [
           IconButton(
@@ -247,9 +337,34 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 },
               ),
             ),
+            if (_showQuickReplySuggestions) _buildQuickReplyOverlay(),
             _buildInputBar(),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildQuickReplyOverlay() {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('Quick Reply Suggestions (Tap to use)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+          const SizedBox(height: 4),
+          ..._quickReplies.map((qr) => ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: Text(qr['shortcut'], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                title: Text(qr['text'], maxLines: 1, overflow: TextOverflow.ellipsis),
+                onTap: () {
+                  _sendMessage(type: 'TEXT', content: qr['text']);
+                },
+              )),
+        ],
       ),
     );
   }
@@ -282,6 +397,44 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             ),
           ),
         ],
+      );
+    } else if (type == 'PRODUCT') {
+      body = Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.orange.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.orange.shade200),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.shopping_bag, color: Colors.orange),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(msg['productTitle'] ?? 'Product Card', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text('Price: JMD \$${msg['price']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green)),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Ordering ${msg['productTitle']}...')),
+                  );
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+                child: const Text('Order Now in Chat'),
+              ),
+            ),
+          ],
+        ),
       );
     } else if (type == 'MONEY_TRANSFER') {
       body = Container(
@@ -362,8 +515,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           Expanded(
             child: TextField(
               controller: _controller,
+              onChanged: (val) {
+                setState(() {
+                  _showQuickReplySuggestions = val.startsWith('/');
+                });
+              },
               decoration: const InputDecoration(
-                hintText: 'Type a message...',
+                hintText: 'Type a message or / for quick replies...',
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.symmetric(horizontal: 12),
               ),

@@ -112,5 +112,80 @@ module.exports = (db) => {
     }
   });
 
+  // Assign Customer Label (WhatsApp Business Tag)
+  router.post('/room/:roomId/labels', async (req, res) => {
+    const { roomId } = req.params;
+    const { label } = req.body; // NEW_CUSTOMER, PENDING_PAYMENT, ORDER_SHIPPED, VIP
+
+    try {
+      await db.collection('chats').doc(roomId).update({
+        label: label || 'NEW_CUSTOMER',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      res.status(200).json({ status: 'SUCCESS', label });
+    } catch (error) {
+      console.error('Customer Label Error:', error);
+      res.status(500).json({ error: 'Failed to update customer label' });
+    }
+  });
+
+  // Fetch & Create Quick Replies (Canned Responses e.g. /hours, /thanks)
+  router.get('/business/quick-replies', async (req, res) => {
+    const userId = req.user.uid;
+    try {
+      const snapshot = await db.collection('business_profiles').doc(userId).collection('quick_replies').get();
+      const replies = [];
+      snapshot.forEach(doc => replies.push({ id: doc.id, ...doc.data() }));
+      res.status(200).json({ replies });
+    } catch (error) {
+      console.error('Quick Replies Error:', error);
+      res.status(500).json({ error: 'Failed to fetch quick replies' });
+    }
+  });
+
+  router.post('/business/quick-replies', async (req, res) => {
+    const userId = req.user.uid;
+    const { shortcut, message } = req.body; // e.g. shortcut: "/thanks", message: "Thank you for shopping with us!"
+
+    if (!shortcut || !message) {
+      return res.status(400).json({ error: 'Shortcut and message required' });
+    }
+
+    try {
+      const ref = await db.collection('business_profiles').doc(userId).collection('quick_replies').add({
+        shortcut,
+        message,
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      res.status(201).json({ id: ref.id, shortcut, message });
+    } catch (error) {
+      console.error('Create Quick Reply Error:', error);
+      res.status(500).json({ error: 'Failed to save quick reply' });
+    }
+  });
+
+  // Business Away & Greeting Message Settings
+  router.post('/business/auto-reply', async (req, res) => {
+    const userId = req.user.uid;
+    const { greetingEnabled, greetingMessage, awayEnabled, awayMessage } = req.body;
+
+    try {
+      await db.collection('business_profiles').doc(userId).set({
+        autoReply: {
+          greetingEnabled: !!greetingEnabled,
+          greetingMessage: greetingMessage || 'Welcome to our store! How can we help you today?',
+          awayEnabled: !!awayEnabled,
+          awayMessage: awayMessage || 'We are currently closed. We will reply as soon as we open!'
+        },
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      res.status(200).json({ status: 'SUCCESS' });
+    } catch (error) {
+      console.error('Auto Reply Config Error:', error);
+      res.status(500).json({ error: 'Failed to update auto reply settings' });
+    }
+  });
+
   return router;
 };

@@ -10,6 +10,8 @@ class MessagingScreen extends StatefulWidget {
 
 class _MessagingScreenState extends State<MessagingScreen> {
   String _searchQuery = '';
+  String _selectedLabel = 'All';
+
   final List<Map<String, dynamic>> _chats = [
     {
       'name': 'Kingston Wholesale',
@@ -18,6 +20,8 @@ class _MessagingScreenState extends State<MessagingScreen> {
       'time': '2:35 PM',
       'unread': 2,
       'isOnline': true,
+      'label': 'Pending Payment',
+      'labelColor': Colors.orange,
     },
     {
       'name': 'Appleton Estate Rep',
@@ -26,6 +30,8 @@ class _MessagingScreenState extends State<MessagingScreen> {
       'time': '1:15 PM',
       'unread': 0,
       'isOnline': true,
+      'label': 'VIP Customer',
+      'labelColor': Colors.purple,
     },
     {
       'name': 'Farm Fresh Produce',
@@ -34,6 +40,8 @@ class _MessagingScreenState extends State<MessagingScreen> {
       'time': 'Yesterday',
       'unread': 1,
       'isOnline': false,
+      'label': 'New Lead',
+      'labelColor': Colors.blue,
     },
     {
       'name': 'Blue Mountain Coffee Co',
@@ -42,26 +50,77 @@ class _MessagingScreenState extends State<MessagingScreen> {
       'time': 'Monday',
       'unread': 0,
       'isOnline': false,
+      'label': 'Order Shipped',
+      'labelColor': Colors.green,
     },
   ];
 
+  void _showBusinessToolsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.store, color: Colors.green),
+            SizedBox(width: 8),
+            Text('WhatsApp Business Tools'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.flash_on, color: Colors.amber),
+              title: const Text('Quick Replies (/thanks, /hours)'),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Manage canned Quick Replies...')),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.mark_email_read, color: Colors.blue),
+              title: const Text('Automated Away & Greeting Message'),
+              onTap: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Auto-reply set to: "Welcome to Kivo Store!"')),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.label, color: Colors.purple),
+              title: const Text('Customer Label Categories'),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final filtered = _chats
-        .where((c) => (c['name'] as String).toLowerCase().contains(_searchQuery.toLowerCase()))
-        .toList();
+    final filtered = _chats.where((c) {
+      final nameMatches = (c['name'] as String).toLowerCase().contains(_searchQuery.toLowerCase());
+      final labelMatches = _selectedLabel == 'All' || c['label'] == _selectedLabel;
+      return nameMatches && labelMatches;
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chats'),
+        title: const Text('WhatsApp Business Chats'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Opening WhatsApp QR scanner...')),
-              );
-            },
+            icon: const Icon(Icons.storefront, color: Colors.green),
+            tooltip: 'Business Tools',
+            onPressed: _showBusinessToolsDialog,
           ),
           IconButton(
             icon: const Icon(Icons.more_vert),
@@ -76,7 +135,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
             child: TextField(
               onChanged: (val) => setState(() => _searchQuery = val),
               decoration: InputDecoration(
-                hintText: 'Search chats or merchants...',
+                hintText: 'Search chats or customer labels...',
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: Colors.grey.shade100,
@@ -88,6 +147,26 @@ class _MessagingScreenState extends State<MessagingScreen> {
               ),
             ),
           ),
+          // WhatsApp Business Labels Filter Chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Row(
+              children: ['All', 'Pending Payment', 'VIP Customer', 'New Lead', 'Order Shipped']
+                  .map((label) => Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: FilterChip(
+                          label: Text(label),
+                          selected: _selectedLabel == label,
+                          onSelected: (selected) {
+                            setState(() => _selectedLabel = label);
+                          },
+                          selectedColor: Colors.green.shade100,
+                        ),
+                      ))
+                  .toList(),
+            ),
+          ),
           Expanded(
             child: ListView.builder(
               itemCount: filtered.length,
@@ -95,6 +174,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
                 final chat = filtered[index];
                 final isOnline = chat['isOnline'] as bool;
                 final unread = chat['unread'] as int;
+                final labelColor = chat['labelColor'] as Color;
 
                 IconData typeIcon = Icons.message;
                 if (chat['type'] == 'VOICE') typeIcon = Icons.mic;
@@ -127,7 +207,22 @@ class _MessagingScreenState extends State<MessagingScreen> {
                         ),
                     ],
                   ),
-                  title: Text(chat['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                  title: Row(
+                    children: [
+                      Expanded(child: Text(chat['name'], style: const TextStyle(fontWeight: FontWeight.bold))),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: labelColor.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          chat['label'],
+                          style: TextStyle(fontSize: 10, color: labelColor, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
                   subtitle: Row(
                     children: [
                       Icon(typeIcon, size: 16, color: Colors.grey),
