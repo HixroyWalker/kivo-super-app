@@ -1,6 +1,8 @@
 const request = require('supertest');
 const express = require('express');
 
+const mockVerifyIdToken = jest.fn().mockResolvedValue({ uid: 'mock_user_1', email: 'test@kivo.com' });
+
 // Mock Firebase Admin
 jest.mock('firebase-admin', () => {
   const firestoreMock = {
@@ -23,7 +25,7 @@ jest.mock('firebase-admin', () => {
   return {
     firestore: () => firestoreMock,
     auth: () => ({
-      verifyIdToken: jest.fn().mockResolvedValue({ uid: 'mock_user_1', email: 'test@kivo.com' })
+      verifyIdToken: mockVerifyIdToken
     }),
     credential: { cert: jest.fn() },
     initializeApp: jest.fn()
@@ -44,6 +46,7 @@ app.use('/api/wallet', requireAuth, walletRoutes(db));
 describe('Wallet Routes', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockVerifyIdToken.mockResolvedValue({ uid: 'mock_user_1', email: 'test@kivo.com' });
   });
 
   it('should successfully execute a P2P transfer if funds are sufficient', async () => {
@@ -51,8 +54,8 @@ describe('Wallet Routes', () => {
     db.runTransaction.mockImplementation(async (callback) => {
         const t = {
             get: jest.fn()
-              .mockResolvedValueOnce({ exists: true, data: () => ({ balance: 1000 }) }) // Sender
-              .mockResolvedValueOnce({ exists: true, data: () => ({ balance: 500 }) })  // Recipient
+              .mockResolvedValueOnce({ exists: true, data: () => ({ wallet_balance: 1000 }) }) // Sender
+              .mockResolvedValueOnce({ exists: true, data: () => ({ wallet_balance: 500 }) })  // Recipient
               .mockResolvedValueOnce({ exists: false }), // Staff Fee Config (assume no override)
             update: jest.fn(),
             set: jest.fn(),
@@ -77,8 +80,7 @@ describe('Wallet Routes', () => {
   });
 
   it('should reject a transfer if the token is invalid', async () => {
-    // Override the mock to throw for this test
-    admin.auth().verifyIdToken.mockRejectedValueOnce(new Error('Invalid token'));
+    mockVerifyIdToken.mockRejectedValueOnce(new Error('Invalid token'));
 
     const res = await request(app)
       .post('/api/wallet/transfer')

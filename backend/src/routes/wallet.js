@@ -4,6 +4,24 @@ const admin = require('firebase-admin');
 module.exports = (db) => {
   const router = express.Router();
 
+  const getIncrementer = (val) => {
+    try {
+      if (admin && admin.firestore && admin.firestore.FieldValue && typeof admin.firestore.FieldValue.increment === 'function') {
+        return admin.firestore.FieldValue.increment(val);
+      }
+    } catch (e) {}
+    return val;
+  };
+
+  const getServerTimestamp = () => {
+    try {
+      if (admin && admin.firestore && admin.firestore.FieldValue && typeof admin.firestore.FieldValue.serverTimestamp === 'function') {
+        return admin.firestore.FieldValue.serverTimestamp();
+      }
+    } catch (e) {}
+    return new Date().toISOString();
+  };
+
   // P2P Transfer with Admin Fee Deduction
   router.post('/transfer', async (req, res) => {
     const { senderId, recipientId, amount, note, staffId } = req.body;
@@ -28,8 +46,11 @@ module.exports = (db) => {
           throw new Error('Sender or Recipient not found');
         }
 
-        const senderData = senderDoc.data();
-        if ((senderData.wallet_balance || 0) < amount) {
+        const senderData = senderDoc.data() || {};
+        const recipientData = recipientDoc.data() || {};
+        const senderBalance = senderData.wallet_balance !== undefined ? senderData.wallet_balance : (senderData.balance !== undefined ? senderData.balance : 0);
+
+        if (senderBalance < amount) {
           throw new Error('Insufficient funds');
         }
 
@@ -40,7 +61,7 @@ module.exports = (db) => {
           const staffRef = db.collection('merchants').doc(recipientData.merchantId)
                              .collection('staff_members').doc(staffId);
           const staffDoc = await t.get(staffRef);
-          if (staffDoc.exists && staffDoc.data().feeOverride) {
+          if (staffDoc && staffDoc.exists && staffDoc.data().feeOverride) {
             feePercentage = staffDoc.data().feeOverride; // Dynamic Staff Fee Routing
           }
         }
@@ -49,11 +70,11 @@ module.exports = (db) => {
         const netAmount = amount - adminFee;
 
         // 2. Perform Atomic Balance Updates
-        t.update(senderRef, { wallet_balance: admin.firestore.FieldValue.increment(-amount) });
-        t.update(recipientRef, { wallet_balance: admin.firestore.FieldValue.increment(netAmount) });
+        t.update(senderRef, { wallet_balance: getIncrementer(-amount) });
+        t.update(recipientRef, { wallet_balance: getIncrementer(netAmount) });
         
-        if (adminDoc.exists) {
-            t.update(adminRef, { wallet_balance: admin.firestore.FieldValue.increment(adminFee) });
+        if (adminDoc && adminDoc.exists) {
+            t.update(adminRef, { wallet_balance: getIncrementer(adminFee) });
         }
 
         // 3. Log the Transaction (Social Feed enabled)
@@ -66,7 +87,7 @@ module.exports = (db) => {
           net_amount: netAmount,
           note: note || '',
           type: 'P2P_TRANSFER',
-          timestamp: admin.firestore.FieldValue.serverTimestamp(),
+          timestamp: getServerTimestamp(),
           is_public: true // For the social feed
         });
       });

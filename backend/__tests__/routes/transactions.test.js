@@ -6,6 +6,8 @@ jest.mock('firebase-admin', () => {
   const firestoreMock = {
     collection: jest.fn().mockReturnThis(),
     doc: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
     get: jest.fn(),
     set: jest.fn(),
     update: jest.fn(),
@@ -48,8 +50,11 @@ describe('Transactions Routes (Webhooks)', () => {
     db.runTransaction.mockImplementation(async (callback) => {
         const t = {
             get: jest.fn()
-              .mockResolvedValueOnce({ exists: false }) // Event not processed yet
-              .mockResolvedValueOnce({ exists: true, data: () => ({ balance: 100 }) }), // User wallet exists
+              .mockResolvedValueOnce({
+                empty: false,
+                docs: [{ id: 'mock_user_1', ref: db.doc('users/mock_user_1'), data: () => ({ wallet_balance: 100 }) }]
+              }) // User query lookup
+              .mockResolvedValueOnce({ exists: false }), // Transaction event not processed yet
             update: jest.fn(),
             set: jest.fn(),
         };
