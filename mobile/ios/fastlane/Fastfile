@@ -3,14 +3,21 @@ default_platform(:ios)
 platform :ios do
   desc "Push a new beta build to TestFlight"
   lane :beta do
-    # Build the iOS App with automatic signing
+    if ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"] && !ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"].empty?
+      app_store_connect_api_key(
+        key_id: ENV["APP_STORE_CONNECT_API_KEY_KEY_ID"],
+        issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+        key_content: ENV["APP_STORE_CONNECT_API_KEY_KEY"],
+        is_key_content_base64: true
+      )
+    end
+
     build_app(
       project: "Runner.xcodeproj",
       scheme: "Runner",
       export_method: "app-store"
     )
 
-    # Upload to TestFlight
     upload_to_testflight(
       skip_waiting_for_build_processing: true
     )
