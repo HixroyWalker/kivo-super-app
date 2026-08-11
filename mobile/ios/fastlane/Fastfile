@@ -17,7 +17,7 @@ platform :ios do
     end
 
     build_app(
-      project: "Runner.xcodeproj",
+      workspace: "Runner.xcworkspace",
       scheme: "Runner",
       export_method: "app-store",
       skip_codesigning: true,

@@ -22,11 +22,12 @@ jobs:
         with:
           channel: 'stable'
           
-      - name: Generate Flutter Native Boilerplate & Inject Minimum iOS Target 14.0
+      - name: Generate Flutter Native Boilerplate & Install CocoaPods Dependencies
         run: |
           flutter create . --org com.kivo.app
           flutter pub get
           python3 patch_ios.py
+          cd ios && pod install --repo-update
         
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
