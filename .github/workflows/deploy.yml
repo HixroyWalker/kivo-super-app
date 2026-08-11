@@ -2,6 +2,11 @@ name: Deploy to TestFlight & Play Store
 
 on:
   workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Release reason'
+        required: false
+        default: 'Manual trigger'
   push:
     tags:
       - 'v*'
