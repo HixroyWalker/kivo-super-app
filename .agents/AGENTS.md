@@ -1,55 +1,24 @@
 # Project Memory: Kivo Super App
 
 ## Current State & Version Baseline
-- **Active Release Version**: `v1.0.22+63`
+- **Active Release Version**: `v1.0.22+63` (Build **63**)
 - **GitHub Repository**: [HixroyWalker/kivo-super-app](https://github.com/HixroyWalker/kivo-super-app.git)
-- **Latest GitHub Release**: [v1.0.22+63 Release](https://github.com/HixroyWalker/kivo-super-app/releases/tag/v1.0.22%2B63)
-- **iOS TestFlight Status**: ✅ **100% SUCCESS** (Run ID: `31462145872`)
-- **Android Google Play Status**: ✅ **100% SUCCESS** (Run ID: `31462145869`)
+- **Latest GitHub Release Tag**: [v1.0.22-63](https://github.com/HixroyWalker/kivo-super-app/releases/tag/v1.0.22-63)
+- **iOS TestFlight Status**: ✅ **100% SUCCESS** (Run ID: `31490405100`) - Build 63 successfully published to TestFlight.
+- **Android Google Play Status**: ✅ **100% SUCCESS** (Run ID: `31490405146`) - Build 63 successfully published to Google Play Internal testing.
 - **Git Branch**: `main` (clean, fully committed and synced with origin)
 
-## Architectural & Feature Summary
+## System Architecture & Store Deployment Key Learnings
 
-### 1. Mobile App (`mobile/`)
-- **Framework**: Flutter (Material 3).
-- **Core Modules**:
-  - `auth`: Google & Apple Sign-In routines, Hardware Device Binding (`device_lock_service.dart`), mandatory 6-Digit PIN & Native Biometrics (FaceID/TouchID) challenge, and 1-tap remote active sessions revocation (`sessions_screen.dart`).
-  - `merchant`: Merchant Business KYC Portal (`merchant_kyc_screen.dart`) supporting TRN, COJ Certificate of Incorporation, Director ID, and Proof of Address document uploads with AI OCR verification engine.
-  - `dashboard`: Total JMD wallet balance display, quick service grid, Lynk Top-Up flow.
-  - `accounting`: **Full QuickBooks Suite**:
-    - Multi-tab interface (Overview, Invoices, Expenses, P&L & GCT Tax).
-    - Auto-calculates 15% Jamaican GCT output vs input tax.
-    - Interactive Profit & Loss bar charts protected by biometric lock.
-    - Expense categorization, invoice creation modals, and CSV/PDF export.
-  - `messaging`: **Full WhatsApp Suite**:
-    - Multimodal message support: Text, Voice Notes (interactive player), Photos, Documents, and In-Chat Money Transfers.
-    - Double blue-tick read receipts (`✓✓`), audio voice calls, contact search, and green online status.
-  - `theme`: Custom Dark Mode theme tokens (`dark_theme.dart`).
+### 1. Fastlane Code Signing & Xcode 16.3 Overrides (iOS)
+- **Fastlane Command Verification**: Never append `|| true` to Fastlane execution commands in production GitHub Actions workflow files (`cd ios && bundle exec fastlane beta`), as it masks underlying `xcodebuild` signing errors and misleads pipeline reporting into false-green success.
+- **CocoaPods Workspace Targeting**: Flutter iOS projects containing native Firebase/Cloud Firestore plugins must have Fastlane `build_app` targeted at `workspace: "Runner.xcworkspace"` and run `cd ios && pod install --repo-update` during CI build steps.
+- **Compiler CFLAGS Patching**: Xcode 16.3 on macOS `macos-latest` runners rejects legacy `-G` flags passed into `BoringSSL-GRPC` CFLAGS. Stripping `-G` flags dynamically in `mobile/patch_ios.py` across Pods target build configurations ensures clean compilation.
 
-### 2. Backend Services (`backend/`)
-- **Runtime**: Node.js Express API on GCP Cloud Run.
-- **Firebase**: Firebase Admin SDK with Firestore & FCM notification dispatch.
-- **Routes**:
-  - `/api/auth`: Login, device hardware UUID lock verification, active sessions query, and session revocation.
-  - `/api/wallet`: P2P balances, admin fee splits, and Lynk webhooks.
-  - `/api/accounting`: Ledger, invoices, expenses, P&L aggregation.
-  - `/api/messaging`: Multimodal messages, read receipts, voice call signaling.
-  - `/api/notifications`: FCM device tokens and admin push broadcasts.
-  - `/api/admin`: Staff fee overrides, global P2P transfer fee thresholds, merchant sales commission overrides, sub-account billing, and KYC review approvals.
+### 2. Android AGP 8 Compliance & `compileSdk 36`
+- **AGP 8 Namespace Rule**: Removed explicit `package="com.kivo.app"` declarations from `AndroidManifest.xml` to adhere to AGP 8 requirements.
+- **JDK 21 & SDK 36 Compatibility**: `sqflite_android: 2.4.3` requires Android SDK 36 (`BAKLAVA` symbols) and JDK 21 (`Locale.of`, `Thread.threadId()`). Setting `compileSdk = 36` in `android/app/build.gradle` and forcing `compileSdk = 36` across all `~/.pub-cache` dependencies via `mobile/patch_android.py` guarantees 100% compilation success.
 
-### 3. CI/CD & Store Automation (`codemagic.yaml` & `fastlane`)
-- **Codemagic**: Automated `flutter-ios-android-release` pipeline executing `flutter create .` ➔ `flutter build appbundle` ➔ `flutter build ipa` on tag push (`v1.0.7+11`).
-- **Fastlane Automation**:
-  - **iOS (`mobile/ios/fastlane`)**: Automated Xcode code-signing and direct TestFlight deployment (`upload_to_testflight`).
-  - **Android (`mobile/android/fastlane`)**: Automated Google Play Console Internal Track deployment (`upload_to_play_store`).
-- **GCP Cost Optimization**: Cloud Run `--concurrency=80`, `--cpu-throttling`, and `--min-instances=0` configured in `cloudbuild.yaml`.
-
-## Deployment Standard Operating Procedure (SOP)
-- **Mandatory Deployment Method**: **Option 2 (Fastlane Direct CLI Automation)**.
-- **Deployment Strategy & Operational Memory Directive
-- **Primary Deployment Strategy**: Option 2 (Direct Local Terminal Deployment via Fastlane & Flutter CLI).
-- **Complementary OTA Strategy**: Option 3 (Self-Hosted Server-Driven UI & Firebase Remote Config).
-- **Execution Protocol**: 
-  1. For release updates, execute Fastlane directly via local terminal (`cd mobile/android && fastlane beta` / `cd mobile/ios && fastlane beta`).
-  2. If any cloud CI or remote workflow attempt encounters build or signing friction, fallback immediately to local terminal Fastlane execution.
-  3. Keep server-driven configuration active for instant zero-downtime FinTech updates in Jamaica. (`v1.x.x+N`), and deploy directly to **Apple TestFlight** and **Google Play Console (Internal Track)** without requesting manual web console steps.
+### 3. CI/CD Workflows (`.github/workflows/`)
+- Dedicated iOS workflow: `.github/workflows/deploy_ios.yml` (macOS runner, Flutter stable, Ruby 3.0, Fastlane beta).
+- Dedicated Android workflow: `.github/workflows/deploy_android.yml` (Ubuntu runner, Java 21 Temurin, Flutter stable, Fastlane beta).
