@@ -25,6 +25,9 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
         
+      - name: Build iOS IPA
+        run: flutter build ipa --release --no-codesign
+        
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -59,6 +62,9 @@ jobs:
           
       - name: Install Dependencies
         run: flutter pub get
+        
+      - name: Build Android App Bundle
+        run: flutter build appbundle --release
         
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
