@@ -22,7 +22,7 @@ jobs:
         with:
           channel: 'stable'
           
-      - name: Generate Flutter Native Boilerplate & Force compileSdk 34
+      - name: Generate Flutter Native Boilerplate & Force All Gradle Subprojects to compileSdk 34
         run: |
           flutter create . --org com.kivo.app
           flutter pub get
@@ -35,6 +35,26 @@ jobs:
             sed -i 's/compileSdkVersion flutter\.compileSdkVersion/compileSdkVersion 34/g' android/app/build.gradle || true
             sed -i 's/compileSdk = flutter\.compileSdkVersion/compileSdk = 34/g' android/app/build.gradle || true
             sed -i 's/compileSdk flutter\.compileSdkVersion/compileSdk 34/g' android/app/build.gradle || true
+          fi
+          if [ -f "android/build.gradle" ]; then
+            python3 -c "
+path = 'android/build.gradle'
+with open(path, 'r') as f:
+    content = f.read()
+subproject_code = '''
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                compileSdkVersion 34
+            }
+        }
+    }
+}
+'''
+with open(path, 'w') as f:
+    f.write(content + '\n' + subproject_code)
+" || true
           fi
         
       - name: Build Android App Bundle
