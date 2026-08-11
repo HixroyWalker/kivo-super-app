@@ -1,13 +1,9 @@
-name: Deploy to TestFlight & Play Store
+name: Deploy Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      reason:
-        description: 'Release reason'
-        required: false
-        default: 'Manual trigger'
   push:
+    branches:
+      - main
     tags:
       - 'v*'
 
