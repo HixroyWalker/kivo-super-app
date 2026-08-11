@@ -10,8 +10,6 @@ if os.path.exists(podfile_path):
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
       config.build_settings['OTHER_CFLAGS'] = '$(inherited) -Wno-error'
       config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '$(inherited) -Wno-error'
-      config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
-      config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
     end"""
     
     if 'flutter_additional_ios_build_settings(target)' in content:
@@ -28,10 +26,6 @@ if os.path.exists(pbxproj_path):
     if team_id:
         pbx = re.sub(r'DEVELOPMENT_TEAM\s*=\s*".*?"', f'DEVELOPMENT_TEAM = "{team_id}"', pbx)
         pbx = re.sub(r'DEVELOPMENT_TEAM\s*=\s*[^;]+', f'DEVELOPMENT_TEAM = {team_id}', pbx)
-    else:
-        # For xcodebuild archive, set CODE_SIGNING_ALLOWED = NO and CODE_SIGN_IDENTITY = ""
-        pbx = pbx.replace('CODE_SIGN_STYLE = Automatic;', 'CODE_SIGN_STYLE = Automatic;\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGN_IDENTITY = "";')
-        pbx = pbx.replace('CODE_SIGN_IDENTITY = "iPhone Developer";', 'CODE_SIGN_IDENTITY = "";')
         
     with open(pbxproj_path, "w") as f:
         f.write(pbx)

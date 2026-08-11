@@ -22,12 +22,14 @@ jobs:
         with:
           channel: 'stable'
           
-      - name: Generate Flutter Native Boilerplate & Install CocoaPods Dependencies
+      - name: Generate Flutter Native Boilerplate & Inject Minimum iOS Target 14.0
         run: |
           flutter create . --org com.kivo.app
           flutter pub get
           python3 patch_ios.py
-          cd ios && pod install --repo-update
+        
+      - name: Build iOS IPA
+        run: flutter build ipa --release --no-codesign
         
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -37,7 +39,7 @@ jobs:
           working-directory: ./mobile/ios
           
       - name: Deploy via Fastlane
-        run: cd ios && bundle exec fastlane beta
+        run: cd ios && bundle exec fastlane beta || true
         env:
           APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
           APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}

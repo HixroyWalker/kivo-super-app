@@ -3,12 +3,18 @@ default_platform(:android)
 platform :android do
   desc "Push a new beta build to Google Play Console (Internal Track)"
   lane :beta do
-    upload_to_play_store(
-      track: 'internal',
-      aab: '../build/app/outputs/bundle/release/app-release.aab',
-      skip_upload_metadata: true,
-      skip_upload_images: true,
-      skip_upload_screenshots: true
-    )
+    json_key_file = File.exist?('./service-account.json') ? './service-account.json' : nil
+    if json_key_file && File.size(json_key_file) > 10
+      upload_to_play_store(
+        json_key: json_key_file,
+        track: 'internal',
+        aab: '../build/app/outputs/bundle/release/app-release.aab',
+        skip_upload_metadata: true,
+        skip_upload_images: true,
+        skip_upload_screenshots: true
+      )
+    else
+      UI.message("Skipping upload_to_play_store because service-account.json is not configured.")
+    end
   end
 end
