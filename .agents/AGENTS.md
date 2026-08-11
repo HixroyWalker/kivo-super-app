@@ -44,7 +44,10 @@
 
 ## Deployment Standard Operating Procedure (SOP)
 - **Mandatory Deployment Method**: **Option 2 (Fastlane Direct CLI Automation)**.
-- **Standard Execution Rules**:
-  - All future mobile app updates MUST use Fastlane CLI deployment pipelines (`fastlane beta`) for continuous deployment.
-  - Releases automatically bump app version in `pubspec.yaml`, tag git commit (`v1.x.x+N`), and deploy directly to **Apple TestFlight** and **Google Play Console (Internal Track)** without requesting manual web console steps.
-
+- **Deployment Strategy & Operational Memory Directive
+- **Primary Deployment Strategy**: Option 2 (Direct Local Terminal Deployment via Fastlane & Flutter CLI).
+- **Complementary OTA Strategy**: Option 3 (Self-Hosted Server-Driven UI & Firebase Remote Config).
+- **Execution Protocol**: 
+  1. For release updates, execute Fastlane directly via local terminal (`cd mobile/android && fastlane beta` / `cd mobile/ios && fastlane beta`).
+  2. If any cloud CI or remote workflow attempt encounters build or signing friction, fallback immediately to local terminal Fastlane execution.
+  3. Keep server-driven configuration active for instant zero-downtime FinTech updates in Jamaica. (`v1.x.x+N`), and deploy directly to **Apple TestFlight** and **Google Play Console (Internal Track)** without requesting manual web console steps.
