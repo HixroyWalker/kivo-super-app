@@ -1,6 +1,7 @@
 name: Deploy to TestFlight & Play Store
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - 'v*' # Triggers when a release tag is pushed (e.g., v1.0.0)
