@@ -22,10 +22,16 @@ jobs:
         with:
           channel: 'stable'
           
-      - name: Generate Flutter Native Boilerplate & Install Dependencies
+      - name: Generate Flutter Native Boilerplate & Fix Minimum iOS Target
         run: |
           flutter create . --org com.kivo.app
           flutter pub get
+          if [ -f "ios/Podfile" ]; then
+            sed -i '' 's/platform :ios, .*/platform :ios, '\''14.0'\''/g' ios/Podfile || true
+          fi
+          if [ -f "ios/Runner.xcodeproj/project.pbxproj" ]; then
+            sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 14.0/g' ios/Runner.xcodeproj/project.pbxproj || true
+          fi
         
       - name: Build iOS IPA
         run: flutter build ipa --release --no-codesign
@@ -62,11 +68,14 @@ jobs:
         with:
           channel: 'stable'
           
-      - name: Generate Flutter Native Boilerplate & Install Dependencies
+      - name: Generate Flutter Native Boilerplate & Clean AGP 8 Manifest
         run: |
           flutter create . --org com.kivo.app
           flutter pub get
           find ~/.pub-cache -name "build.gradle" -exec sed -i 's/proguard-android.txt/proguard-android-optimize.txt/g' {} +
+          if [ -f "android/app/src/main/AndroidManifest.xml" ]; then
+            sed -i 's/package="com.kivo.app"//g' android/app/src/main/AndroidManifest.xml || true
+          fi
         
       - name: Build Android App Bundle
         run: flutter build appbundle --release
