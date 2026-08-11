@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'mobile/**'
-      - '.github/workflows/deploy_ios.yml'
 
 jobs:
   deploy_ios:
