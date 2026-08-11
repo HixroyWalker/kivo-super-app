@@ -12,10 +12,18 @@ platform :ios do
       )
     end
 
+    if ENV["MATCH_GIT_URL"] && !ENV["MATCH_GIT_URL"].empty?
+      match(type: "appstore", readonly: true)
+    end
+
     build_app(
       project: "Runner.xcodeproj",
       scheme: "Runner",
-      export_method: "app-store"
+      export_method: "app-store",
+      export_options: {
+        method: "app-store",
+        signingStyle: "automatic"
+      }
     )
 
     upload_to_testflight(

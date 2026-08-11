@@ -52,7 +52,7 @@ jobs:
         run: echo '${{ secrets.ANDROID_KEYSTORE_BASE64 }}' | base64 --decode > ./android/app/upload-keystore.jks
         
       - name: Deploy via Fastlane
-        run: cd android && bundle exec fastlane beta || true
+        run: cd android && bundle exec fastlane beta
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
