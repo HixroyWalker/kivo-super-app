@@ -68,13 +68,18 @@ jobs:
         with:
           channel: 'stable'
           
-      - name: Generate Flutter Native Boilerplate & Clean AGP 8 Manifest
+      - name: Generate Flutter Native Boilerplate & Clean AGP 8 Manifest & Set compileSdk 34
         run: |
           flutter create . --org com.kivo.app
           flutter pub get
           find ~/.pub-cache -name "build.gradle" -exec sed -i 's/proguard-android.txt/proguard-android-optimize.txt/g' {} +
           if [ -f "android/app/src/main/AndroidManifest.xml" ]; then
             sed -i 's/package="com.kivo.app"//g' android/app/src/main/AndroidManifest.xml || true
+          fi
+          if [ -f "android/app/build.gradle" ]; then
+            sed -i 's/compileSdk = [0-9]*/compileSdk = 34/g' android/app/build.gradle || true
+            sed -i 's/compileSdkVersion [0-9]*/compileSdkVersion 34/g' android/app/build.gradle || true
+            sed -i 's/targetSdkVersion [0-9]*/targetSdkVersion 34/g' android/app/build.gradle || true
           fi
         
       - name: Build Android App Bundle

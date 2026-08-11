@@ -2,7 +2,7 @@ name: kivo
 description: A closed-loop Super App for the Jamaican market.
 publish_to: 'none'
 
-version: 1.0.16+20
+version: 1.0.17+21
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
