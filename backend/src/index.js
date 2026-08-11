@@ -38,6 +38,12 @@ app.use('/api/ads', requireAuth, adsRoutes(db));
 app.use('/api/notifications', requireAuth, notificationRoutes(db));
 app.use('/api/offline', requireAuth, offlineSettlementRoutes(db));
 
+// Global Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled Server Error:', err);
+  res.status(500).json({ error: err.message || 'Internal server error' });
+});
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Kivo backend listening on port ${PORT}`);
