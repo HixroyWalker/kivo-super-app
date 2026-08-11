@@ -8,8 +8,16 @@ if os.path.exists(podfile_path):
         
     patch = """    target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-      config.build_settings['OTHER_CFLAGS'] = '$(inherited) -Wno-error'
-      config.build_settings['OTHER_CPLUSPLUSFLAGS'] = '$(inherited) -Wno-error'
+      ['OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS', 'CFLAGS'].each do |flag_key|
+        if config.build_settings[flag_key]
+          flags = config.build_settings[flag_key]
+          if flags.is_a?(String)
+            config.build_settings[flag_key] = flags.gsub(/-G\\b/, '')
+          elsif flags.is_a?(Array)
+            config.build_settings[flag_key] = flags.reject { |f| f == '-G' }
+          end
+        end
+      end
     end"""
     
     if 'flutter_additional_ios_build_settings(target)' in content:

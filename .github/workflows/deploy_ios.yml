@@ -28,9 +28,6 @@ jobs:
           flutter pub get
           python3 patch_ios.py
         
-      - name: Build iOS IPA
-        run: flutter build ipa --release --no-codesign
-        
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
