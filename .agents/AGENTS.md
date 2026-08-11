@@ -41,3 +41,10 @@
   - **iOS (`mobile/ios/fastlane`)**: Automated Xcode code-signing and direct TestFlight deployment (`upload_to_testflight`).
   - **Android (`mobile/android/fastlane`)**: Automated Google Play Console Internal Track deployment (`upload_to_play_store`).
 - **GCP Cost Optimization**: Cloud Run `--concurrency=80`, `--cpu-throttling`, and `--min-instances=0` configured in `cloudbuild.yaml`.
+
+## Deployment Standard Operating Procedure (SOP)
+- **Mandatory Deployment Method**: **Option 2 (Fastlane Direct CLI Automation)**.
+- **Standard Execution Rules**:
+  - All future mobile app updates MUST use Fastlane CLI deployment pipelines (`fastlane beta`) for continuous deployment.
+  - Releases automatically bump app version in `pubspec.yaml`, tag git commit (`v1.x.x+N`), and deploy directly to **Apple TestFlight** and **Google Play Console (Internal Track)** without requesting manual web console steps.
+
