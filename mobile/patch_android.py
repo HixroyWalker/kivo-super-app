@@ -10,7 +10,7 @@ if os.path.exists(manifest_path):
     with open(manifest_path, "w") as f:
         f.write(content)
 
-# Set compileSdk 34 in app/build.gradle
+# Set compileSdk 34 and append subprojects block to android/app/build.gradle
 app_gradle = "android/app/build.gradle"
 if os.path.exists(app_gradle):
     with open(app_gradle, "r") as f:
@@ -18,27 +18,45 @@ if os.path.exists(app_gradle):
     content = re.sub(r'compileSdk\s*=.*', 'compileSdk = 34', content)
     content = re.sub(r'compileSdkVersion\s+.*', 'compileSdkVersion 34', content)
     content = re.sub(r'targetSdkVersion\s+.*', 'targetSdkVersion 34', content)
-    with open(app_gradle, "w") as f:
-        f.write(content)
-
-# Force all Gradle subprojects (e.g. device_info_plus) to compileSdkVersion 34
-root_gradle = "android/build.gradle"
-if os.path.exists(root_gradle):
-    with open(root_gradle, "r") as f:
-        content = f.read()
+    
     subproject_code = """
+
 subprojects {
     afterEvaluate { project ->
         if (project.hasProperty('android')) {
             project.android {
                 compileSdkVersion 34
+                compileSdk 34
             }
         }
     }
 }
 """
-    if "subprojects {" not in content or "compileSdkVersion 34" not in content:
+    if "compileSdkVersion 34" not in content:
+        content += subproject_code
+
+    with open(app_gradle, "w") as f:
+        f.write(content)
+
+# Also append to root android/build.gradle if present
+root_gradle = "android/build.gradle"
+if os.path.exists(root_gradle):
+    with open(root_gradle, "r") as f:
+        root_content = f.read()
+    root_subproject_code = """
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                compileSdkVersion 34
+                compileSdk 34
+            }
+        }
+    }
+}
+"""
+    if "compileSdkVersion 34" not in root_content:
         with open(root_gradle, "a") as f:
-            f.write(subproject_code)
+            f.write(root_subproject_code)
 
 print("Android patching complete.")
