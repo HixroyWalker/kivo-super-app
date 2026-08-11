@@ -48,4 +48,23 @@ subprojects {
     with open(root_gradle, "w") as f:
         f.write(subproject_code + "\n" + root_content)
 
+# Dynamically patch all pub-cache plugin build.gradle files (e.g. device_info_plus) to compileSdk 34
+pub_cache = os.path.expanduser("~/.pub-cache")
+if os.path.exists(pub_cache):
+    for root_dir, dirs, files in os.walk(pub_cache):
+        for f_name in files:
+            if f_name == "build.gradle":
+                p = os.path.join(root_dir, f_name)
+                try:
+                    with open(p, "r") as f:
+                        c = f.read()
+                    c_new = re.sub(r'compileSdkVersion\s+[0-9]+', 'compileSdkVersion 34', c)
+                    c_new = re.sub(r'compileSdk\s*=\s*[0-9]+', 'compileSdk = 34', c_new)
+                    c_new = re.sub(r'flutter\.compileSdkVersion', '34', c_new)
+                    if c_new != c:
+                        with open(p, "w") as f:
+                            f.write(c_new)
+                except Exception:
+                    pass
+
 print("Android patching complete.")
