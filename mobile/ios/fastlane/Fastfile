@@ -20,6 +20,7 @@ platform :ios do
       project: "Runner.xcodeproj",
       scheme: "Runner",
       export_method: "app-store",
+      skip_codesigning: true,
       export_options: {
         method: "app-store",
         signingStyle: "automatic"

@@ -29,8 +29,9 @@ if os.path.exists(pbxproj_path):
         pbx = re.sub(r'DEVELOPMENT_TEAM\s*=\s*".*?"', f'DEVELOPMENT_TEAM = "{team_id}"', pbx)
         pbx = re.sub(r'DEVELOPMENT_TEAM\s*=\s*[^;]+', f'DEVELOPMENT_TEAM = {team_id}', pbx)
     else:
-        # Disable strict signing requirement during xcodebuild archive if team_id not specified
-        pbx = pbx.replace('CODE_SIGN_STYLE = Automatic;', 'CODE_SIGN_STYLE = Automatic;\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;')
+        # For xcodebuild archive, set CODE_SIGNING_ALLOWED = NO and CODE_SIGN_IDENTITY = ""
+        pbx = pbx.replace('CODE_SIGN_STYLE = Automatic;', 'CODE_SIGN_STYLE = Automatic;\n\t\t\t\tCODE_SIGNING_ALLOWED = NO;\n\t\t\t\tCODE_SIGN_IDENTITY = "";')
+        pbx = pbx.replace('CODE_SIGN_IDENTITY = "iPhone Developer";', 'CODE_SIGN_IDENTITY = "";')
         
     with open(pbxproj_path, "w") as f:
         f.write(pbx)
