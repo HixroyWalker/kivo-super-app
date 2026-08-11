@@ -26,20 +26,7 @@ jobs:
         run: |
           flutter create . --org com.kivo.app
           flutter pub get
-          if [ -f "ios/Podfile" ]; then
-            python3 -c "
-path = 'ios/Podfile'
-with open(path, 'r') as f:
-    content = f.read()
-patch = '''    target.build_configurations.each do |config|
-      config.build_settings[\"IPHONEOS_DEPLOYMENT_TARGET\"] = \"14.0\"
-    end'''
-if 'flutter_additional_ios_build_settings(target)' in content:
-    content = content.replace('flutter_additional_ios_build_settings(target)', 'flutter_additional_ios_build_settings(target)\n' + patch)
-with open(path, 'w') as f:
-    f.write(content)
-" || true
-          fi
+          python3 patch_ios.py
         
       - name: Build iOS Frameworks
         run: flutter build ios --release --no-codesign
