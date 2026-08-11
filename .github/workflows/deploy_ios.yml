@@ -30,8 +30,8 @@ jobs:
             sed -i '' 's/flutter_additional_ios_build_settings(target)/flutter_additional_ios_build_settings(target); target.build_configurations.each { |config| config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = "14.0" }/g' ios/Podfile || true
           fi
         
-      - name: Build iOS IPA
-        run: flutter build ipa --release --no-codesign
+      - name: Build iOS Frameworks
+        run: flutter build ios --release --no-codesign
         
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
