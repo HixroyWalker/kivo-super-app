@@ -22,18 +22,23 @@ jobs:
         with:
           channel: 'stable'
           
-      - name: Generate Flutter Native Boilerplate & Force Minimum iOS Target 14.0
+      - name: Generate Flutter Native Boilerplate & Inject Minimum iOS Target 14.0
         run: |
           flutter create . --org com.kivo.app
           flutter pub get
           if [ -f "ios/Podfile" ]; then
-            echo "post_install do |installer|" >> ios/Podfile
-            echo "  installer.pods_project.targets.each do |target|" >> ios/Podfile
-            echo "    target.build_configurations.each do |config|" >> ios/Podfile
-            echo "      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'" >> ios/Podfile
-            echo "    end" >> ios/Podfile
-            echo "  end" >> ios/Podfile
-            echo "end" >> ios/Podfile
+            python3 -c "
+path = 'ios/Podfile'
+with open(path, 'r') as f:
+    content = f.read()
+target_code = '''    target.build_configurations.each do |config|
+      config.build_settings[\"IPHONEOS_DEPLOYMENT_TARGET\"] = \"14.0\"
+    end'''
+if 'flutter_additional_ios_build_settings(target)' in content:
+    content = content.replace('flutter_additional_ios_build_settings(target)', 'flutter_additional_ios_build_settings(target)\n' + target_code)
+with open(path, 'w') as f:
+    f.write(content)
+" || true
           fi
         
       - name: Build iOS IPA
