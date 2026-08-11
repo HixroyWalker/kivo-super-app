@@ -1,0 +1,64 @@
+name: Deploy to TestFlight
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/deploy_ios.yml'
+
+jobs:
+  deploy_ios:
+    name: Deploy to TestFlight
+    runs-on: macos-latest
+    
+    defaults:
+      run:
+        working-directory: ./mobile
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          
+      - name: Generate Flutter Native Boilerplate & Inject Minimum iOS Target 14.0
+        run: |
+          flutter create . --org com.kivo.app
+          flutter pub get
+          if [ -f "ios/Podfile" ]; then
+            python3 -c "
+path = 'ios/Podfile'
+with open(path, 'r') as f:
+    content = f.read()
+target_code = '''    target.build_configurations.each do |config|
+      config.build_settings[\"IPHONEOS_DEPLOYMENT_TARGET\"] = \"14.0\"
+    end'''
+if 'flutter_additional_ios_build_settings(target)' in content:
+    content = content.replace('flutter_additional_ios_build_settings(target)', 'flutter_additional_ios_build_settings(target)\n' + target_code)
+with open(path, 'w') as f:
+    f.write(content)
+" || true
+          fi
+        
+      - name: Build iOS IPA
+        run: flutter build ipa --release --no-codesign
+        
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+          working-directory: ./mobile/ios
+          
+      - name: Deploy via Fastlane
+        run: cd ios && bundle exec fastlane beta || true
+        env:
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
