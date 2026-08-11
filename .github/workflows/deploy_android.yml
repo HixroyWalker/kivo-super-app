@@ -28,7 +28,7 @@ jobs:
         with:
           channel: 'stable'
           
-      - name: Generate Flutter Native Boilerplate & Force All Gradle Subprojects to compileSdk 35
+      - name: Generate Flutter Native Boilerplate & Force All Gradle Subprojects to compileSdk 36
         run: |
           flutter create . --org com.kivo.app
           flutter pub get
