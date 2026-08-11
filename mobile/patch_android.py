@@ -10,7 +10,7 @@ if os.path.exists(manifest_path):
     with open(manifest_path, "w") as f:
         f.write(content)
 
-# Set compileSdk 34 and append subprojects block to android/app/build.gradle
+# Set compileSdk 34 in android/app/build.gradle
 app_gradle = "android/app/build.gradle"
 if os.path.exists(app_gradle):
     with open(app_gradle, "r") as f:
@@ -18,33 +18,23 @@ if os.path.exists(app_gradle):
     content = re.sub(r'compileSdk\s*=.*', 'compileSdk = 34', content)
     content = re.sub(r'compileSdkVersion\s+.*', 'compileSdkVersion 34', content)
     content = re.sub(r'targetSdkVersion\s+.*', 'targetSdkVersion 34', content)
-    
-    subproject_code = """
-
-subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            project.android {
-                compileSdkVersion 34
-                compileSdk 34
-            }
-        }
-    }
-}
-"""
-    if "compileSdkVersion 34" not in content:
-        content += subproject_code
-
     with open(app_gradle, "w") as f:
         f.write(content)
 
-# Also append to root android/build.gradle if present
+# Prepend subprojects resolutionStrategy & compileSdk 34 to root android/build.gradle
 root_gradle = "android/build.gradle"
 if os.path.exists(root_gradle):
     with open(root_gradle, "r") as f:
         root_content = f.read()
-    root_subproject_code = """
+    subproject_code = """
 subprojects {
+    project.configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'androidx.exifinterface') {
+                details.useVersion '1.3.7'
+            }
+        }
+    }
     afterEvaluate { project ->
         if (project.hasProperty('android')) {
             project.android {
@@ -55,8 +45,7 @@ subprojects {
     }
 }
 """
-    if "compileSdkVersion 34" not in root_content:
-        with open(root_gradle, "a") as f:
-            f.write(root_subproject_code)
+    with open(root_gradle, "w") as f:
+        f.write(subproject_code + "\n" + root_content)
 
 print("Android patching complete.")
