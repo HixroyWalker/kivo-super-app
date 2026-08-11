@@ -22,8 +22,10 @@ jobs:
         with:
           channel: 'stable'
           
-      - name: Install Dependencies
-        run: flutter pub get
+      - name: Generate Flutter Native Boilerplate & Install Dependencies
+        run: |
+          flutter create . --org com.kivo.app
+          flutter pub get
         
       - name: Build iOS IPA
         run: flutter build ipa --release --no-codesign
@@ -60,8 +62,10 @@ jobs:
         with:
           channel: 'stable'
           
-      - name: Install Dependencies
-        run: flutter pub get
+      - name: Generate Flutter Native Boilerplate & Install Dependencies
+        run: |
+          flutter create . --org com.kivo.app
+          flutter pub get
         
       - name: Build Android App Bundle
         run: flutter build appbundle --release
