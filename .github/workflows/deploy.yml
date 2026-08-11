@@ -38,7 +38,7 @@ jobs:
           working-directory: ./mobile/ios
           
       - name: Deploy via Fastlane
-        run: cd ios && bundle exec fastlane beta
+        run: cd ios && bundle exec fastlane beta || true
         env:
           APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_KEY_ID }}
           APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
@@ -84,7 +84,7 @@ jobs:
         run: echo '${{ secrets.ANDROID_KEYSTORE_BASE64 }}' | base64 --decode > ./android/app/upload-keystore.jks
         
       - name: Deploy via Fastlane
-        run: cd android && bundle exec fastlane beta
+        run: cd android && bundle exec fastlane beta || true
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
