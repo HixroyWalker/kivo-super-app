@@ -8,6 +8,8 @@ if os.path.exists(podfile_path):
         
     patch = """    target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+      config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+      config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
       config.build_settings.each do |key, value|
         if value.is_a?(String)
           config.build_settings[key] = value.gsub(/-G(\\s+|$)/, ' ').strip
