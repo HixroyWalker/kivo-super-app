@@ -60,7 +60,7 @@ if os.path.exists(podfile_path):
     # Foolproof fix for Explicit Module non-modular header errors:
     # Physically replace the bad imports in the plugin source files before compilation
     import glob
-    for header in glob.glob('.symlinks/plugins/firebase_*/ios/**/*.h', recursive=True):
+    for header in glob.glob('ios/.symlinks/plugins/firebase_*/ios/**/*.h', recursive=True):
         try:
             with open(header, 'r') as f:
                 header_content = f.read()
