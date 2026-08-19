@@ -29,6 +29,15 @@ platform :ios do
       end
     end
 
+    # Nuke -Werror from the pbxproj files directly!
+    Dir.glob("Pods/**/*.pbxproj").each do |file|
+      text = File.read(file)
+      new_text = text.gsub(/-Werror(\\S*)/, ' ')
+      if text != new_text
+        File.write(file, new_text)
+      end
+    end
+
     # Build the Xcode archive
     build_app(
       workspace: "ios/Runner.xcworkspace",

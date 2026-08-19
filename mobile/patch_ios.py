@@ -17,8 +17,10 @@ if os.path.exists(podfile_path):
         if config.build_settings[flag_key].nil?
           config.build_settings[flag_key] = ['$(inherited)'] + cflags
         elsif config.build_settings[flag_key].is_a?(String)
+          config.build_settings[flag_key] = config.build_settings[flag_key].gsub(/-Werror\\S*/, '')
           config.build_settings[flag_key] += ' ' + cflags.join(' ')
         elsif config.build_settings[flag_key].is_a?(Array)
+          config.build_settings[flag_key].reject! { |flag| flag.to_s.start_with?('-Werror') }
           config.build_settings[flag_key].concat(cflags)
         end
       end
