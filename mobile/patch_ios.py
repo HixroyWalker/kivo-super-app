@@ -24,6 +24,19 @@ if os.path.exists(podfile_path):
           file.settings['COMPILER_FLAGS'] = flags.join(' ')
         end
       end
+    end
+    if target.name == 'gRPC-Core' || target.name.include?('gRPC-C++') || target.name.include?('gRPC')
+      target.build_configurations.each do |config|
+        config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
+      end
+      target.source_build_phase.files.each do |file|
+        if file.settings && file.settings['COMPILER_FLAGS']
+          flags = file.settings['COMPILER_FLAGS'].split
+          flags.reject! { |flag| flag == '-Werror' || flag == '-Werror=missing-template-arg-list-after-template-kw' }
+          flags << '-Wno-missing-template-arg-list-after-template-kw'
+          file.settings['COMPILER_FLAGS'] = flags.join(' ')
+        end
+      end
     end"""
     
     if 'flutter_additional_ios_build_settings(target)' in content:
