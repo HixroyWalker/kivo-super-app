@@ -12,30 +12,20 @@ if os.path.exists(podfile_path):
       config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
       config.build_settings.each do |key, value|
         if value.is_a?(String)
-          config.build_settings[key] = value.gsub(/-G(\\s+|$)/, ' ').strip
+          config.build_settings[key] = value.gsub(/-G(\\s+|$)/, ' ').gsub(/-Werror(\\S*)/, ' ').strip
         elsif value.is_a?(Array)
-          config.build_settings[key] = value.map { |v| v.is_a?(String) ? v.gsub(/-G(\\s+|$)/, ' ').strip : v }.reject { |v| v == '-G' || v.empty? }
+          config.build_settings[key] = value.map { |v| v.is_a?(String) ? v.gsub(/-G(\\s+|$)/, ' ').gsub(/-Werror(\\S*)/, ' ').strip : v }.reject { |v| v == '-G' || v.empty? }
         end
       end
     end
-    if target.name == 'BoringSSL-GRPC' || target.name.include?('BoringSSL')
+    if target.respond_to?(:source_build_phase) && target.source_build_phase
       target.source_build_phase.files.each do |file|
         if file.settings && file.settings['COMPILER_FLAGS']
           flags = file.settings['COMPILER_FLAGS'].split
-          flags.reject! { |flag| flag == '-G' || flag == '-GCC_WARN_INHIBIT_ALL_WARNINGS' }
-          file.settings['COMPILER_FLAGS'] = flags.join(' ')
-        end
-      end
-    end
-    if target.name == 'gRPC-Core' || target.name.include?('gRPC-C++') || target.name.include?('gRPC')
-      target.build_configurations.each do |config|
-        config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
-      end
-      target.source_build_phase.files.each do |file|
-        if file.settings && file.settings['COMPILER_FLAGS']
-          flags = file.settings['COMPILER_FLAGS'].split
-          flags.reject! { |flag| flag == '-Werror' || flag == '-Werror=missing-template-arg-list-after-template-kw' }
-          flags << '-Wno-missing-template-arg-list-after-template-kw'
+          flags.reject! { |flag| flag.start_with?('-Werror') || flag == '-G' || flag == '-GCC_WARN_INHIBIT_ALL_WARNINGS' }
+          if target.name == 'gRPC-Core' || target.name.include?('gRPC')
+            flags << '-Wno-missing-template-arg-list-after-template-kw'
+          end
           file.settings['COMPILER_FLAGS'] = flags.join(' ')
         end
       end
