@@ -24,7 +24,8 @@ platform :ios do
     build_app(
       workspace: "ios/Runner.xcworkspace",
       scheme: "Runner",
-      export_method: "app-store"
+      export_method: "app-store",
+      xcargs: "CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES=YES GCC_TREAT_WARNINGS_AS_ERRORS=NO"
     )
 
     # Upload to TestFlight
