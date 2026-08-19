@@ -15,6 +15,15 @@ if os.path.exists(podfile_path):
           config.build_settings[key] = value.map { |v| v.is_a?(String) ? v.gsub(/-G(\\s+|$)/, ' ').strip : v }.reject { |v| v == '-G' || v.empty? }
         end
       end
+    end
+    if target.name == 'BoringSSL-GRPC' || target.name.include?('BoringSSL')
+      target.source_build_phase.files.each do |file|
+        if file.settings && file.settings['COMPILER_FLAGS']
+          flags = file.settings['COMPILER_FLAGS'].split
+          flags.reject! { |flag| flag == '-G' || flag == '-GCC_WARN_INHIBIT_ALL_WARNINGS' }
+          file.settings['COMPILER_FLAGS'] = flags.join(' ')
+        end
+      end
     end"""
     
     if 'flutter_additional_ios_build_settings(target)' in content:
