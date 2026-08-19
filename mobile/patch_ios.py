@@ -47,8 +47,8 @@ if os.path.exists(podfile_path):
     end"""
     
     if 'flutter_additional_ios_build_settings(target)' in content:
-        content = content.replace('use_frameworks! :linkage => :static', '')
-        content = content.replace('use_frameworks!', '')
+        content = content.replace('use_frameworks! :linkage => :static', 'use_modular_headers!')
+        content = content.replace('use_frameworks!', 'use_modular_headers!')
         content = content.replace('flutter_additional_ios_build_settings(target)', 'flutter_additional_ios_build_settings(target)\n' + patch)
         with open(podfile_path, "w") as f:
             f.write(content)
