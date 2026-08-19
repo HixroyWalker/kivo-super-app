@@ -20,6 +20,15 @@ platform :ios do
     # Build the Flutter app for iOS
     sh("cd .. && flutter build ios --release --no-codesign")
 
+    # Forcefully strip -Werror and -G from all generated pod xcconfig files right before archive
+    Dir.glob("Pods/**/*.xcconfig").each do |file|
+      text = File.read(file)
+      new_text = text.gsub(/-Werror(\\S*)/, ' ').gsub(/-G(\\s+|$)/, ' ')
+      if text != new_text
+        File.write(file, new_text)
+      end
+    end
+
     # Build the Xcode archive
     build_app(
       workspace: "ios/Runner.xcworkspace",
