@@ -12,6 +12,10 @@ if os.path.exists(podfile_path):
       config.build_settings['CLANG_WARN_NON_MODULAR_INCLUDE_IN_FRAMEWORK_MODULE'] = 'NO'
       config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
       
+      if target.name.start_with?('gRPC') || target.name == 'abseil'
+        config.build_settings['GCC_OPTIMIZATION_LEVEL'] = '0'
+      end
+      
       cflags = ['-Wno-non-modular-include-in-framework-module', '-Wno-error=non-modular-include-in-framework-module']
       ['OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS', 'WARNING_CFLAGS'].each do |flag_key|
         if config.build_settings[flag_key].nil?
