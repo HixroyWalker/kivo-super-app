@@ -57,6 +57,24 @@ if os.path.exists(podfile_path):
         with open(podfile_path, "w") as f:
             f.write(content)
 
+    # Foolproof fix for Explicit Module non-modular header errors:
+    # Physically replace the bad imports in the plugin source files before compilation
+    import glob
+    for header in glob.glob('.symlinks/plugins/firebase_*/ios/**/*.h', recursive=True):
+        try:
+            with open(header, 'r') as f:
+                header_content = f.read()
+            if '#import <Firebase/Firebase.h>' in header_content:
+                header_content = header_content.replace(
+                    '#import <Firebase/Firebase.h>',
+                    '#import <FirebaseCore/FirebaseCore.h>\n#import <FirebaseMessaging/FirebaseMessaging.h>\n#import <FirebaseAuth/FirebaseAuth.h>'
+                )
+                with open(header, 'w') as f:
+                    f.write(header_content)
+                print(f"Patched {header} to remove non-modular Firebase umbrella import.")
+        except Exception as e:
+            print(f"Failed to patch {header}: {e}")
+
 # Clean any existing .xcconfig files in Pods
 pods_dir = "ios/Pods"
 if os.path.exists(pods_dir):

@@ -38,9 +38,6 @@ platform :ios do
       end
     end
 
-    # Wrap Firebase imports in all Flutter Firebase plugins with pragma diagnostic ignores to bypass Xcode 16 Explicit Module non-modular header errors
-    sh("find ios/.symlinks/plugins/firebase_* -name '*.h' -type f -exec perl -pi -e 's/#import <Firebase\\/Firebase\\.h>/#pragma clang diagnostic push\\n#pragma clang diagnostic ignored \"-Wnon-modular-include-in-framework-module\"\\n#import <Firebase\\/Firebase.h>\\n#pragma clang diagnostic pop/g' {} + || true")
-
     # Build the Xcode archive
     build_app(
       workspace: "ios/Runner.xcworkspace",
