@@ -8,14 +8,11 @@ if os.path.exists(podfile_path):
         
     patch = """    target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-      ['OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS', 'CFLAGS'].each do |flag_key|
-        if config.build_settings[flag_key]
-          flags = config.build_settings[flag_key]
-          if flags.is_a?(String)
-            config.build_settings[flag_key] = flags.gsub(/-G\\b/, '')
-          elsif flags.is_a?(Array)
-            config.build_settings[flag_key] = flags.reject { |f| f == '-G' }
-          end
+      config.build_settings.each do |key, value|
+        if value.is_a?(String)
+          config.build_settings[key] = value.gsub(/-G(\\s+|$)/, ' ').strip
+        elsif value.is_a?(Array)
+          config.build_settings[key] = value.map { |v| v.is_a?(String) ? v.gsub(/-G(\\s+|$)/, ' ').strip : v }.reject { |v| v == '-G' || v.empty? }
         end
       end
     end"""
@@ -24,6 +21,20 @@ if os.path.exists(podfile_path):
         content = content.replace('flutter_additional_ios_build_settings(target)', 'flutter_additional_ios_build_settings(target)\n' + patch)
         with open(podfile_path, "w") as f:
             f.write(content)
+
+# Clean any existing .xcconfig files in Pods
+pods_dir = "ios/Pods"
+if os.path.exists(pods_dir):
+    for root, dirs, files in os.walk(pods_dir):
+        for file in files:
+            if file.endswith(".xcconfig"):
+                filepath = os.path.join(root, file)
+                with open(filepath, "r") as f:
+                    xc_content = f.read()
+                if "-G" in xc_content:
+                    new_xc = re.sub(r'-G(\s+|$)', ' ', xc_content)
+                    with open(filepath, "w") as f:
+                        f.write(new_xc)
 
 pbxproj_path = "ios/Runner.xcodeproj/project.pbxproj"
 if os.path.exists(pbxproj_path):

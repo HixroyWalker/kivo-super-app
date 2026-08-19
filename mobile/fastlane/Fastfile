@@ -6,6 +6,14 @@ platform :ios do
     # Ensure dependencies are up to date
     cocoapods(clean_install: true)
 
+    # Strip -G flag from all generated pod xcconfig files
+    Dir.glob("Pods/**/*.xcconfig").each do |file|
+      text = File.read(file)
+      if text.include?("-G")
+        File.write(file, text.gsub(/-G(\s+|$)/, ' '))
+      end
+    end
+
     # Fetch Code Signing Certificates via Match
     match(type: "appstore", readonly: true)
 
