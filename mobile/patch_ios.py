@@ -10,6 +10,18 @@ if os.path.exists(podfile_path):
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
       config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
       config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
+      
+      cflags = ['-Wno-non-modular-include-in-framework-module', '-Wno-error=non-modular-include-in-framework-module']
+      ['OTHER_CFLAGS', 'OTHER_CPLUSPLUSFLAGS'].each do |flag_key|
+        if config.build_settings[flag_key].nil?
+          config.build_settings[flag_key] = ['$(inherited)'] + cflags
+        elsif config.build_settings[flag_key].is_a?(String)
+          config.build_settings[flag_key] += ' ' + cflags.join(' ')
+        elsif config.build_settings[flag_key].is_a?(Array)
+          config.build_settings[flag_key].concat(cflags)
+        end
+      end
+
       config.build_settings.each do |key, value|
         if value.is_a?(String)
           config.build_settings[key] = value.gsub(/-G(\\s+|$)/, ' ').gsub(/-Werror(\\S*)/, ' ').strip
