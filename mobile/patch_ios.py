@@ -1,7 +1,49 @@
 import os
 import re
 
-# 1. Clean any existing .xcconfig files in Pods
+# 1. Patch Podfile
+podfile_path = "ios/Podfile"
+if os.path.exists(podfile_path):
+    with open(podfile_path, "r") as f:
+        content = f.read()
+    
+    # Ensure static linkage for frameworks (Firebase, GoogleMobileAds, GoogleSignIn)
+    if "use_frameworks! :linkage => :static" not in content:
+        if "use_frameworks!" in content:
+            content = re.sub(r'use_frameworks!.*', 'use_frameworks! :linkage => :static', content)
+        else:
+            content = content.replace("target 'Runner' do", "target 'Runner' do\n  use_frameworks! :linkage => :static")
+
+    content = content.replace('use_modular_headers!', '')
+
+    # Set platform 14.0
+    if "platform :ios" not in content:
+        content = "platform :ios, '14.0'\n" + content
+    else:
+        content = re.sub(r"platform :ios,.*", "platform :ios, '14.0'", content)
+
+    # Add post_install optimizations for Xcode 16 & iOS 14
+    post_install_patch = """    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+      config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+      config.build_settings['SWIFT_EMIT_APP_INTENTS_METADATA'] = 'NO'
+      config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+      config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
+      config.build_settings['OTHER_CFLAGS'] = ['$(inherited)', '-Wno-non-modular-include-in-framework-module', '-Wno-error=non-modular-include-in-framework-module']
+      config.build_settings['OTHER_CPLUSPLUSFLAGS'] = ['$(inherited)', '-Wno-non-modular-include-in-framework-module', '-Wno-error=non-modular-include-in-framework-module']
+      config.build_settings['OTHER_SWIFT_FLAGS'] = ['$(inherited)', '-Xcc', '-Wno-non-modular-include-in-framework-module']
+      if target.name.start_with?('gRPC') || target.name == 'abseil'
+        config.build_settings['GCC_OPTIMIZATION_LEVEL'] = '0'
+      end
+    end"""
+
+    if 'flutter_additional_ios_build_settings(target)' in content:
+        content = content.replace('flutter_additional_ios_build_settings(target)', 'flutter_additional_ios_build_settings(target)\n' + post_install_patch)
+
+    with open(podfile_path, "w") as f:
+        f.write(content)
+
+# 2. Clean any existing .xcconfig files in Pods
 pods_dir = "ios/Pods"
 if os.path.exists(pods_dir):
     for root, dirs, files in os.walk(pods_dir):
@@ -15,7 +57,7 @@ if os.path.exists(pods_dir):
                     with open(filepath, "w") as f:
                         f.write(new_xc)
 
-# 2. Patch Xcode Project settings
+# 3. Patch Xcode Project settings
 pbxproj_path = "ios/Runner.xcodeproj/project.pbxproj"
 if os.path.exists(pbxproj_path):
     with open(pbxproj_path, "r") as f:
@@ -43,7 +85,7 @@ if os.path.exists(pbxproj_path):
     with open(pbxproj_path, "w") as f:
         f.write(pbx)
 
-# 3. Patch Info.plist to guarantee encryption compliance & full screen & version bindings
+# 4. Patch Info.plist to guarantee encryption compliance & full screen & version bindings
 info_plist_path = "ios/Runner/Info.plist"
 if os.path.exists(info_plist_path):
     with open(info_plist_path, "r") as f:

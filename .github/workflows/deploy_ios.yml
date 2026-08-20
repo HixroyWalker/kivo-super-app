@@ -35,9 +35,8 @@ jobs:
           
       - name: Generate Flutter Native Boilerplate & Install CocoaPods Dependencies
         run: |
-          flutter create . --org com.kivowebb.app
+          flutter create . --org com.kivowebb
           flutter pub get
-          flutter build ios --config-only || true
           python3 patch_ios.py
           cd ios && pod install --repo-update
         
