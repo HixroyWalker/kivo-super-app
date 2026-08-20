@@ -33,16 +33,12 @@ jobs:
         with:
           channel: 'stable'
           
-      - name: Generate Flutter Native Boilerplate & Install CocoaPods Dependencies
+      - name: Generate Flutter Native Workspace & Install CocoaPods
         run: |
-          set -x
           flutter create . --org com.kivowebb.app
           flutter pub get
           python3 patch_ios.py
-          cd ios
-          pod install
-          cd ..
-          flutter build ios --release --no-codesign
+          cd ios && pod install
         
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
