@@ -2,7 +2,7 @@ name: kivo
 description: A closed-loop Super App for the Jamaican market.
 publish_to: 'none'
 
-version: 1.0.22+80
+version: 1.0.22+81
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -10,20 +10,23 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  firebase_core: any
-  firebase_auth: any
-  cloud_firestore: any
-  firebase_messaging: any
-  google_sign_in: any
-  sign_in_with_apple: any
-  provider: ^6.1.2
+  firebase_core: ^2.24.2
+  firebase_auth: ^4.15.3
+  cloud_firestore: ^4.13.6
+  firebase_messaging: ^14.7.19
+  google_sign_in: ^6.1.6
+  sign_in_with_apple: ^6.1.1
+  provider: ^6.1.1
   youtube_player_flutter: ^9.0.3
-  cached_network_image: ^3.4.1
-  fl_chart: ^0.69.0
-  local_auth: any
-  sqflite: any
-  device_info_plus: any
-  google_mobile_ads: any
+  cached_network_image: ^3.3.0
+  fl_chart: ^0.66.0
+  local_auth: ^2.1.8
+  sqflite: ^2.3.0
+  device_info_plus: ^9.1.1
+  google_mobile_ads: ^5.1.0
+
+dependency_overrides:
+  flutter_inappwebview: ^6.0.0
 
 dev_dependencies:
   flutter_test:
