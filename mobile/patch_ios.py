@@ -49,8 +49,11 @@ if os.path.exists(pbxproj_path):
         
     team_id = os.environ.get("APPLE_TEAM_ID") or os.environ.get("DEVELOPMENT_TEAM", "")
     if team_id:
-        pbx = re.sub(r'DEVELOPMENT_TEAM\s*=\s*".*?"', f'DEVELOPMENT_TEAM = "{team_id}"', pbx)
-        pbx = re.sub(r'DEVELOPMENT_TEAM\s*=\s*[^;]+', f'DEVELOPMENT_TEAM = {team_id}', pbx)
+        if "DEVELOPMENT_TEAM" in pbx:
+            pbx = re.sub(r'DEVELOPMENT_TEAM\s*=\s*".*?"', f'DEVELOPMENT_TEAM = "{team_id}"', pbx)
+            pbx = re.sub(r'DEVELOPMENT_TEAM\s*=\s*[^;]+;', f'DEVELOPMENT_TEAM = {team_id};', pbx)
+        else:
+            pbx = pbx.replace('buildSettings = {', f'buildSettings = {{\n\t\t\t\tDEVELOPMENT_TEAM = {team_id};')
         
     pbx = re.sub(r'PRODUCT_BUNDLE_IDENTIFIER\s*=\s*com\.kivo\.app\.[^;]+;', 'PRODUCT_BUNDLE_IDENTIFIER = com.kivo.app;', pbx)
         
