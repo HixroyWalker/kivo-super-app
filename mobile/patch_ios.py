@@ -51,9 +51,9 @@ if os.path.exists(podfile_path):
     end"""
     
     if 'flutter_additional_ios_build_settings(target)' in content:
-        content = content.replace('use_modular_headers!', 'use_frameworks! :linkage => :static')
-        content = content.replace('use_frameworks!', 'use_frameworks! :linkage => :static')
-        content = content.replace('flutter_additional_ios_build_settings(target)', 'flutter_additional_ios_build_settings(target)\n' + patch)
+        content = re.sub(r'use_frameworks!.*', "use_frameworks! :linkage => :static\\n  pod 'Firebase', :modular_headers => true\\n  pod 'FirebaseCore', :modular_headers => true", content)
+        content = content.replace('use_modular_headers!', '')
+        content = content.replace('flutter_additional_ios_build_settings(target)', 'flutter_additional_ios_build_settings(target)\\n' + patch)
         with open(podfile_path, "w") as f:
             f.write(content)
 
