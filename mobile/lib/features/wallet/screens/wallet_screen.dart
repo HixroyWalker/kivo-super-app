@@ -280,7 +280,21 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                     Icon(c['icon'] as IconData, color: Colors.white, size: 20),
                   ],
                 ),
-                Text(c['balance'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 20)),
+                InkWell(
+                  onTap: wallet.toggleBalanceVisibility,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2.0),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(c['balance'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 20)),
+                        const SizedBox(width: 6),
+                        Icon(wallet.isBalanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: Colors.white70, size: 16),
+                      ],
+                    ),
+                  ),
+                ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(

@@ -34,7 +34,7 @@ class WalletProvider extends ChangeNotifier {
   double _jmdBalance = 124500.50;
   double _usdBalance = 820.00;
   bool _isJmd = true;
-  bool _isBalanceVisible = true;
+  bool _isBalanceVisible = false;
 
   double get jmdBalance => _jmdBalance;
   double get usdBalance => _usdBalance;

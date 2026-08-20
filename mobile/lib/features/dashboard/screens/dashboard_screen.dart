@@ -242,13 +242,44 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Text(
-            wallet.formattedBalance,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
+          InkWell(
+            onTap: wallet.toggleBalanceVisibility,
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Row(
+                children: [
+                  Text(
+                    wallet.formattedBalance,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Icon(
+                    wallet.isBalanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                    size: 20,
+                    color: KivoDarkTheme.accentCyan,
+                  ),
+                  if (!wallet.isBalanceVisible) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: KivoDarkTheme.accentCyan.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'Tap to show',
+                        style: TextStyle(color: KivoDarkTheme.accentCyan, fontSize: 10, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 18),
