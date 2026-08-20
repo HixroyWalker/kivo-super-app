@@ -112,7 +112,7 @@ module.exports = (db) => {
     }
   });
 
-  // Assign Customer Label (WhatsApp Business Tag)
+  // Assign Customer Label (Business Tag)
   router.post('/room/:roomId/labels', async (req, res) => {
     const { roomId } = req.params;
     const { label } = req.body; // NEW_CUSTOMER, PENDING_PAYMENT, ORDER_SHIPPED, VIP

@@ -56,7 +56,7 @@ class _MessagingScreenState extends State<MessagingScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('In-App Messaging & P2P'),
+        title: const Text('Message'),
         actions: [
           IconButton(
             icon: const Icon(Icons.more_vert),

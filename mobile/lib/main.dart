@@ -161,7 +161,7 @@ class _MainShellState extends State<MainShell> {
                 label: Text('$unreadChats'),
                 child: const Icon(Icons.chat_bubble),
               ),
-              label: 'Chat',
+              label: 'Message',
             ),
             const NavigationDestination(
               icon: Icon(Icons.analytics_outlined),

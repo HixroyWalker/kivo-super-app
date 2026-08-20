@@ -384,7 +384,7 @@ class DashboardScreen extends StatelessWidget {
     final services = [
       {'title': 'P2P Wallet', 'icon': Icons.account_balance_wallet, 'color': KivoDarkTheme.accentCyan, 'route': '/wallet'},
       {'title': 'Marketplace', 'icon': Icons.storefront, 'color': Colors.orangeAccent, 'route': '/marketplace'},
-      {'title': 'In-App Chat', 'icon': Icons.chat_bubble_outline, 'color': Colors.purpleAccent, 'route': '/messaging'},
+      {'title': 'Message', 'icon': Icons.chat_bubble_outline, 'color': Colors.purpleAccent, 'route': '/messaging'},
       {'title': 'TAJ GCT Tax', 'icon': Icons.receipt_long, 'color': Colors.tealAccent, 'route': '/accounting'},
       {'title': 'Merchant POS', 'icon': Icons.point_of_sale, 'color': KivoDarkTheme.primaryEmerald, 'route': '/merchant_pos'},
       {'title': 'Watch & Earn', 'icon': Icons.monetization_on_outlined, 'color': KivoDarkTheme.accentAmber, 'route': '/ads'},
