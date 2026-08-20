@@ -18,7 +18,8 @@ if os.path.exists(podfile_path):
       
       if target.name.start_with?('gRPC') || target.name == 'abseil'
         config.build_settings['GCC_OPTIMIZATION_LEVEL'] = '0'
-      end"""
+      end
+    end"""
     
     if 'flutter_additional_ios_build_settings(target)' in content:
         content = re.sub(r'use_frameworks!.*', "use_frameworks! :linkage => :static", content)
