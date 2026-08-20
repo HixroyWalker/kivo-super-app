@@ -34,10 +34,20 @@ platform :ios do
       )
     end
 
+    export_opts = {
+      method: "app-store"
+    }
+    if ENV["sigh_com.kivo.app_appstore_profile_name"]
+      export_opts[:provisioningProfiles] = {
+        "com.kivo.app" => ENV["sigh_com.kivo.app_appstore_profile_name"]
+      }
+    end
+
     build_app(
       workspace: "Runner.xcworkspace",
       scheme: "Runner",
-      export_method: "app-store"
+      export_method: "app-store",
+      export_options: export_opts
     )
 
     upload_to_testflight(
