@@ -7,6 +7,9 @@ if os.path.exists(manifest_path):
     with open(manifest_path, "r") as f:
         content = f.read()
     content = content.replace('package="com.kivo.app"', '')
+    if 'com.google.android.gms.ads.APPLICATION_ID' not in content:
+        admob_meta = '<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"/>'
+        content = content.replace('</application>', f'    {admob_meta}\n    </application>')
     with open(manifest_path, "w") as f:
         f.write(content)
 

@@ -16,14 +16,15 @@ import 'features/merchant/screens/pos_cashier_screen.dart';
 import 'features/merchant/screens/merchant_kyc_screen.dart';
 import 'features/notifications/screens/notifications_screen.dart';
 import 'features/ads/screens/ads_screen.dart';
-import 'features/profile/screens/profile_screen.dart';
+import 'core/services/admob_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await Firebase.initializeApp();
+    await AdMobService.initialize();
   } catch (e) {
-    debugPrint('Firebase init fallback: $e');
+    debugPrint('Firebase/AdMob init fallback: $e');
   }
   runApp(
     MultiProvider(

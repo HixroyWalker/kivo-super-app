@@ -81,6 +81,8 @@ if os.path.exists(info_plist_path):
 
     if "ITSAppUsesNonExemptEncryption" not in plist:
         plist = plist.replace("<dict>", "<dict>\n\t<key>ITSAppUsesNonExemptEncryption</key>\n\t<false/>")
+    if "GADApplicationIdentifier" not in plist:
+        plist = plist.replace("<dict>", "<dict>\n\t<key>GADApplicationIdentifier</key>\n\t<string>ca-app-pub-3940256099942544~1458002511</string>")
     if "UIRequiresFullScreen" not in plist:
         plist = plist.replace("<dict>", "<dict>\n\t<key>UIRequiresFullScreen</key>\n\t<true/>")
     if "NSFaceIDUsageDescription" not in plist:

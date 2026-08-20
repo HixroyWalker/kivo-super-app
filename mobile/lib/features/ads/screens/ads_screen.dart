@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/services/api_client.dart';
-import '../../../core/services/auth_provider.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../../../core/theme/dark_theme.dart';
+import '../../../core/services/admob_service.dart';
+import '../../../core/services/wallet_provider.dart';
 
 class AdsScreen extends StatefulWidget {
   const AdsScreen({super.key});
@@ -11,91 +13,216 @@ class AdsScreen extends StatefulWidget {
 }
 
 class _AdsScreenState extends State<AdsScreen> {
-  bool _isWatching = false;
-  String? _message;
+  RewardedAd? _rewardedAd;
+  bool _isLoadingAd = false;
+  bool _isClaimingReward = false;
+  String? _statusMessage;
+  double _todayEarned = 15.0;
 
-  Future<void> _watchAdAndEarn() async {
+  @override
+  void initState() {
+    super.initState();
+    _loadRewardedAd();
+  }
+
+  void _loadRewardedAd() {
+    setState(() => _isLoadingAd = true);
+    AdMobService.loadRewardedAd(
+      onAdLoaded: (ad) {
+        setState(() {
+          _rewardedAd = ad;
+          _isLoadingAd = false;
+        });
+      },
+      onAdFailedToLoad: (error) {
+        setState(() {
+          _rewardedAd = null;
+          _isLoadingAd = false;
+        });
+        debugPrint('Rewarded ad failed to load: $error');
+      },
+    );
+  }
+
+  void _showRewardedAd() {
+    if (_rewardedAd == null) {
+      _loadRewardedAd();
+      return;
+    }
+
+    _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (ad) {
+        ad.dispose();
+        _loadRewardedAd();
+      },
+      onAdFailedToShowFullScreenContent: (ad, error) {
+        ad.dispose();
+        _loadRewardedAd();
+      },
+    );
+
+    _rewardedAd!.show(
+      onUserEarnedReward: (AdWithoutView ad, RewardItem reward) {
+        _handleRewardClaim();
+      },
+    );
+  }
+
+  void _handleRewardClaim() {
     setState(() {
-      _isWatching = true;
-      _message = 'Simulating 5-second video ad...';
+      _isClaimingReward = true;
+      _todayEarned += 5.0;
     });
 
-    // Mock waiting for a video ad to finish playing
-    await Future.delayed(const Duration(seconds: 5));
+    // Credit 5.00 JMD to WalletProvider
+    final wallet = context.read<WalletProvider>();
+    wallet.topUpLynk(5.0);
 
-    if (!mounted) return;
+    setState(() {
+      _isClaimingReward = false;
+      _statusMessage = '🎉 +JMD \$5.00 successfully added to your Kivo Wallet!';
+    });
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final apiClient = ApiClient(baseUrl: 'https://your-kivo-backend.com/api', authProvider: authProvider);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🎉 +JMD \$5.00 credited to your Kivo Wallet!'),
+        backgroundColor: KivoDarkTheme.primaryEmerald,
+      ),
+    );
+  }
 
-    try {
-      final response = await apiClient.post('/ads/reward', {'adId': 'ad_campaign_123'});
-      
-      if (response.statusCode == 200) {
-        setState(() {
-          _message = 'Success! 5 JMD has been credited to your wallet.';
-        });
-      } else {
-        setState(() {
-          _message = 'Failed to claim reward.';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _message = 'Error: $e';
-      });
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isWatching = false;
-        });
-      }
-    }
+  @override
+  void dispose() {
+    _rewardedAd?.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Watch & Earn')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.monetization_on, size: 100, color: Colors.amber),
-              const SizedBox(height: 24),
-              const Text(
-                'Earn JMD by watching short ads from our partners!',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      appBar: AppBar(
+        title: const Text('Watch & Earn'),
+        backgroundColor: KivoDarkTheme.background,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          children: [
+            // Hero Earnings Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: KivoDarkTheme.primaryGradient,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: KivoDarkTheme.primaryEmerald.withOpacity(0.25),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              const SizedBox(height: 48),
-              if (_message != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  child: Text(
-                    _message!,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: _message!.contains('Success') ? Colors.green : Colors.black,
-                      fontWeight: FontWeight.bold,
+              child: Column(
+                children: [
+                  const Text(
+                    'Total Ad Earnings Today',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'JMD \$${_todayEarned.toStringAsFixed(2)}',
+                    style: const TextStyle(fontSize: 34, fontWeight: FontWeight.w900, color: Colors.black),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.bolt, color: Colors.black, size: 16),
+                        SizedBox(width: 4),
+                        Text(
+                          'JMD \$5.00 per video ad completed',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.black),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ElevatedButton.icon(
-                onPressed: _isWatching ? null : _watchAdAndEarn,
-                icon: _isWatching ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Icon(Icons.play_arrow),
-                label: Text(_isWatching ? 'Watching Ad...' : 'Watch Ad & Earn 5 JMD'),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 60),
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                ),
+                ],
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 32),
+
+            // Partner Network Card
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: KivoDarkTheme.surface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.white.withOpacity(0.08)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: KivoDarkTheme.accentCyan.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.ads_click, color: KivoDarkTheme.accentCyan, size: 20),
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Google AdMob Partner Network',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Watch 15-30 second sponsor videos to earn instant JMD cash back directly into your closed-loop balance.',
+                    style: TextStyle(fontSize: 13, color: KivoDarkTheme.textSecondary, height: 1.4),
+                  ),
+                  const SizedBox(height: 20),
+
+                  if (_statusMessage != null)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: KivoDarkTheme.primaryEmerald.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.3)),
+                      ),
+                      child: Text(
+                        _statusMessage!,
+                        style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+
+                  ElevatedButton.icon(
+                    onPressed: (_isLoadingAd || _isClaimingReward) ? null : _showRewardedAd,
+                    icon: _isLoadingAd
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2))
+                        : const Icon(Icons.play_circle_fill, size: 24),
+                    label: Text(_isLoadingAd ? 'Loading Google Ad...' : 'Watch Sponsor Video (+JMD \$5.00)'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 54),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
