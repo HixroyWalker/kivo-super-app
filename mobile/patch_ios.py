@@ -1,6 +1,7 @@
 import os
 import re
 
+# 1. Patch Podfile
 podfile_path = "ios/Podfile"
 if os.path.exists(podfile_path):
     with open(podfile_path, "r") as f:
@@ -30,7 +31,7 @@ if os.path.exists(podfile_path):
         with open(podfile_path, "w") as f:
             f.write(content)
 
-# Clean any existing .xcconfig files in Pods
+# 2. Clean any existing .xcconfig files in Pods
 pods_dir = "ios/Pods"
 if os.path.exists(pods_dir):
     for root, dirs, files in os.walk(pods_dir):
@@ -44,6 +45,7 @@ if os.path.exists(pods_dir):
                     with open(filepath, "w") as f:
                         f.write(new_xc)
 
+# 3. Patch Xcode Project settings
 pbxproj_path = "ios/Runner.xcodeproj/project.pbxproj"
 if os.path.exists(pbxproj_path):
     with open(pbxproj_path, "r") as f:
@@ -70,5 +72,25 @@ if os.path.exists(pbxproj_path):
         
     with open(pbxproj_path, "w") as f:
         f.write(pbx)
+
+# 4. Patch Info.plist to guarantee encryption compliance & full screen & version bindings
+info_plist_path = "ios/Runner/Info.plist"
+if os.path.exists(info_plist_path):
+    with open(info_plist_path, "r") as f:
+        plist = f.read()
+
+    if "ITSAppUsesNonExemptEncryption" not in plist:
+        plist = plist.replace("<dict>", "<dict>\n\t<key>ITSAppUsesNonExemptEncryption</key>\n\t<false/>")
+    if "UIRequiresFullScreen" not in plist:
+        plist = plist.replace("<dict>", "<dict>\n\t<key>UIRequiresFullScreen</key>\n\t<true/>")
+    if "NSFaceIDUsageDescription" not in plist:
+        plist = plist.replace("<dict>", "<dict>\n\t<key>NSFaceIDUsageDescription</key>\n\t<string>Kivo requires FaceID / TouchID to secure your wallet transfers, biometric login, and merchant financials.</string>")
+    if "CFBundleShortVersionString" in plist:
+        plist = re.sub(r'<key>CFBundleShortVersionString</key>\s*<string>.*?</string>', '<key>CFBundleShortVersionString</key>\n\t<string>$(FLUTTER_BUILD_NAME)</string>', plist)
+    if "CFBundleVersion" in plist:
+        plist = re.sub(r'<key>CFBundleVersion</key>\s*<string>.*?</string>', '<key>CFBundleVersion</key>\n\t<string>$(FLUTTER_BUILD_NUMBER)</string>', plist)
+
+    with open(info_plist_path, "w") as f:
+        f.write(plist)
 
 print("iOS patching complete.")
