@@ -1,7 +1,7 @@
 import os
 import re
 
-# 1. Write Canonical Podfile
+# 1. Write Canonical Podfile with dynamic Flutter SDK detection
 podfile_content = """platform :ios, '14.0'
 
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -14,15 +14,23 @@ project 'Runner', {
 
 def flutter_root
   generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
-  unless File.exist?(generated_xcode_build_settings_path)
-    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+  if File.exist?(generated_xcode_build_settings_path)
+    File.foreach(generated_xcode_build_settings_path) do |line|
+      matches = line.match(/FLUTTER_ROOT\=(.*)/)
+      return matches[1].strip if matches
+    end
+  end
+  
+  if ENV['FLUTTER_ROOT'] && !ENV['FLUTTER_ROOT'].empty?
+    return ENV['FLUTTER_ROOT']
   end
 
-  File.foreach(generated_xcode_build_settings_path) do |line|
-    matches = line.match(/FLUTTER_ROOT\=(.*)/)
-    return matches[1].strip if matches
+  which_flutter = `which flutter`.strip
+  unless which_flutter.empty?
+    return File.expand_path(File.join(File.dirname(File.realpath(which_flutter)), '..'))
   end
-  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+
+  '/Users/runner/hostedtoolcache/flutter/stable-arm64/flutter'
 end
 
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
