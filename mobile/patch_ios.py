@@ -61,6 +61,12 @@ if os.path.exists(pbxproj_path):
     pbx = re.sub(r'CODE_SIGN_IDENTITY\s*=\s*"iPhone Developer";', 'CODE_SIGN_IDENTITY = "Apple Distribution";', pbx)
     pbx = re.sub(r'CODE_SIGN_IDENTITY\s*=\s*"Apple Development";', 'CODE_SIGN_IDENTITY = "Apple Distribution";', pbx)
     pbx = re.sub(r'CODE_SIGN_STYLE\s*=\s*Automatic;', 'CODE_SIGN_STYLE = Manual;', pbx)
+    
+    if "PROVISIONING_PROFILE_SPECIFIER" in pbx:
+        pbx = re.sub(r'PROVISIONING_PROFILE_SPECIFIER\s*=\s*".*?"', 'PROVISIONING_PROFILE_SPECIFIER = "com.kivowebb.app AppStore"', pbx)
+        pbx = re.sub(r'PROVISIONING_PROFILE_SPECIFIER\s*=\s*[^;]+;', 'PROVISIONING_PROFILE_SPECIFIER = "com.kivowebb.app AppStore";', pbx)
+    else:
+        pbx = pbx.replace('buildSettings = {', 'buildSettings = {\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "com.kivowebb.app AppStore";')
         
     with open(pbxproj_path, "w") as f:
         f.write(pbx)
