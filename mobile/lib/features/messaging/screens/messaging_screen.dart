@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/dark_theme.dart';
 import 'chat_detail_screen.dart';
 
 class MessagingScreen extends StatefulWidget {
@@ -14,96 +15,36 @@ class _MessagingScreenState extends State<MessagingScreen> {
 
   final List<Map<String, dynamic>> _chats = [
     {
-      'name': 'Kingston Wholesale',
-      'lastMessage': 'Sent JMD \$5,000.00',
-      'type': 'MONEY_TRANSFER',
+      'name': 'Marcus Sterling',
+      'lastMessage': 'Received! Thanks a lot man. See you at 1:00 PM!',
+      'type': 'TEXT',
       'time': '2:35 PM',
-      'unread': 2,
-      'isOnline': true,
-      'label': 'Pending Payment',
-      'labelColor': Colors.orange,
-    },
-    {
-      'name': 'Appleton Estate Rep',
-      'lastMessage': '🎤 Voice Note (0:14)',
-      'type': 'VOICE',
-      'time': '1:15 PM',
-      'unread': 0,
-      'isOnline': true,
-      'label': 'VIP Customer',
-      'labelColor': Colors.purple,
-    },
-    {
-      'name': 'Farm Fresh Produce',
-      'lastMessage': '📷 Product Photo attached',
-      'type': 'IMAGE',
-      'time': 'Yesterday',
       'unread': 1,
-      'isOnline': false,
-      'label': 'New Lead',
-      'labelColor': Colors.blue,
+      'isOnline': true,
+      'label': 'Friend',
+      'labelColor': KivoDarkTheme.accentCyan,
     },
     {
-      'name': 'Blue Mountain Coffee Co',
+      'name': 'Mavis Bank Coffee Co.',
       'lastMessage': 'Your order has been shipped via Knutsford Express!',
       'type': 'TEXT',
-      'time': 'Monday',
+      'time': '1:15 PM',
       'unread': 0,
       'isOnline': false,
-      'label': 'Order Shipped',
-      'labelColor': Colors.green,
+      'label': 'Merchant',
+      'labelColor': KivoDarkTheme.primaryEmerald,
+    },
+    {
+      'name': 'Shenseea P.',
+      'lastMessage': '💸 Sent JMD \$45,000.00 Design Retainer',
+      'type': 'MONEY_TRANSFER',
+      'time': 'Yesterday',
+      'unread': 0,
+      'isOnline': true,
+      'label': 'Client',
+      'labelColor': Colors.purpleAccent,
     },
   ];
-
-  void _showBusinessToolsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.store, color: Colors.green),
-            SizedBox(width: 8),
-            Text('WhatsApp Business Tools'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.flash_on, color: Colors.amber),
-              title: const Text('Quick Replies (/thanks, /hours)'),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Manage canned Quick Replies...')),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.mark_email_read, color: Colors.blue),
-              title: const Text('Automated Away & Greeting Message'),
-              onTap: () {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Auto-reply set to: "Welcome to Kivo Store!"')),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.label, color: Colors.purple),
-              title: const Text('Customer Label Categories'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,13 +56,8 @@ class _MessagingScreenState extends State<MessagingScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('WhatsApp Business Chats'),
+        title: const Text('In-App Messaging & P2P'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.storefront, color: Colors.green),
-            tooltip: 'Business Tools',
-            onPressed: _showBusinessToolsDialog,
-          ),
           IconButton(
             icon: const Icon(Icons.more_vert),
             onPressed: () {},
@@ -134,147 +70,152 @@ class _MessagingScreenState extends State<MessagingScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TextField(
               onChanged: (val) => setState(() => _searchQuery = val),
-              decoration: InputDecoration(
-                hintText: 'Search chats or customer labels...',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.grey.shade100,
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
-                ),
+              style: const TextStyle(color: KivoDarkTheme.textPrimary),
+              decoration: const InputDecoration(
+                hintText: 'Search conversations or contacts...',
+                prefixIcon: Icon(Icons.search, color: KivoDarkTheme.textSecondary),
               ),
             ),
           ),
-          // WhatsApp Business Labels Filter Chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
-              children: ['All', 'Pending Payment', 'VIP Customer', 'New Lead', 'Order Shipped']
+              children: ['All', 'Friend', 'Merchant', 'Client']
                   .map((label) => Padding(
                         padding: const EdgeInsets.only(right: 8.0),
-                        child: FilterChip(
+                        child: ChoiceChip(
                           label: Text(label),
                           selected: _selectedLabel == label,
-                          onSelected: (selected) {
-                            setState(() => _selectedLabel = label);
-                          },
-                          selectedColor: Colors.green.shade100,
+                          onSelected: (_) => setState(() => _selectedLabel = label),
+                          selectedColor: KivoDarkTheme.primaryEmerald.withOpacity(0.2),
+                          backgroundColor: KivoDarkTheme.surface,
+                          labelStyle: TextStyle(
+                            color: _selectedLabel == label ? KivoDarkTheme.primaryEmerald : KivoDarkTheme.textSecondary,
+                            fontWeight: _selectedLabel == label ? FontWeight.bold : FontWeight.normal,
+                          ),
                         ),
                       ))
                   .toList(),
-            ),
           ),
+          const SizedBox(height: 8),
           Expanded(
-            child: ListView.builder(
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
               itemCount: filtered.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final chat = filtered[index];
                 final isOnline = chat['isOnline'] as bool;
                 final unread = chat['unread'] as int;
                 final labelColor = chat['labelColor'] as Color;
 
-                IconData typeIcon = Icons.message;
-                if (chat['type'] == 'VOICE') typeIcon = Icons.mic;
-                if (chat['type'] == 'IMAGE') typeIcon = Icons.camera_alt;
-                if (chat['type'] == 'MONEY_TRANSFER') typeIcon = Icons.attach_money;
-
-                return ListTile(
-                  leading: Stack(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: Colors.green.shade700,
-                        child: Text(
-                          (chat['name'] as String)[0],
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                return Container(
+                  decoration: BoxDecoration(
+                    color: KivoDarkTheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: KivoDarkTheme.surfaceBorder),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    leading: Stack(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: labelColor.withOpacity(0.2),
+                          child: Text(
+                            (chat['name'] as String)[0],
+                            style: TextStyle(color: labelColor, fontWeight: FontWeight.bold),
+                          ),
                         ),
-                      ),
-                      if (isOnline)
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              color: Colors.greenAccent.shade400,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
+                        if (isOnline)
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: KivoDarkTheme.primaryEmerald,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: KivoDarkTheme.surface, width: 2),
+                              ),
                             ),
                           ),
-                        ),
-                    ],
-                  ),
-                  title: Row(
-                    children: [
-                      Expanded(child: Text(chat['name'], style: const TextStyle(fontWeight: FontWeight.bold))),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: labelColor.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          chat['label'],
-                          style: TextStyle(fontSize: 10, color: labelColor, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                  subtitle: Row(
-                    children: [
-                      Icon(typeIcon, size: 16, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          chat['lastMessage'],
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(chat['time'], style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                      const SizedBox(height: 4),
-                      if (unread > 0)
-                        CircleAvatar(
-                          radius: 10,
-                          backgroundColor: Colors.green.shade700,
+                      ],
+                    ),
+                    title: Row(
+                      children: [
+                        Expanded(
                           child: Text(
-                            '$unread',
-                            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                            chat['name'],
+                            style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                         ),
-                    ],
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ChatDetailScreen(merchantName: chat['name']),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: labelColor.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            chat['label'],
+                            style: TextStyle(fontSize: 10, color: labelColor, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        chat['lastMessage'],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12),
                       ),
-                    );
-                  },
+                    ),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(chat['time'], style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
+                        const SizedBox(height: 4),
+                        if (unread > 0)
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: const BoxDecoration(
+                              color: KivoDarkTheme.primaryEmerald,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              '$unread',
+                              style: const TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                      ],
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatDetailScreen(merchantName: chat['name']),
+                        ),
+                      );
+                    },
+                  ),
                 );
               },
             ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Select contact to start a new chat')),
+            const SnackBar(content: Text('Select recipient to start chat')),
           );
         },
-        backgroundColor: Colors.green.shade700,
-        child: const Icon(Icons.chat),
+        icon: const Icon(Icons.edit, color: Colors.black),
+        label: const Text('New Message', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
       ),
     );
   }

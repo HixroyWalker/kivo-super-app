@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../core/theme/dark_theme.dart';
+import '../../../core/services/wallet_provider.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   final String merchantName;
@@ -52,7 +55,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       'sender': 'me',
       'type': 'MONEY_TRANSFER',
       'amount': 3200.0,
-      'note': 'Coffee Order Payment Request',
+      'note': 'Coffee Order Payment',
       'time': '2:20 PM',
       'status': 'READ',
     },
@@ -83,101 +86,36 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     });
   }
 
-  void _showBusinessProfileSheet() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Colors.green.shade700,
-                  child: Text(widget.merchantName[0], style: const TextStyle(color: Colors.white, fontSize: 24)),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(widget.merchantName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.verified, color: Colors.blue, size: 18),
-                        ],
-                      ),
-                      const Text('Official Verified Kivo Merchant', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const Divider(height: 32),
-            const ListTile(
-              leading: Icon(Icons.schedule, color: Colors.green),
-              title: Text('Business Hours'),
-              subtitle: Text('Mon - Sat: 8:00 AM - 6:00 PM'),
-            ),
-            const ListTile(
-              leading: Icon(Icons.location_on, color: Colors.red),
-              title: Text('Location'),
-              subtitle: Text('Half Way Tree, Kingston, Jamaica'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.storefront, color: Colors.orange),
-              title: const Text('View Full Store Catalog'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/marketplace');
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _showAttachmentMenu() {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: KivoDarkTheme.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
         child: Wrap(
           spacing: 24,
           runSpacing: 24,
           alignment: WrapAlignment.center,
           children: [
-            _buildAttachmentOption(Icons.attach_money, Colors.green, 'Send Money', () {
+            _buildAttachmentOption(Icons.attach_money, KivoDarkTheme.primaryEmerald, 'Send Money', () {
               Navigator.pop(context);
               _showSendMoneyDialog();
             }),
-            _buildAttachmentOption(Icons.shopping_bag, Colors.orange, 'Catalog Product', () {
+            _buildAttachmentOption(Icons.shopping_bag, Colors.orangeAccent, 'Product Card', () {
               Navigator.pop(context);
               _sendMessage(type: 'PRODUCT', productTitle: 'Appleton Estate Rum 750ml', amount: 4500.0, content: 'Special Reserve Rum');
             }),
-            _buildAttachmentOption(Icons.camera_alt, Colors.pink, 'Camera', () {
+            _buildAttachmentOption(Icons.camera_alt, Colors.pinkAccent, 'Camera', () {
               Navigator.pop(context);
               _sendMessage(type: 'IMAGE', content: '📷 Photo attached');
             }),
-            _buildAttachmentOption(Icons.mic, Colors.orange, 'Voice Note', () {
+            _buildAttachmentOption(Icons.mic, KivoDarkTheme.accentCyan, 'Voice Note', () {
               Navigator.pop(context);
               _sendMessage(type: 'VOICE', duration: '0:15');
-            }),
-            _buildAttachmentOption(Icons.insert_drive_file, Colors.purple, 'Document', () {
-              Navigator.pop(context);
-              _sendMessage(type: 'TEXT', content: '📄 Invoice_Kivo_2026.pdf');
             }),
           ],
         ),
@@ -187,32 +125,50 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   void _showSendMoneyDialog() {
     final amountController = TextEditingController();
+    final wallet = context.read<WalletProvider>();
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Transfer Money to ${widget.merchantName}'),
-        content: TextField(
-          controller: amountController,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Amount (JMD \$)',
-            prefixText: '\$',
-          ),
+        backgroundColor: KivoDarkTheme.surfaceElevated,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Transfer to ${widget.merchantName}', style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Available Balance: ${wallet.formattedBalance}', style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: amountController,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
+              decoration: const InputDecoration(
+                labelText: 'Amount (JMD)',
+                prefixText: 'JMD \$ ',
+                prefixStyle: TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel', style: TextStyle(color: KivoDarkTheme.textSecondary))),
           ElevatedButton(
             onPressed: () {
-              if (amountController.text.isEmpty) return;
-              final amt = double.tryParse(amountController.text) ?? 0.0;
-              Navigator.pop(context);
-              _sendMessage(type: 'MONEY_TRANSFER', amount: amt);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Transferred JMD \$$amt in chat!')),
-              );
+              final amt = double.tryParse(amountController.text.trim());
+              if (amt != null && amt > 0) {
+                if (wallet.jmdBalance >= amt) {
+                  wallet.sendMoney(widget.merchantName, amt, 'In-Chat Transfer');
+                  Navigator.pop(context);
+                  _sendMessage(type: 'MONEY_TRANSFER', amount: amt);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Insufficient wallet balance.')),
+                  );
+                }
+              }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('Send Money Now', style: TextStyle(color: Colors.white)),
+            child: const Text('Send Money Now'),
           ),
         ],
       ),
@@ -225,42 +181,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: color,
-            child: Icon(icon, color: Colors.white, size: 28),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              shape: BoxShape.circle,
+              border: Border.all(color: color.withOpacity(0.3)),
+            ),
+            child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
-  }
-
-  void _triggerVoiceCall() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.phone_in_talk, color: Colors.green),
-            const SizedBox(width: 8),
-            Text('Calling ${widget.merchantName}...'),
-          ],
-        ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircleAvatar(radius: 40, backgroundColor: Colors.green, child: Icon(Icons.person, size: 40, color: Colors.white)),
-            SizedBox(height: 16),
-            Text('WhatsApp Voice Call Ringing...', style: TextStyle(color: Colors.grey)),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.call_end, color: Colors.red, size: 36),
-            onPressed: () => Navigator.pop(context),
-          ),
+          Text(label, style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -271,95 +202,81 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 0,
-        title: InkWell(
-          onTap: _showBusinessProfileSheet,
-          child: Row(
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.green.shade700,
-                child: Text(widget.merchantName[0], style: const TextStyle(color: Colors.white)),
-              ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(widget.merchantName, style: const TextStyle(fontSize: 16)),
-                      const SizedBox(width: 4),
-                      const Icon(Icons.verified, color: Colors.blue, size: 16),
-                    ],
-                  ),
-                  const Text('Business Account • Online', style: TextStyle(fontSize: 11, color: Colors.greenAccent)),
-                ],
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.phone, color: Colors.green),
-            tooltip: 'Audio Voice Call',
-            onPressed: _triggerVoiceCall,
-          ),
-          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
-        ],
-      ),
-      body: Container(
-        color: Colors.grey.shade100,
-        child: Column(
+        title: Row(
           children: [
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final msg = _messages[index];
-                  final isMe = msg['sender'] == 'me';
-
-                  return Align(
-                    alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isMe ? Colors.green.shade100 : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4, offset: const Offset(0, 2)),
-                        ],
-                      ),
-                      child: _buildMessageContent(msg, isMe),
-                    ),
-                  );
-                },
-              ),
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: KivoDarkTheme.primaryEmerald,
+              child: Text(widget.merchantName[0], style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
             ),
-            if (_showQuickReplySuggestions) _buildQuickReplyOverlay(),
-            _buildInputBar(),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(widget.merchantName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.verified, color: KivoDarkTheme.accentCyan, size: 16),
+                  ],
+                ),
+                const Text('Verified Merchant • Online', style: TextStyle(fontSize: 11, color: KivoDarkTheme.primaryEmerald)),
+              ],
+            ),
           ],
         ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final msg = _messages[index];
+                final isMe = msg['sender'] == 'me';
+
+                return Align(
+                  alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isMe ? const Color(0xFF1B382B) : KivoDarkTheme.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isMe ? KivoDarkTheme.primaryEmerald.withOpacity(0.3) : KivoDarkTheme.surfaceBorder,
+                      ),
+                    ),
+                    child: _buildMessageContent(msg, isMe),
+                  ),
+                );
+              },
+            ),
+          ),
+          if (_showQuickReplySuggestions) _buildQuickReplyOverlay(),
+          _buildInputBar(),
+        ],
       ),
     );
   }
 
   Widget _buildQuickReplyOverlay() {
     return Container(
-      color: Colors.white,
+      color: KivoDarkTheme.surfaceElevated,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('Quick Reply Suggestions (Tap to use)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
+          const Text('Quick Reply Suggestions', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: KivoDarkTheme.textSecondary)),
           const SizedBox(height: 4),
           ..._quickReplies.map((qr) => ListTile(
                 dense: true,
                 contentPadding: EdgeInsets.zero,
-                leading: Text(qr['shortcut'], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
-                title: Text(qr['text'], maxLines: 1, overflow: TextOverflow.ellipsis),
+                leading: Text(qr['shortcut'], style: const TextStyle(fontWeight: FontWeight.bold, color: KivoDarkTheme.primaryEmerald)),
+                title: Text(qr['text'], maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: KivoDarkTheme.textPrimary)),
                 onTap: () {
                   _sendMessage(type: 'TEXT', content: qr['text']);
                 },
@@ -378,7 +295,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            icon: Icon(msg['isPlaying'] == true ? Icons.pause_circle : Icons.play_circle, color: Colors.green.shade800, size: 32),
+            icon: Icon(msg['isPlaying'] == true ? Icons.pause_circle : Icons.play_circle, color: KivoDarkTheme.accentCyan, size: 32),
             onPressed: () {
               setState(() {
                 msg['isPlaying'] = !(msg['isPlaying'] ?? false);
@@ -390,97 +307,44 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(height: 4, color: Colors.green.shade300),
+                Container(height: 4, decoration: BoxDecoration(color: KivoDarkTheme.accentCyan, borderRadius: BorderRadius.circular(2))),
                 const SizedBox(height: 4),
-                Text('Voice Note (${msg['duration']})', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                Text('Voice Note (${msg['duration']})', style: const TextStyle(fontSize: 12, color: KivoDarkTheme.textSecondary)),
               ],
             ),
           ),
         ],
       );
-    } else if (type == 'PRODUCT') {
-      body = Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.orange.shade50,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.orange.shade200),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.shopping_bag, color: Colors.orange),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(msg['productTitle'] ?? 'Product Card', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text('Price: JMD \$${msg['price']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green)),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Ordering ${msg['productTitle']}...')),
-                  );
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
-                child: const Text('Order Now in Chat'),
-              ),
-            ),
-          ],
-        ),
-      );
     } else if (type == 'MONEY_TRANSFER') {
       body = Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.green.shade700,
+          color: KivoDarkTheme.primaryEmerald.withOpacity(0.15),
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.4)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Row(
               children: [
-                Icon(Icons.account_balance_wallet, color: Colors.white, size: 20),
+                Icon(Icons.account_balance_wallet, color: KivoDarkTheme.primaryEmerald, size: 18),
                 SizedBox(width: 8),
-                Text('Kivo In-Chat Payment', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                Text('Kivo In-Chat Transfer', style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold, fontSize: 13)),
               ],
             ),
             const SizedBox(height: 8),
             Text(
-              'JMD \$${msg['amount']}',
-              style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+              'JMD \$${(msg['amount'] as double).toStringAsFixed(2)}',
+              style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 4),
-            Text(msg['note'] ?? 'Direct Transfer', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+            Text(msg['note'] ?? 'Direct Transfer', style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
           ],
         ),
       );
-    } else if (type == 'IMAGE') {
-      body = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 140,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Center(child: Icon(Icons.image, size: 48, color: Colors.grey)),
-          ),
-          const SizedBox(height: 4),
-          Text(msg['content'] ?? '', style: const TextStyle(fontSize: 14)),
-        ],
-      );
     } else {
-      body = Text(msg['content'] ?? '', style: const TextStyle(fontSize: 15));
+      body = Text(msg['content'] ?? '', style: const TextStyle(fontSize: 15, color: KivoDarkTheme.textPrimary));
     }
 
     return Column(
@@ -488,16 +352,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       children: [
         body,
         const SizedBox(height: 4),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(msg['time'] ?? '', style: const TextStyle(fontSize: 10, color: Colors.grey)),
-            if (isMe) ...[
-              const SizedBox(width: 4),
-              const Icon(Icons.done_all, size: 14, color: Colors.blue),
-            ],
-          ],
-        ),
+        Text(msg['time'] ?? '', style: const TextStyle(fontSize: 10, color: KivoDarkTheme.textSecondary)),
       ],
     );
   }
@@ -505,16 +360,20 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   Widget _buildInputBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      color: Colors.white,
+      decoration: BoxDecoration(
+        color: KivoDarkTheme.surface,
+        border: Border(top: BorderSide(color: Colors.white.withOpacity(0.08))),
+      ),
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.add_circle_outline, color: Colors.grey),
+            icon: const Icon(Icons.add_circle_outline, color: KivoDarkTheme.accentCyan),
             onPressed: _showAttachmentMenu,
           ),
           Expanded(
             child: TextField(
               controller: _controller,
+              style: const TextStyle(color: KivoDarkTheme.textPrimary),
               onChanged: (val) {
                 setState(() {
                   _showQuickReplySuggestions = val.startsWith('/');
@@ -528,24 +387,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.camera_alt, color: Colors.grey),
-            onPressed: () => _sendMessage(type: 'IMAGE', content: '📷 Photo attached'),
-          ),
-          IconButton(
-            icon: Icon(_isRecordingVoice ? Icons.stop_circle : Icons.mic, color: _isRecordingVoice ? Colors.red : Colors.green.shade700),
+            icon: Icon(_isRecordingVoice ? Icons.stop_circle : Icons.mic, color: _isRecordingVoice ? KivoDarkTheme.accentRose : KivoDarkTheme.textSecondary),
             onPressed: () {
               setState(() => _isRecordingVoice = !_isRecordingVoice);
               if (!_isRecordingVoice) {
                 _sendMessage(type: 'VOICE', duration: '0:08');
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Recording Voice Note... Tap again to send')),
-                );
               }
             },
           ),
           IconButton(
-            icon: const Icon(Icons.send, color: Colors.green),
+            icon: const Icon(Icons.send, color: KivoDarkTheme.primaryEmerald),
             onPressed: () => _sendMessage(type: 'TEXT'),
           ),
         ],

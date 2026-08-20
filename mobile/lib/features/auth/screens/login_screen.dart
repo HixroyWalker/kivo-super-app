@@ -1,92 +1,98 @@
 import 'package:flutter/material.dart';
-// import 'package:google_sign_in/google_sign_in.dart';
-// import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import '../../../core/theme/dark_theme.dart';
+import '../../../core/services/auth_provider.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   Future<void> _handleGoogleSignIn(BuildContext context) async {
-    try {
-      /* 
-      // 1. Native Authentication (Uncomment when native modules are built)
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        scopes: ['email', 'profile'],
-      );
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser == null) return; // User canceled
-      
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final String? idToken = googleAuth.idToken;
-
-      // 2. Backend Exchange
-      final response = await http.post(
-        Uri.parse('https://kivo-backend-url/api/auth/login'),
-        body: {'idToken': idToken},
-      );
-      
-      if (response.statusCode == 200) {
-        // Save session JWT to secure storage and navigate
-        Navigator.pushReplacementNamed(context, '/dashboard');
-      }
-      */
-      
-      // Mock navigation for current dev environment
-      Navigator.pushReplacementNamed(context, '/dashboard');
-    } catch (error) {
-      debugPrint('Sign in error: $error');
-    }
+    final auth = context.read<AuthProvider>();
+    auth.setSession('jwt_token_sample_session', 'usr_8923019');
+    Navigator.pushReplacementNamed(context, '/main');
   }
 
   Future<void> _handleAppleSignIn(BuildContext context) async {
-    try {
-      Navigator.pushReplacementNamed(context, '/dashboard');
-    } catch (error) {
-      debugPrint('Apple sign in error: $error');
-    }
+    final auth = context.read<AuthProvider>();
+    auth.setSession('jwt_token_sample_session', 'usr_8923019');
+    Navigator.pushReplacementNamed(context, '/main');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Kivo',
-                style: TextStyle(
-                  fontSize: 48,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
+      body: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0B0F14), Color(0xFF101922)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Glowing App Icon
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    gradient: KivoDarkTheme.primaryGradient,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: KivoDarkTheme.primaryEmerald.withOpacity(0.35),
+                        blurRadius: 30,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.flash_on, color: Colors.black, size: 48),
                 ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'The closed-loop super app for Jamaica.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-              const SizedBox(height: 48),
-              ElevatedButton.icon(
-                onPressed: () => _handleGoogleSignIn(context),
-                icon: const Icon(Icons.login),
-                label: const Text('Sign in with Google'),
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
+                const SizedBox(height: 24),
+                const Text(
+                  'KIVO',
+                  style: TextStyle(
+                    fontSize: 42,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: -1,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              OutlinedButton.icon(
-                onPressed: () => _handleAppleSignIn(context),
-                icon: const Icon(Icons.apple),
-                label: const Text('Sign in with Apple'),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
+                const SizedBox(height: 8),
+                const Text(
+                  'The Closed-Loop Super App for Jamaica 🇯🇲',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: KivoDarkTheme.textSecondary),
                 ),
-              ),
-            ],
+                const SizedBox(height: 48),
+                ElevatedButton.icon(
+                  onPressed: () => _handleGoogleSignIn(context),
+                  icon: const Icon(Icons.g_mobiledata, size: 28),
+                  label: const Text('Continue with Google'),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 54),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                OutlinedButton.icon(
+                  onPressed: () => _handleAppleSignIn(context),
+                  icon: const Icon(Icons.apple, size: 22),
+                  label: const Text('Continue with Apple'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 54),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'By signing in, you agree to Kivo Security & TAJ compliance terms.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 11, color: KivoDarkTheme.textSecondary),
+                ),
+              ],
+            ),
           ),
         ),
       ),

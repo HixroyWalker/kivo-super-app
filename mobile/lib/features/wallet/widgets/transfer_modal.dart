@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/services/api_client.dart';
-import '../../../core/services/auth_provider.dart';
+import 'package:local_auth/local_auth.dart';
+import '../../../core/theme/dark_theme.dart';
+import '../../../core/services/wallet_provider.dart';
 
 class TransferModal extends StatefulWidget {
   const TransferModal({super.key});
@@ -12,95 +13,246 @@ class TransferModal extends StatefulWidget {
 
 class _TransferModalState extends State<TransferModal> {
   final _formKey = GlobalKey<FormState>();
-  String _recipientHandle = '';
-  double _amount = 0.0;
-  String _note = '';
+  final _recipientController = TextEditingController();
+  final _amountController = TextEditingController();
+  final _noteController = TextEditingController();
+  final LocalAuthentication _localAuth = LocalAuthentication();
   bool _isLoading = false;
   String? _errorMessage;
 
+  final List<String> _recentContacts = [
+    'Marcus Sterling',
+    'Shenseea P.',
+    'Mavis Bank Agro',
+    'Island Grocers',
+  ];
+
   Future<void> _submitTransfer() async {
     if (!_formKey.currentState!.validate()) return;
-    _formKey.currentState!.save();
+
+    final amount = double.tryParse(_amountController.text.trim());
+    if (amount == null || amount <= 0) {
+      setState(() => _errorMessage = 'Please enter a valid amount');
+      return;
+    }
+
+    final recipient = _recipientController.text.trim();
+    final note = _noteController.text.trim();
 
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final apiClient = ApiClient(baseUrl: 'https://your-kivo-backend.com/api', authProvider: authProvider);
-
+    // 1. Biometric verification if available
     try {
-      // Execute the P2P transfer against the Cloud Run backend
-      await apiClient.post('/wallet/transfer', {
-        'senderId': authProvider.userId,
-        // In a real app, you'd resolve the recipientHandle to their exact user ID first, 
-        // or pass the handle to the backend and let the backend resolve it.
-        'recipientId': _recipientHandle, 
-        'amount': _amount,
-        'note': _note,
-      });
-
-      if (mounted) {
-        Navigator.pop(context, true); // Success
+      final bool canCheckBiometrics = await _localAuth.canCheckBiometrics;
+      if (canCheckBiometrics) {
+        final bool didAuthenticate = await _localAuth.authenticate(
+          localizedReason: 'Authorize JMD \$${amount.toStringAsFixed(2)} transfer to $recipient',
+          options: const AuthenticationOptions(biometricOnly: false),
+        );
+        if (!didAuthenticate) {
+          setState(() {
+            _isLoading = false;
+            _errorMessage = 'Biometric authentication cancelled';
+          });
+          return;
+        }
       }
     } catch (e) {
+      debugPrint('Biometric fallback: $e');
+    }
+
+    // 2. Execute transfer via WalletProvider
+    final wallet = context.read<WalletProvider>();
+    final success = wallet.sendMoney(recipient, amount, note);
+
+    if (success) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: KivoDarkTheme.surfaceElevated,
+            content: Text(
+              'Successfully sent JMD \$${amount.toStringAsFixed(2)} to $recipient! 🎉',
+              style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold),
+            ),
+          ),
+        );
+      }
+    } else {
       setState(() {
-        _errorMessage = e.toString();
+        _isLoading = false;
+        _errorMessage = 'Insufficient wallet balance for this transfer';
       });
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Container(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16, right: 16, top: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        left: 20,
+        right: 20,
+        top: 20,
+      ),
+      decoration: const BoxDecoration(
+        color: KivoDarkTheme.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Form(
         key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Text('Send JMD', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            if (_errorMessage != null)
-              Container(
-                padding: const EdgeInsets.all(8),
-                color: Colors.red.shade100,
-                child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
               ),
-            TextFormField(
-              decoration: const InputDecoration(labelText: 'Recipient Kivo Handle'),
-              validator: (value) => value == null || value.isEmpty ? 'Required' : null,
-              onSaved: (value) => _recipientHandle = value!,
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              decoration: const InputDecoration(labelText: 'Amount (JMD)', prefixText: '\$'),
-              keyboardType: TextInputType.number,
-              validator: (value) => value == null || double.tryParse(value) == null ? 'Invalid amount' : null,
-              onSaved: (value) => _amount = double.parse(value!),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              decoration: const InputDecoration(labelText: 'Note / Emoji'),
-              onSaved: (value) => _note = value ?? '',
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _submitTransfer,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green, padding: const EdgeInsets.symmetric(vertical: 16)),
-              child: _isLoading 
-                  ? const CircularProgressIndicator(color: Colors.white) 
-                  : const Text('Send Payment', style: TextStyle(color: Colors.white, fontSize: 16)),
-            ),
-            const SizedBox(height: 24),
-          ],
+              const SizedBox(height: 16),
+              const Row(
+                children: [
+                  Icon(Icons.send_rounded, color: KivoDarkTheme.primaryEmerald),
+                  SizedBox(width: 10),
+                  Text(
+                    'Instant P2P Transfer',
+                    style: TextStyle(
+                      color: KivoDarkTheme.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (_errorMessage != null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: KivoDarkTheme.accentRose.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: KivoDarkTheme.accentRose.withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    _errorMessage!,
+                    style: const TextStyle(color: KivoDarkTheme.accentRose, fontSize: 13),
+                  ),
+                ),
+
+              // Recent contacts picker
+              const Text('Recent Recipients', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 36,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _recentContacts.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, i) {
+                    return InkWell(
+                      onTap: () {
+                        setState(() {
+                          _recipientController.text = _recentContacts[i];
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(18),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: KivoDarkTheme.surfaceElevated,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: KivoDarkTheme.surfaceBorder),
+                        ),
+                        child: Text(
+                          _recentContacts[i],
+                          style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 12),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: _recipientController,
+                style: const TextStyle(color: KivoDarkTheme.textPrimary),
+                decoration: const InputDecoration(
+                  labelText: 'Recipient Name or @handle',
+                  prefixIcon: Icon(Icons.person_outline, color: KivoDarkTheme.textSecondary),
+                ),
+                validator: (value) => value == null || value.trim().isEmpty ? 'Enter a recipient' : null,
+              ),
+              const SizedBox(height: 12),
+
+              TextFormField(
+                controller: _amountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
+                decoration: const InputDecoration(
+                  labelText: 'Amount (JMD)',
+                  prefixText: 'JMD \$ ',
+                  prefixStyle: TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) return 'Enter amount';
+                  if (double.tryParse(value) == null) return 'Invalid amount';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 10),
+
+              // Quick amount pills
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [500, 1000, 2500, 5000].map((amt) {
+                  return InkWell(
+                    onTap: () => setState(() => _amountController.text = amt.toString()),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: KivoDarkTheme.surfaceElevated,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: KivoDarkTheme.surfaceBorder),
+                      ),
+                      child: Text('+\$$amt', style: const TextStyle(color: KivoDarkTheme.accentCyan, fontSize: 11, fontWeight: FontWeight.w600)),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 12),
+
+              TextFormField(
+                controller: _noteController,
+                style: const TextStyle(color: KivoDarkTheme.textPrimary),
+                decoration: const InputDecoration(
+                  labelText: 'Note / Reason (e.g. Lunch, Groceries 🍔)',
+                  prefixIcon: Icon(Icons.note_alt_outlined, color: KivoDarkTheme.textSecondary),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              ElevatedButton.icon(
+                onPressed: _isLoading ? null : _submitTransfer,
+                icon: _isLoading
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                    : const Icon(Icons.lock_outline, size: 20),
+                label: Text(_isLoading ? 'Authorizing...' : 'Authorize & Send Payment'),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,5 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import '../../../core/theme/dark_theme.dart';
 
 class AccountingScreen extends StatefulWidget {
   const AccountingScreen({super.key});
@@ -9,7 +9,6 @@ class AccountingScreen extends StatefulWidget {
 }
 
 class _AccountingScreenState extends State<AccountingScreen> {
-  // Mock Invoices
   final List<Map<String, dynamic>> _invoices = [
     {
       'id': 'INV-1001',
@@ -27,27 +26,26 @@ class _AccountingScreenState extends State<AccountingScreen> {
       'gctAmount': 18000.0,
       'totalAmount': 138000.0,
       'status': 'PENDING',
-      'dueDate': '2026-08-15',
+      'dueDate': '2026-08-25',
     },
   ];
 
-  // Mock Expenses
   final List<Map<String, dynamic>> _expenses = [
     {
       'id': 'EXP-501',
       'category': 'Inventory',
-      'description': 'Bulk Coffee Beans & Spices',
+      'description': 'Bulk Coffee Beans & Packaging',
       'amount': 28000.0,
       'gctPaid': 4200.0,
-      'date': '2026-07-28',
+      'date': '2026-08-18',
     },
     {
       'id': 'EXP-502',
       'category': 'Utilities',
-      'description': 'JPS Electricity Bill',
+      'description': 'JPS Commercial Electricity',
       'amount': 14500.0,
       'gctPaid': 2175.0,
-      'date': '2026-07-25',
+      'date': '2026-08-15',
     },
   ];
 
@@ -58,51 +56,59 @@ class _AccountingScreenState extends State<AccountingScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Create New Invoice'),
+        backgroundColor: KivoDarkTheme.surfaceElevated,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Create New Invoice', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(labelText: 'Customer Name'),
+              style: const TextStyle(color: KivoDarkTheme.textPrimary),
+              decoration: const InputDecoration(labelText: 'Customer / Business Name'),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: amountController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Subtotal Amount (JMD)'),
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
+              decoration: const InputDecoration(labelText: 'Subtotal Amount (JMD)', prefixText: 'JMD \$ '),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             const Text(
-              '15% GCT will be calculated automatically.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+              'Standard 15% GCT will be automatically itemized.',
+              style: TextStyle(fontSize: 11, color: KivoDarkTheme.textSecondary),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel', style: TextStyle(color: KivoDarkTheme.textSecondary))),
           ElevatedButton(
             onPressed: () {
-              if (nameController.text.isEmpty || amountController.text.isEmpty) return;
-              final sub = double.tryParse(amountController.text) ?? 0.0;
+              if (nameController.text.trim().isEmpty || amountController.text.trim().isEmpty) return;
+              final sub = double.tryParse(amountController.text.trim()) ?? 0.0;
               final gct = sub * 0.15;
               setState(() {
                 _invoices.insert(0, {
                   'id': 'INV-${1000 + _invoices.length + 1}',
-                  'customerName': nameController.text,
+                  'customerName': nameController.text.trim(),
                   'subtotal': sub,
                   'gctAmount': gct,
                   'totalAmount': sub + gct,
                   'status': 'PENDING',
-                  'dueDate': '2026-08-20',
+                  'dueDate': '2026-08-30',
                 });
               });
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Invoice created & sent to customer!')),
+                const SnackBar(
+                  backgroundColor: KivoDarkTheme.surfaceElevated,
+                  content: Text('Invoice created and sent to customer!', style: TextStyle(color: KivoDarkTheme.primaryEmerald)),
+                ),
               );
             },
-            child: const Text('Create & Send'),
+            child: const Text('Generate Invoice'),
           ),
         ],
       ),
@@ -118,50 +124,59 @@ class _AccountingScreenState extends State<AccountingScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Record Business Expense'),
+          backgroundColor: KivoDarkTheme.surfaceElevated,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Record Business Expense', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
                 value: category,
+                dropdownColor: KivoDarkTheme.surfaceElevated,
+                style: const TextStyle(color: KivoDarkTheme.textPrimary),
                 items: ['Inventory', 'Utilities', 'Rent', 'Payroll', 'Marketing', 'Supplies']
-                    .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
+                    .map((cat) => DropdownMenuItem(value: cat, child: Text(cat, style: const TextStyle(color: KivoDarkTheme.textPrimary))))
                     .toList(),
                 onChanged: (val) => setDialogState(() => category = val!),
-                decoration: const InputDecoration(labelText: 'Expense Category'),
+                decoration: const InputDecoration(labelText: 'Category'),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: descController,
+                style: const TextStyle(color: KivoDarkTheme.textPrimary),
                 decoration: const InputDecoration(labelText: 'Description / Vendor'),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: amountController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Total Amount (JMD)'),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: const TextStyle(color: KivoDarkTheme.textPrimary),
+                decoration: const InputDecoration(labelText: 'Total Amount (JMD)', prefixText: 'JMD \$ '),
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel', style: TextStyle(color: KivoDarkTheme.textSecondary))),
             ElevatedButton(
               onPressed: () {
-                if (amountController.text.isEmpty) return;
-                final amt = double.tryParse(amountController.text) ?? 0.0;
+                if (amountController.text.trim().isEmpty) return;
+                final amt = double.tryParse(amountController.text.trim()) ?? 0.0;
                 setState(() {
                   _expenses.insert(0, {
                     'id': 'EXP-${500 + _expenses.length + 1}',
                     'category': category,
-                    'description': descController.text.isEmpty ? category : descController.text,
+                    'description': descController.text.trim().isEmpty ? category : descController.text.trim(),
                     'amount': amt,
                     'gctPaid': amt * 0.15,
-                    'date': DateTime.now().toString().split(' ')[0],
+                    'date': '2026-08-20',
                   });
                 });
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Expense logged successfully!')),
+                  const SnackBar(
+                    backgroundColor: KivoDarkTheme.surfaceElevated,
+                    content: Text('Expense logged successfully!', style: TextStyle(color: KivoDarkTheme.primaryEmerald)),
+                  ),
                 );
               },
               child: const Text('Save Expense'),
@@ -178,14 +193,17 @@ class _AccountingScreenState extends State<AccountingScreen> {
       length: 4,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Kivo QuickBooks Suite'),
+          title: const Text('Business & TAJ Tax'),
           bottom: const TabBar(
             isScrollable: true,
+            indicatorColor: KivoDarkTheme.primaryEmerald,
+            labelColor: KivoDarkTheme.primaryEmerald,
+            unselectedLabelColor: KivoDarkTheme.textSecondary,
             tabs: [
-              Tab(icon: Icon(Icons.dashboard), text: 'Overview'),
-              Tab(icon: Icon(Icons.receipt_long), text: 'Invoices'),
-              Tab(icon: Icon(Icons.money_off), text: 'Expenses'),
-              Tab(icon: Icon(Icons.pie_chart), text: 'P&L & Tax'),
+              Tab(icon: Icon(Icons.dashboard_outlined), text: 'Overview'),
+              Tab(icon: Icon(Icons.receipt_long_outlined), text: 'Invoices'),
+              Tab(icon: Icon(Icons.money_off_outlined), text: 'Expenses'),
+              Tab(icon: Icon(Icons.pie_chart_outline), text: 'TAJ GCT-03'),
             ],
           ),
         ),
@@ -201,7 +219,6 @@ class _AccountingScreenState extends State<AccountingScreen> {
     );
   }
 
-  // --- TAB 1: OVERVIEW ---
   Widget _buildOverviewTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
@@ -211,45 +228,48 @@ class _AccountingScreenState extends State<AccountingScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.green.shade700,
-              borderRadius: BorderRadius.circular(16),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF004D40), Color(0xFF0B1F1C)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.3)),
             ),
             child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Monthly Net Cashflow', style: TextStyle(color: Colors.white70)),
+                Text('Monthly Net Cashflow', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13)),
                 SizedBox(height: 8),
-                Text('JMD \$125,750.00',
-                    style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                Text('JMD \$125,750.00', style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w800)),
                 SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Total Inflow: +JMD \$189,750.00', style: TextStyle(color: Colors.white)),
-                    Text('Total Expenses: -JMD \$64,000.00', style: TextStyle(color: Colors.white70)),
+                    Text('Total Inflow: +JMD \$189,750', style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold, fontSize: 12)),
+                    Text('Expenses: -JMD \$64,000', style: TextStyle(color: KivoDarkTheme.accentRose, fontWeight: FontWeight.bold, fontSize: 12)),
                   ],
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
-          const Text('Quick Financial Actions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Text('Quick Financial Actions', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: _showCreateInvoiceDialog,
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(Icons.add, size: 18),
                   label: const Text('New Invoice'),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: _showAddExpenseDialog,
-                  icon: const Icon(Icons.remove_circle_outline),
+                  icon: const Icon(Icons.remove_circle_outline, size: 18),
                   label: const Text('Log Expense'),
                 ),
               ),
@@ -260,13 +280,12 @@ class _AccountingScreenState extends State<AccountingScreen> {
     );
   }
 
-  // --- TAB 2: INVOICES ---
   Widget _buildInvoicesTab() {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: _showCreateInvoiceDialog,
-        backgroundColor: Colors.green,
-        child: const Icon(Icons.add),
+        backgroundColor: KivoDarkTheme.primaryEmerald,
+        child: const Icon(Icons.add, color: Colors.black),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
@@ -275,36 +294,45 @@ class _AccountingScreenState extends State<AccountingScreen> {
           final inv = _invoices[index];
           final isPaid = inv['status'] == 'PAID';
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: ListTile(
-              title: Text('${inv['customerName']} (${inv['id']})',
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text('Subtotal: \$${inv['subtotal']} + GCT (15%): \$${inv['gctAmount']}'),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('JMD \$${inv['totalAmount']}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: isPaid ? Colors.green.shade100 : Colors.orange.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      inv['status'],
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isPaid ? Colors.green.shade900 : Colors.orange.shade900,
-                        fontWeight: FontWeight.bold,
+          return Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: KivoDarkTheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: KivoDarkTheme.surfaceBorder),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('${inv['customerName']} (${inv['id']})', style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                      const SizedBox(height: 4),
+                      Text('Subtotal: \$${inv['subtotal']} + GCT: \$${inv['gctAmount']}', style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text('JMD \$${inv['totalAmount']}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15)),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: isPaid ? KivoDarkTheme.primaryEmerald.withOpacity(0.15) : KivoDarkTheme.accentAmber.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        inv['status'],
+                        style: TextStyle(fontSize: 10, color: isPaid ? KivoDarkTheme.primaryEmerald : KivoDarkTheme.accentAmber, fontWeight: FontWeight.bold),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
           );
         },
@@ -312,32 +340,45 @@ class _AccountingScreenState extends State<AccountingScreen> {
     );
   }
 
-  // --- TAB 3: EXPENSES ---
   Widget _buildExpensesTab() {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddExpenseDialog,
-        backgroundColor: Colors.orange,
-        child: const Icon(Icons.add),
+        backgroundColor: KivoDarkTheme.accentAmber,
+        child: const Icon(Icons.add, color: Colors.black),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: _expenses.length,
         itemBuilder: (context, index) {
           final exp = _expenses[index];
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: Colors.orangeAccent,
-                child: Icon(Icons.shopping_bag, color: Colors.white),
-              ),
-              title: Text(exp['description'], style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text('Category: ${exp['category']} • Date: ${exp['date']}'),
-              trailing: Text(
-                '- JMD \$${exp['amount']}',
-                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
-              ),
+          return Container(
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: KivoDarkTheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: KivoDarkTheme.surfaceBorder),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: KivoDarkTheme.accentAmber.withOpacity(0.15),
+                  child: const Icon(Icons.receipt_outlined, color: KivoDarkTheme.accentAmber, size: 20),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(exp['description'], style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                      const SizedBox(height: 2),
+                      Text('${exp['category']} • ${exp['date']}', style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                Text('- JMD \$${exp['amount']}', style: const TextStyle(color: KivoDarkTheme.accentRose, fontWeight: FontWeight.bold, fontSize: 14)),
+              ],
             ),
           );
         },
@@ -345,7 +386,6 @@ class _AccountingScreenState extends State<AccountingScreen> {
     );
   }
 
-  // --- TAB 4: PROFIT & LOSS (P&L) & TAX ---
   Widget _buildPnLTab() {
     double totalRevenue = _invoices.where((i) => i['status'] == 'PAID').fold(0.0, (s, i) => s + (i['subtotal'] as double));
     double totalExpenses = _expenses.fold(0.0, (s, e) => s + (e['amount'] as double));
@@ -358,106 +398,37 @@ class _AccountingScreenState extends State<AccountingScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Profit & Loss Statement (P&L)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const Text('Tax Administration Jamaica (TAJ) Summary', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
-          // Interactive Visual Financial Bar Breakdown
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(12),
+              color: KivoDarkTheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: KivoDarkTheme.surfaceBorder),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Financial Breakdown (Sales vs Expenses)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey)),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: (totalRevenue / (totalRevenue + totalExpenses) * 100).toInt(),
-                      child: Container(
-                        height: 24,
-                        decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(4)),
-                        child: Center(child: Text('Sales \$${totalRevenue.toInt()}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold))),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      flex: (totalExpenses / (totalRevenue + totalExpenses) * 100).toInt(),
-                      child: Container(
-                        height: 24,
-                        decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(4)),
-                        child: Center(child: Text('Exp \$${totalExpenses.toInt()}', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold))),
-                      ),
-                    ),
-                  ],
-                ),
+                _buildReportRow('GCT Output Tax (Collected 15%)', 'JMD \$${gctCollected.toStringAsFixed(2)}', KivoDarkTheme.primaryEmerald),
+                const Divider(color: KivoDarkTheme.surfaceBorder),
+                _buildReportRow('GCT Input Tax (Paid on Expenses)', '- JMD \$${gctPaid.toStringAsFixed(2)}', KivoDarkTheme.accentCyan),
+                const Divider(color: KivoDarkTheme.surfaceBorder, thickness: 1.5),
+                _buildReportRow('Net GCT Payable to TAJ', 'JMD \$${(gctCollected - gctPaid).toStringAsFixed(2)}', Colors.amberAccent, isBold: true),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  _buildReportRow('Total Revenue (Sales)', 'JMD \$${totalRevenue.toStringAsFixed(2)}', Colors.green),
-                  const Divider(),
-                  _buildReportRow('Total Operating Expenses', '- JMD \$${totalExpenses.toStringAsFixed(2)}', Colors.red),
-                  const Divider(thickness: 2),
-                  _buildReportRow('Net Operating Income', 'JMD \$${netIncome.toStringAsFixed(2)}',
-                      netIncome >= 0 ? Colors.green.shade900 : Colors.red.shade900, isBold: true),
-                ],
-              ),
-            ),
-          ),
           const SizedBox(height: 24),
-          const Text('Jamaican GCT Tax Summary (15%)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          Card(
-            color: Colors.blue.shade50,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  _buildReportRow('GCT Collected (Output Tax)', 'JMD \$${gctCollected.toStringAsFixed(2)}', Colors.blue.shade900),
-                  const Divider(),
-                  _buildReportRow('GCT Paid on Expenses (Input Tax)', '- JMD \$${gctPaid.toStringAsFixed(2)}', Colors.blue.shade900),
-                  const Divider(thickness: 2),
-                  _buildReportRow('Net GCT Tax Payable to TAJ', 'JMD \$${(gctCollected - gctPaid).toStringAsFixed(2)}',
-                      Colors.indigo, isBold: true),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Protected: Verification required via FaceID/TouchID or 6-Digit PIN ✔')),
-                );
-              },
-              icon: const Icon(Icons.lock),
-              label: const Text('Export P&L & GCT Report (Requires Biometric Lock)'),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white, minimumSize: const Size(double.infinity, 50)),
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('TAJ GCT03 Return Form generated & exported to CSV for eServices Upload! ✔')),
-                );
-              },
-              icon: const Icon(Icons.description),
-              label: const Text('Generate TAJ GCT03 Tax Return Form (CSV/PDF)'),
-              style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 50)),
-            ),
+          ElevatedButton.icon(
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  backgroundColor: KivoDarkTheme.surfaceElevated,
+                  content: Text('TAJ GCT-03 Tax Return Form generated and ready for eServices upload! 🇯🇲', style: TextStyle(color: KivoDarkTheme.primaryEmerald)),
+                ),
+              );
+            },
+            icon: const Icon(Icons.description_outlined),
+            label: const Text('Export TAJ GCT-03 Return (CSV/PDF)'),
           ),
         ],
       ),
@@ -470,7 +441,7 @@ class _AccountingScreenState extends State<AccountingScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontSize: isBold ? 16 : 14, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          Text(label, style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: isBold ? 15 : 13, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
           Text(value, style: TextStyle(fontSize: isBold ? 16 : 14, fontWeight: FontWeight.bold, color: color)),
         ],
       ),
