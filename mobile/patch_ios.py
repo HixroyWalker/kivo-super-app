@@ -55,7 +55,7 @@ if os.path.exists(pbxproj_path):
         else:
             pbx = pbx.replace('buildSettings = {', f'buildSettings = {{\n\t\t\t\tDEVELOPMENT_TEAM = {team_id};')
         
-    pbx = re.sub(r'PRODUCT_BUNDLE_IDENTIFIER\s*=\s*com\.kivo\.app\.[^;]+;', 'PRODUCT_BUNDLE_IDENTIFIER = com.kivo.app;', pbx)
+    pbx = re.sub(r'PRODUCT_BUNDLE_IDENTIFIER\s*=\s*[^;]+;', 'PRODUCT_BUNDLE_IDENTIFIER = com.kivowebb.app;', pbx)
         
     with open(pbxproj_path, "w") as f:
         f.write(pbx)

@@ -19,7 +19,7 @@ platform :ios do
       match(type: "appstore", readonly: true)
     elsif api_key
       get_certificates(api_key: api_key)
-      get_provisioning_profile(api_key: api_key, app_identifier: "com.kivo.app")
+      get_provisioning_profile(api_key: api_key, app_identifier: "com.kivowebb.app")
     end
 
     if ENV["APPLE_TEAM_ID"] && !ENV["APPLE_TEAM_ID"].empty?
@@ -27,19 +27,19 @@ platform :ios do
         path: "Runner.xcodeproj",
         teamid: ENV["APPLE_TEAM_ID"]
       )
-    elsif ENV["sigh_com.kivo.app_appstore_team_id"]
+    elsif ENV["sigh_com.kivowebb.app_appstore_team_id"]
       update_project_team(
         path: "Runner.xcodeproj",
-        teamid: ENV["sigh_com.kivo.app_appstore_team_id"]
+        teamid: ENV["sigh_com.kivowebb.app_appstore_team_id"]
       )
     end
 
     export_opts = {
       method: "app-store"
     }
-    if ENV["sigh_com.kivo.app_appstore_profile_name"]
+    if ENV["sigh_com.kivowebb.app_appstore_profile_name"]
       export_opts[:provisioningProfiles] = {
-        "com.kivo.app" => ENV["sigh_com.kivo.app_appstore_profile_name"]
+        "com.kivowebb.app" => ENV["sigh_com.kivowebb.app_appstore_profile_name"]
       }
     end
 
