@@ -60,6 +60,7 @@ if os.path.exists(pbxproj_path):
     pbx = re.sub(r'PRODUCT_BUNDLE_IDENTIFIER\s*=\s*[^;]+;', 'PRODUCT_BUNDLE_IDENTIFIER = com.kivowebb.app;', pbx)
     pbx = re.sub(r'CODE_SIGN_IDENTITY\s*=\s*"iPhone Developer";', 'CODE_SIGN_IDENTITY = "Apple Distribution";', pbx)
     pbx = re.sub(r'CODE_SIGN_IDENTITY\s*=\s*"Apple Development";', 'CODE_SIGN_IDENTITY = "Apple Distribution";', pbx)
+    pbx = re.sub(r'CODE_SIGN_STYLE\s*=\s*Automatic;', 'CODE_SIGN_STYLE = Manual;', pbx)
         
     with open(pbxproj_path, "w") as f:
         f.write(pbx)
