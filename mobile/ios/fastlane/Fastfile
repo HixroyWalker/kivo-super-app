@@ -14,18 +14,25 @@ platform :ios do
 
     if ENV["MATCH_GIT_URL"] && !ENV["MATCH_GIT_URL"].empty?
       match(type: "appstore", readonly: true)
+      build_app(
+        workspace: "Runner.xcworkspace",
+        scheme: "Runner",
+        export_method: "app-store",
+        export_options: {
+          method: "app-store",
+          signingStyle: "manual",
+          provisioningProfiles: {
+            "com.kivo.app" => "match AppStore com.kivo.app"
+          }
+        }
+      )
+    else
+      build_app(
+        workspace: "Runner.xcworkspace",
+        scheme: "Runner",
+        export_method: "app-store"
+      )
     end
-
-    build_app(
-      workspace: "Runner.xcworkspace",
-      scheme: "Runner",
-      export_method: "app-store",
-      skip_codesigning: true,
-      export_options: {
-        method: "app-store",
-        signingStyle: "automatic"
-      }
-    )
 
     upload_to_testflight(
       skip_waiting_for_build_processing: true
