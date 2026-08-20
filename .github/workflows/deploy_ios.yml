@@ -38,7 +38,8 @@ jobs:
           flutter create . --org com.kivowebb.app
           flutter pub get
           python3 patch_ios.py
-          cd ios && pod install
+          cd ios
+          pod install --verbose > pod_log.txt 2>&1 || (cat pod_log.txt | tail -n 50 && exit 1)
         
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
