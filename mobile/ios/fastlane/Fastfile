@@ -63,7 +63,8 @@ platform :ios do
       }
     end
 
-    xcargs_opts = "CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution'"
+    team_id = ENV["APPLE_TEAM_ID"] || "Z5W8VPPS7U"
+    xcargs_opts = "DEVELOPMENT_TEAM=#{team_id}"
     if ENV["sigh_com.kivowebb.app_appstore_profile_name"]
       xcargs_opts += " PROVISIONING_PROFILE_SPECIFIER='#{ENV["sigh_com.kivowebb.app_appstore_profile_name"]}'"
     end
