@@ -25,7 +25,7 @@ jobs:
       - name: Generate Flutter Native Boilerplate & Install CocoaPods Dependencies
         run: |
           flutter create . --org com.kivo.app
-          flutter pub upgrade --major-versions firebase_core firebase_auth firebase_messaging
+          flutter pub upgrade --major-versions firebase_core firebase_auth cloud_firestore firebase_messaging
           flutter pub get
           python3 patch_ios.py
           cd ios && pod install --repo-update
