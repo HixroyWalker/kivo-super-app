@@ -15,10 +15,21 @@ platform :ios do
       )
     end
 
+    if ENV["IOS_CERTIFICATE_P12_BASE64"] && !ENV["IOS_CERTIFICATE_P12_BASE64"].empty?
+      p12_path = File.expand_path("/tmp/distribution.p12")
+      File.open(p12_path, "wb") do |f|
+        f.write(Base64.decode64(ENV["IOS_CERTIFICATE_P12_BASE64"]))
+      end
+      import_certificate(
+        certificate_path: p12_path,
+        certificate_password: ENV["IOS_CERTIFICATE_PASSWORD"] || "",
+        keychain_name: "fastlane_tmp_keychain"
+      )
+    end
+
     if ENV["MATCH_GIT_URL"] && !ENV["MATCH_GIT_URL"].empty?
       match(type: "appstore", readonly: true)
     elsif api_key
-      get_certificates(api_key: api_key)
       get_provisioning_profile(api_key: api_key, app_identifier: "com.kivowebb.app")
     end
 
