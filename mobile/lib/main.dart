@@ -47,7 +47,7 @@ class KivoApp extends StatelessWidget {
       title: 'Kivo Super App',
       debugShowCheckedModeBanner: false,
       theme: KivoDarkTheme.darkTheme,
-      initialRoute: '/main',
+      home: const AuthGate(),
       routes: {
         '/login': (context) => const LoginScreen(),
         '/main': (context) => const MainShell(),
@@ -63,6 +63,20 @@ class KivoApp extends StatelessWidget {
         '/profile': (context) => const ProfileScreen(),
       },
     );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    if (auth.isAuthenticated) {
+      return const MainShell();
+    } else {
+      return const LoginScreen();
+    }
   }
 }
 
