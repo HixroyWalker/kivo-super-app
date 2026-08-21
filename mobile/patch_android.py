@@ -77,7 +77,6 @@ subprojects {
         if (project.hasProperty('android')) {
             project.android {
                 compileSdkVersion 34
-                compileSdk 34
             }
         }
     }
