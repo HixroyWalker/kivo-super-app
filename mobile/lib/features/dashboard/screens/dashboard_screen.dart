@@ -164,25 +164,29 @@ class DashboardScreen extends StatelessWidget {
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                       ),
                     ),
-                    const SizedBox(height: 16),
-
+                    const SizedBox(height: 16),                    
                     if (generatedCode == null) ...[
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           color: KivoDarkTheme.surface,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: KivoDarkTheme.surfaceBorder),
+                          border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.3)),
                         ),
-                        child: const Row(
+                        child: const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.security, color: KivoDarkTheme.accentAmber, size: 20),
-                            SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                'Kivo will ping the Jam-Dex rail with a \$1.25 JMD test transaction containing a 4-digit security code to verify account ownership.',
-                                style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12),
-                              ),
+                            Row(
+                              children: [
+                                Icon(Icons.shield_outlined, color: KivoDarkTheme.primaryEmerald, size: 20),
+                                SizedBox(width: 8),
+                                Text('Zero-Cost Inbound Verification', style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold, fontSize: 13)),
+                              ],
+                            ),
+                            SizedBox(height: 6),
+                            Text(
+                              'To prove ownership, send a JMD \$10.00 test deposit from Lynk. 100% of this amount is credited directly to your Kivo balance!',
+                              style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12, height: 1.3),
                             ),
                           ],
                         ),
@@ -205,28 +209,29 @@ class DashboardScreen extends StatelessWidget {
                                   final res = await wallet.initiateLynkVerification(uname);
                                   setModalState(() {
                                     generatedCode = res['code'];
+                                    codeController.text = res['code'];
                                   });
                                 },
                           icon: wallet.isVerifying
                               ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
-                              : const Icon(Icons.send_to_mobile, color: Colors.black),
+                              : const Icon(Icons.vpn_key, color: Colors.black),
                           label: Text(
-                            wallet.isVerifying ? 'Running Test Handshake...' : 'Run Handshake & Send Micro-Test Code',
+                            wallet.isVerifying ? 'Generating Session...' : 'Generate Unique Handshake Code',
                             style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: KivoDarkTheme.accentAmber,
+                            backgroundColor: KivoDarkTheme.primaryEmerald,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
                       ),
                     ] else ...[
-                      // Code Confirmation Step
+                      // Option B Step-by-Step Guidance
                       Container(
-                        padding: const EdgeInsets.all(14),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: KivoDarkTheme.surface,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                           border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.4)),
                         ),
                         child: Column(
@@ -234,33 +239,31 @@ class DashboardScreen extends StatelessWidget {
                           children: [
                             const Row(
                               children: [
-                                Icon(Icons.mark_email_read, color: KivoDarkTheme.primaryEmerald, size: 18),
+                                Icon(Icons.send_to_mobile, color: KivoDarkTheme.primaryEmerald, size: 20),
                                 SizedBox(width: 8),
-                                Text('Test Transaction Initiated!', style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold, fontSize: 13)),
+                                Text('Complete Test Transfer in Lynk', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
                               ],
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Test code sent to Jam-Dex rail: #$generatedCode (in transaction reference memo).',
-                              style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12),
-                            ),
+                            const SizedBox(height: 12),
+                            _buildInstructionRow('1. Send To:', '@kivo_treasury', context),
+                            const SizedBox(height: 8),
+                            _buildInstructionRow('2. Test Amount:', 'JMD \$10.00 (Credited back)', context, isAmount: true),
+                            const SizedBox(height: 8),
+                            _buildInstructionRow('3. Reference Memo:', generatedCode!, context, isCode: true),
                           ],
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const Text('Enter 4-Digit Verification PIN:', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+                      const Text('Confirm Reference Code:', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       TextField(
                         controller: codeController,
-                        keyboardType: TextInputType.number,
-                        maxLength: 4,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 8),
+                        style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 4),
                         decoration: InputDecoration(
-                          counterText: '',
                           filled: true,
                           fillColor: KivoDarkTheme.surface,
-                          hintText: '••••',
+                          hintText: 'KV-XXXXXX',
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                         ),
                       ),
@@ -270,29 +273,29 @@ class DashboardScreen extends StatelessWidget {
                         height: 48,
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            final success = wallet.confirmLynkVerificationCode(codeController.text.trim());
-                            if (success) {
+                            final res = wallet.confirmLynkVerificationCode(codeController.text.trim());
+                            if (res['success'] == true) {
                               Navigator.pop(ctx);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   backgroundColor: KivoDarkTheme.surfaceElevated,
                                   content: Text(
-                                    '✅ Lynk Account ${wallet.lynkUsername} verified successfully! Real-time auto-crediting is active.',
+                                    res['message'] as String,
                                     style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               );
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
+                                SnackBar(
                                   backgroundColor: Colors.redAccent,
-                                  content: Text('Invalid verification code. Please check and try again.'),
+                                  content: Text(res['message'] as String),
                                 ),
                               );
                             }
                           },
-                          icon: const Icon(Icons.check_circle, color: Colors.black),
-                          label: const Text('Confirm Account Ownership', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 15)),
+                          icon: const Icon(Icons.check_circle_outline, color: Colors.black),
+                          label: const Text('I\'ve Sent Transfer — Verify & Credit \$10 JMD', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: KivoDarkTheme.primaryEmerald,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -317,6 +320,41 @@ class DashboardScreen extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => const TransferModal(),
+    );
+  }
+
+  Widget _buildInstructionRow(String label, String value, BuildContext context, {bool isCode = false, bool isAmount = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13)),
+        Row(
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                color: isCode ? const Color(0xFFFFD700) : (isAmount ? KivoDarkTheme.primaryEmerald : KivoDarkTheme.textPrimary),
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            if (isCode || label.contains('Send To')) ...[
+              const SizedBox(width: 6),
+              GestureDetector(
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      duration: const Duration(seconds: 1),
+                      content: Text('Copied $value to clipboard!'),
+                    ),
+                  );
+                },
+                child: const Icon(Icons.copy, size: 14, color: KivoDarkTheme.accentCyan),
+              ),
+            ],
+          ],
+        ),
+      ],
     );
   }
 

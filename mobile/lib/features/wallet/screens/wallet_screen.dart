@@ -310,61 +310,106 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                   ),
                   const SizedBox(height: 14),
                   if (generatedCode == null || generatedCode!.isEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: KivoDarkTheme.surface,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.3)),
+                      ),
+                      child: const Text(
+                        'Send a JMD \$10.00 test deposit from Lynk. 100% of this amount is credited directly to your Kivo balance upon verification!',
+                        style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
                     ElevatedButton.icon(
                       onPressed: () async {
-                        final res = await wallet.initiateLynkVerification(usernameController.text.trim());
-                        setModalState(() => generatedCode = res['code']);
+                        final uname = usernameController.text.trim();
+                        if (uname.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter your Lynk username.')),
+                          );
+                          return;
+                        }
+                        final res = await wallet.initiateLynkVerification(uname);
+                        setModalState(() {
+                          generatedCode = res['code'];
+                          codeController.text = res['code'];
+                        });
                       },
-                      icon: const Icon(Icons.send, color: Colors.black),
-                      label: const Text('Send Micro-Test PIN to Jam-Dex Rail', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                      icon: const Icon(Icons.vpn_key, color: Colors.black),
+                      label: const Text('Generate Unique Handshake Code', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: KivoDarkTheme.accentAmber,
+                        backgroundColor: KivoDarkTheme.primaryEmerald,
                         minimumSize: const Size(double.infinity, 48),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                   ] else ...[
                     Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: KivoDarkTheme.surface, borderRadius: BorderRadius.circular(10)),
-                      child: Text('Test code sent: #$generatedCode (in transaction reference memo).', style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 12)),
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: KivoDarkTheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.4)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Lynk Transfer Instructions:', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                          const SizedBox(height: 8),
+                          const Text('• Send To: @kivo_treasury', style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold, fontSize: 12)),
+                          const SizedBox(height: 4),
+                          const Text('• Amount: JMD \$10.00 (Credited back)', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                          const SizedBox(height: 4),
+                          Text('• Reference Memo: $generatedCode', style: const TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 12)),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: codeController,
-                      keyboardType: TextInputType.number,
-                      maxLength: 4,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 6),
+                      style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 4),
                       decoration: InputDecoration(
-                        counterText: '',
                         filled: true,
                         fillColor: KivoDarkTheme.surface,
-                        hintText: 'PIN',
+                        hintText: 'KV-XXXXXX',
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ElevatedButton(
+                    ElevatedButton.icon(
                       onPressed: () {
-                        final ok = wallet.confirmLynkVerificationCode(codeController.text.trim());
-                        if (ok) {
+                        final res = wallet.confirmLynkVerificationCode(codeController.text.trim());
+                        if (res['success'] == true) {
                           Navigator.pop(ctx);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('✅ Lynk Account ownership verified successfully!')),
+                            SnackBar(
+                              backgroundColor: KivoDarkTheme.surfaceElevated,
+                              content: Text(
+                                res['message'] as String,
+                                style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold),
+                              ),
+                            ),
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Invalid code. Please try again.')),
+                            SnackBar(
+                              backgroundColor: Colors.redAccent,
+                              content: Text(res['message'] as String),
+                            ),
                           );
                         }
                       },
+                      icon: const Icon(Icons.check_circle_outline, color: Colors.black),
+                      label: const Text('I\'ve Sent Transfer — Verify & Credit \$10 JMD', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: KivoDarkTheme.primaryEmerald,
                         minimumSize: const Size(double.infinity, 48),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('Confirm Ownership', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ],

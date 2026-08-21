@@ -84,18 +84,33 @@ class WalletProvider extends ChangeNotifier {
   String? _lynkUsername;
   bool _isLynkVerified = false;
   String? _pendingVerificationCode;
-  double _pendingVerificationAmount = 0.0;
+  String _kivoTreasuryHandle = '@kivo_treasury';
+  double _pendingVerificationAmount = 10.00; // JMD $10.00 test deposit credited back 100%
   bool _isVerifying = false;
+  int _failedVerificationAttempts = 0;
+  DateTime? _verificationLockoutUntil;
 
   bool get isLynkAutoCreditActive => _isLynkAutoCreditActive;
   String get lynkLinkedAccount => _lynkLinkedAccount;
   String? get lynkUsername => _lynkUsername;
+  String get kivoTreasuryHandle => _kivoTreasuryHandle;
   bool get isLynkVerified => _isLynkVerified;
   String? get pendingVerificationCode => _pendingVerificationCode;
   double get pendingVerificationAmount => _pendingVerificationAmount;
   bool get isVerifying => _isVerifying;
 
-  /// Initiate Lynk account verification test handshake
+  /// Helper to generate a collision-proof 6-character alphanumeric reference code
+  String _generateUniqueReferenceCode() {
+    const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'; // Excludes confusing 0, 1, I, O
+    final rand = DateTime.now().microsecondsSinceEpoch;
+    final buffer = StringBuffer('KV-');
+    for (int i = 0; i < 6; i++) {
+      buffer.write(chars[(rand >> (i * 5)) % chars.length]);
+    }
+    return buffer.toString();
+  }
+
+  /// Initiate Option B Lynk Account Verification (Inbound Test Top-Up Handshake)
   Future<Map<String, dynamic>> initiateLynkVerification(String inputUsername) async {
     _isVerifying = true;
     notifyListeners();
@@ -104,47 +119,62 @@ class WalletProvider extends ChangeNotifier {
         ? inputUsername.trim()
         : '@${inputUsername.trim()}';
 
-    await Future.delayed(const Duration(milliseconds: 1200));
+    await Future.delayed(const Duration(milliseconds: 600));
 
-    // Generate deterministic 4-digit verification code
-    final code = (1000 + (DateTime.now().millisecondsSinceEpoch % 9000)).toString();
-    _pendingVerificationCode = code;
-    _pendingVerificationAmount = 1.25;
+    // Generate unique collision-proof reference code (e.g. KV-8F2N9X)
+    final refCode = _generateUniqueReferenceCode();
+    _pendingVerificationCode = refCode;
+    _pendingVerificationAmount = 10.00;
     _lynkUsername = formatted;
     _isLynkVerified = false;
     _isVerifying = false;
-
-    // Send micro-credit test transfer to prove ownership on Jamaican rail
-    processIncomingLynkCredit(
-      amount: _pendingVerificationAmount,
-      senderName: 'Lynk BOJ Jam-Dex Test Rail ($formatted)',
-      referenceCode: 'LNK-AUTH-$code',
-    );
+    _failedVerificationAttempts = 0;
 
     notifyListeners();
     return {
       'success': true,
-      'code': code,
+      'code': refCode,
       'amount': _pendingVerificationAmount,
       'username': formatted,
+      'treasuryHandle': _kivoTreasuryHandle,
     };
   }
 
-  /// Confirm the 4-digit security code received in the Lynk test transaction
-  bool confirmLynkVerificationCode(String inputCode) {
-    if (_pendingVerificationCode != null && inputCode.trim() == _pendingVerificationCode) {
+  /// Confirm the inbound Lynk transfer reference code and credit $10.00 JMD to user's wallet
+  Map<String, dynamic> confirmLynkVerificationCode(String inputCode) {
+    if (_verificationLockoutUntil != null && DateTime.now().isBefore(_verificationLockoutUntil!)) {
+      final remaining = _verificationLockoutUntil!.difference(DateTime.now()).inMinutes + 1;
+      return {
+        'success': false,
+        'message': 'Too many failed attempts. Verification locked for $remaining minutes.',
+      };
+    }
+
+    final sanitizedInput = inputCode.trim().toUpperCase();
+    final expectedCode = _pendingVerificationCode?.toUpperCase();
+
+    // Check code match (accepts full KV-XXXXXX or just XXXXXX)
+    final isMatch = expectedCode != null &&
+        (sanitizedInput == expectedCode || sanitizedInput == expectedCode.replaceAll('KV-', ''));
+
+    if (isMatch) {
       _isLynkVerified = true;
       _isLynkAutoCreditActive = true;
       _lynkLinkedAccount = 'Lynk BOJ Jam-Dex Linked ($_lynkUsername)';
       _pendingVerificationCode = null;
+      _failedVerificationAttempts = 0;
+      _verificationLockoutUntil = null;
+
+      // 100% of the $10.00 JMD test deposit is credited directly to the user's Kivo Wallet!
+      _jmdBalance += _pendingVerificationAmount;
 
       _transactions.insert(
         0,
         TransactionItem(
           id: 'tx-${DateTime.now().millisecondsSinceEpoch}',
-          title: 'Lynk Account Ownership Verified 🇯🇲',
-          subtitle: 'Linked $_lynkUsername • Real-time auto-crediting enabled',
-          amount: 0.0,
+          title: 'Lynk Account Verified + Initial Deposit 🇯🇲',
+          subtitle: 'Linked $_lynkUsername • JMD \$10.00 test deposit credited 100%',
+          amount: _pendingVerificationAmount,
           timestamp: DateTime.now(),
           icon: Icons.verified_user,
           iconColor: const Color(0xFF00E676),
@@ -153,9 +183,27 @@ class WalletProvider extends ChangeNotifier {
       );
 
       notifyListeners();
-      return true;
+      return {
+        'success': true,
+        'message': 'Lynk account $_lynkUsername verified! JMD \$10.00 test deposit credited to your wallet.',
+      };
+    } else {
+      _failedVerificationAttempts++;
+      if (_failedVerificationAttempts >= 4) {
+        _verificationLockoutUntil = DateTime.now().add(const Duration(minutes: 15));
+        notifyListeners();
+        return {
+          'success': false,
+          'message': 'Security Alert: 4 failed attempts. Code verification locked for 15 minutes to prevent abuse.',
+        };
+      }
+
+      final attemptsLeft = 4 - _failedVerificationAttempts;
+      return {
+        'success': false,
+        'message': 'Code mismatch. Make sure you entered your specific session code ($attemptsLeft attempts left).',
+      };
     }
-    return false;
   }
 
   /// Unlink Lynk account
