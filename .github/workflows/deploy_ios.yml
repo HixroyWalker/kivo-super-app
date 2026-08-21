@@ -42,6 +42,7 @@ jobs:
           
       - name: Generate Flutter Native Workspace & Install CocoaPods
         run: |
+          flutter config --no-enable-swift-package-manager
           flutter precache --ios
           flutter create . --org com.kivowebb.app
           flutter pub get
