@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:local_auth/local_auth.dart';
 import '../../../core/theme/dark_theme.dart';
 import '../../../core/services/wallet_provider.dart';
+import '../../../core/services/recurring_transfer_service.dart';
+import '../../../core/models/recurring_transfer_model.dart';
 
 class TransferModal extends StatefulWidget {
   const TransferModal({super.key});
@@ -19,6 +21,10 @@ class _TransferModalState extends State<TransferModal> {
   final LocalAuthentication _localAuth = LocalAuthentication();
   bool _isLoading = false;
   String? _errorMessage;
+
+  // Recurring transfer state
+  bool _isRecurring = false;
+  RecurringFrequency _frequency = RecurringFrequency.monthly;
 
   final List<String> _recentContacts = [
     'Marcus Sterling',
@@ -66,16 +72,34 @@ class _TransferModalState extends State<TransferModal> {
 
     // 2. Execute transfer via WalletProvider
     final wallet = context.read<WalletProvider>();
-    final success = wallet.sendMoney(recipient, amount, note);
+    final success = wallet.sendMoney(recipient, amount, note.isEmpty ? 'P2P Transfer' : note);
 
     if (success) {
+      // 3. If Recurring is selected, register schedule
+      if (_isRecurring) {
+        try {
+          await context.read<RecurringTransferService>().createSchedule(
+            recipientIdentifier: recipient.toLowerCase().replaceAll(' ', '_') + '@kivowebb.app',
+            recipientName: recipient,
+            amount: amount,
+            frequency: _frequency,
+            startDate: DateTime.now(),
+            note: note.isEmpty ? 'Recurring Transfer' : note,
+          );
+        } catch (e) {
+          debugPrint('Failed to save recurring schedule: $e');
+        }
+      }
+
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: KivoDarkTheme.surfaceElevated,
             content: Text(
-              'Successfully sent JMD \$${amount.toStringAsFixed(2)} to $recipient! 🎉',
+              _isRecurring
+                  ? 'Sent JMD \$${amount.toStringAsFixed(2)} to $recipient and scheduled ${_frequency.name.toUpperCase()} recurring transfer! 🔁'
+                  : 'Successfully sent JMD \$${amount.toStringAsFixed(2)} to $recipient! 🎉',
               style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold),
             ),
           ),
@@ -242,14 +266,80 @@ class _TransferModalState extends State<TransferModal> {
                   prefixIcon: Icon(Icons.note_alt_outlined, color: KivoDarkTheme.textSecondary),
                 ),
               ),
+              const SizedBox(height: 16),
+
+              // Recurring Transfer Toggle Card
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: KivoDarkTheme.surfaceElevated,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: _isRecurring ? KivoDarkTheme.primaryEmerald.withOpacity(0.4) : KivoDarkTheme.surfaceBorder,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.autorenew, color: KivoDarkTheme.primaryEmerald, size: 20),
+                            SizedBox(width: 8),
+                            Text(
+                              'Make this a recurring transfer',
+                              style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 13, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                        Switch(
+                          value: _isRecurring,
+                          activeColor: KivoDarkTheme.primaryEmerald,
+                          onChanged: (val) => setState(() => _isRecurring = val),
+                        ),
+                      ],
+                    ),
+                    if (_isRecurring) ...[
+                      const Divider(color: KivoDarkTheme.surfaceBorder),
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Frequency:', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
+                          DropdownButton<RecurringFrequency>(
+                            value: _frequency,
+                            dropdownColor: KivoDarkTheme.surfaceElevated,
+                            underline: const SizedBox(),
+                            style: const TextStyle(color: KivoDarkTheme.accentCyan, fontWeight: FontWeight.bold, fontSize: 13),
+                            items: const [
+                              DropdownMenuItem(value: RecurringFrequency.daily, child: Text('Daily')),
+                              DropdownMenuItem(value: RecurringFrequency.weekly, child: Text('Weekly')),
+                              DropdownMenuItem(value: RecurringFrequency.fortnightly, child: Text('Fortnightly (Every 2 wks)')),
+                              DropdownMenuItem(value: RecurringFrequency.monthly, child: Text('Monthly')),
+                            ],
+                            onChanged: (val) {
+                              if (val != null) setState(() => _frequency = val);
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
               const SizedBox(height: 24),
 
               ElevatedButton.icon(
                 onPressed: _isLoading ? null : _submitTransfer,
                 icon: _isLoading
                     ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
-                    : const Icon(Icons.lock_outline, size: 20),
-                label: Text(_isLoading ? 'Authorizing...' : 'Authorize & Send Payment'),
+                    : Icon(_isRecurring ? Icons.schedule_send : Icons.lock_outline, size: 20),
+                label: Text(_isLoading
+                    ? 'Authorizing...'
+                    : _isRecurring
+                        ? 'Authorize & Schedule Recurring Transfer'
+                        : 'Authorize & Send Payment'),
               ),
             ],
           ),

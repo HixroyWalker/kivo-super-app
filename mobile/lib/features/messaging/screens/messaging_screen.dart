@@ -58,9 +58,62 @@ class _MessagingScreenState extends State<MessagingScreen> {
       appBar: AppBar(
         title: const Text('Message'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {},
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            color: KivoDarkTheme.surfaceElevated,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            onSelected: (action) {
+              if (action == 'mark_read') {
+                setState(() {
+                  for (var chat in _chats) {
+                    chat['unread'] = 0;
+                  }
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('All messages marked as read.')),
+                );
+              } else if (action == 'new_chat') {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Starting new secure P2P chat channel...')),
+                );
+              } else if (action == 'broadcast') {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Merchant broadcast composer opened.')),
+                );
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'new_chat',
+                child: Row(
+                  children: [
+                    Icon(Icons.add_comment_outlined, color: KivoDarkTheme.accentCyan, size: 18),
+                    SizedBox(width: 10),
+                    Text('New Conversation', style: TextStyle(color: Colors.white)),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'mark_read',
+                child: Row(
+                  children: [
+                    Icon(Icons.done_all, color: KivoDarkTheme.primaryEmerald, size: 18),
+                    SizedBox(width: 10),
+                    Text('Mark All as Read', style: TextStyle(color: Colors.white)),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'broadcast',
+                child: Row(
+                  children: [
+                    Icon(Icons.campaign_outlined, color: Colors.orangeAccent, size: 18),
+                    SizedBox(width: 10),
+                    Text('Broadcast Update', style: TextStyle(color: Colors.white)),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

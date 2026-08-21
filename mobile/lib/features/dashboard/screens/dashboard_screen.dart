@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:fl_chart/fl_chart.dart';
 import '../../../core/theme/dark_theme.dart';
 import '../../../core/services/wallet_provider.dart';
 import '../../wallet/widgets/transfer_modal.dart';
 import '../../notifications/screens/notifications_screen.dart';
-import '../../ads/screens/ads_screen.dart';
 import '../../merchant/screens/pos_cashier_screen.dart';
-import '../../merchant/screens/merchant_kyc_screen.dart';
-import '../../admin/screens/admin_dashboard_screen.dart';
-import '../../../ui/screens/social/social_feed_screen.dart';
-import '../../../ui/screens/wallet/standing_orders_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -407,29 +401,14 @@ class DashboardScreen extends StatelessWidget {
             // 1. Fintech Hero Card
             _buildHeroCard(context, wallet),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // 2. Spending Analytics Section
-            _buildSpendingSection(wallet),
+            // 2. Quick Business & Store Services Banner
+            _buildBusinessShortcutCard(context),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // 3. Super App Quick Grid
-            const Text(
-              'Super App Services',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                color: KivoDarkTheme.textPrimary,
-                letterSpacing: -0.3,
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildServicesGrid(context),
-
-            const SizedBox(height: 24),
-
-            // 4. Live Activity Feed
+            // 3. Live Activity Feed
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -617,135 +596,77 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSpendingSection(WalletProvider wallet) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: KivoDarkTheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: KivoDarkTheme.surfaceBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Weekly Activity', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
-              Text('Past 7 Days', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 110,
-            child: BarChart(
-              BarChartData(
-                alignment: BarChartAlignment.spaceAround,
-                maxY: 16000,
-                barTouchData: BarTouchData(enabled: true),
-                titlesData: FlTitlesData(
-                  show: true,
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                        if (value.toInt() >= 0 && value.toInt() < days.length) {
-                          return Text(days[value.toInt()], style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 10));
-                        }
-                        return const Text('');
-                      },
+  Widget _buildBusinessShortcutCard(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: InkWell(
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PosCashierScreen())),
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: KivoDarkTheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.3)),
+              ),
+              child: const Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Color(0x2600E676),
+                    radius: 18,
+                    child: Icon(Icons.point_of_sale, color: KivoDarkTheme.primaryEmerald, size: 20),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Merchant POS', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
+                        Text('Store Terminal', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
+                      ],
                     ),
                   ),
-                ),
-                gridData: const FlGridData(show: false),
-                borderData: FlBorderData(show: false),
-                barGroups: List.generate(7, (i) {
-                  return BarChartGroupData(
-                    x: i,
-                    barRods: [
-                      BarChartRodData(
-                        toY: wallet.weeklySpending[i],
-                        color: i == 5 ? KivoDarkTheme.primaryEmerald : KivoDarkTheme.accentCyan.withOpacity(0.6),
-                        width: 14,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ],
-                  );
-                }),
+                ],
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildServicesGrid(BuildContext context) {
-    final services = [
-      {'title': 'Admin Hub', 'icon': Icons.admin_panel_settings, 'color': KivoDarkTheme.accentCyan, 'route': '/admin'},
-      {'title': 'Social Feed', 'icon': Icons.dynamic_feed, 'color': const Color(0xFFFFD700), 'route': '/social_feed'},
-      {'title': 'Standing Orders', 'icon': Icons.schedule_send, 'color': KivoDarkTheme.accentCyan, 'route': '/standing_orders'},
-      {'title': 'P2P Wallet', 'icon': Icons.account_balance_wallet, 'color': KivoDarkTheme.primaryEmerald, 'route': '/wallet'},
-      {'title': 'Marketplace', 'icon': Icons.storefront, 'color': Colors.orangeAccent, 'route': '/marketplace'},
-      {'title': 'Message', 'icon': Icons.chat_bubble_outline, 'color': Colors.purpleAccent, 'route': '/messaging'},
-      {'title': 'TAJ GCT Tax', 'icon': Icons.receipt_long, 'color': Colors.tealAccent, 'route': '/accounting'},
-      {'title': 'Merchant POS', 'icon': Icons.point_of_sale, 'color': KivoDarkTheme.primaryEmerald, 'route': '/merchant_pos'},
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 0.95,
-      ),
-      itemCount: services.length,
-      itemBuilder: (context, index) {
-        final s = services[index];
-        return InkWell(
-          onTap: () {
-            if (s['route'] == '/ads') {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const AdsScreen()));
-            } else if (s['route'] == '/merchant_pos') {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const PosCashierScreen()));
-            } else if (s['route'] == '/admin') {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminDashboardScreen()));
-            } else if (s['route'] == '/social_feed') {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const SocialFeedScreen()));
-            } else if (s['route'] == '/standing_orders') {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const StandingOrdersScreen()));
-            } else {
-              Navigator.pushNamed(context, s['route'] as String);
-            }
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: KivoDarkTheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: KivoDarkTheme.surfaceBorder),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(s['icon'] as IconData, size: 28, color: s['color'] as Color),
-                const SizedBox(height: 8),
-                Text(
-                  s['title'] as String,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: KivoDarkTheme.textPrimary),
-                ),
-              ],
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: InkWell(
+            onTap: () => Navigator.pushNamed(context, '/accounting'),
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: KivoDarkTheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: KivoDarkTheme.accentCyan.withOpacity(0.3)),
+              ),
+              child: const Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Color(0x2600E5FF),
+                    radius: 18,
+                    child: Icon(Icons.receipt_long, color: KivoDarkTheme.accentCyan, size: 20),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Accounting', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
+                        Text('TAJ Tax & Stats', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 

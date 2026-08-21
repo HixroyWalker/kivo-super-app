@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../../core/theme/dark_theme.dart';
+import '../../../core/services/wallet_provider.dart';
 
 class AccountingScreen extends StatefulWidget {
   const AccountingScreen({super.key});
@@ -183,6 +186,7 @@ class _AccountingScreenState extends State<AccountingScreen> {
   }
 
   Widget _buildOverviewTab() {
+    final wallet = context.watch<WalletProvider>();
     final double totalInflow = _invoices.where((i) => i['status'] == 'PAID').fold<double>(0.0, (acc, i) => acc + ((i['totalAmount'] as num?)?.toDouble() ?? 0.0));
     final double totalExpenses = _expenses.fold<double>(0.0, (acc, e) => acc + ((e['amount'] as num?)?.toDouble() ?? 0.0));
     final double netCashflow = totalInflow - totalExpenses;
@@ -229,7 +233,75 @@ class _AccountingScreenState extends State<AccountingScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
+
+          // Weekly Activity & Spending Trends Chart
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: KivoDarkTheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: KivoDarkTheme.surfaceBorder),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Weekly Spending & Cash Flow', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
+                    Text('Past 7 Days', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  height: 120,
+                  child: BarChart(
+                    BarChartData(
+                      alignment: BarChartAlignment.spaceAround,
+                      maxY: 16000,
+                      barTouchData: BarTouchData(enabled: true),
+                      titlesData: FlTitlesData(
+                        show: true,
+                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                              if (value.toInt() >= 0 && value.toInt() < days.length) {
+                                return Text(days[value.toInt()], style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 10));
+                              }
+                              return const Text('');
+                            },
+                          ),
+                        ),
+                      ),
+                      gridData: const FlGridData(show: false),
+                      borderData: FlBorderData(show: false),
+                      barGroups: List.generate(7, (i) {
+                        return BarChartGroupData(
+                          x: i,
+                          barRods: [
+                            BarChartRodData(
+                              toY: wallet.weeklySpending[i],
+                              color: i == 5 ? KivoDarkTheme.primaryEmerald : KivoDarkTheme.accentCyan.withOpacity(0.6),
+                              width: 14,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ],
+                        );
+                      }),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
           const Text('Quick Financial Actions', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Row(

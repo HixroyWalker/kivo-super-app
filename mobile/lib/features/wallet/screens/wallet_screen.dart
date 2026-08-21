@@ -162,9 +162,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
           // Bank Accounts & Cards Carousel
           _buildBankCardsCarousel(wallet),
 
-          const SizedBox(height: 12),
-
-          // Quick Action Bar
+          const SizedBox(height: 12),          // Quick Action Bar
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -173,29 +171,15 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                   child: ElevatedButton.icon(
                     onPressed: () => _showTransferModal(context),
                     icon: const Icon(Icons.send, size: 16),
-                    label: const Text('Send / Pay', style: TextStyle(fontSize: 12)),
+                    label: const Text('Send / Transfer', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _showReceiveQRModal(context, wallet),
                     icon: const Icon(Icons.qr_code_scanner, size: 16),
-                    label: const Text('Receive QR', style: TextStyle(fontSize: 12)),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const StandingOrdersScreen()),
-                    ),
-                    icon: const Icon(Icons.schedule, color: KivoDarkTheme.accentAmber, size: 16),
-                    label: const Text('Standing', style: TextStyle(fontSize: 12, color: KivoDarkTheme.accentAmber)),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: KivoDarkTheme.accentAmber.withOpacity(0.5)),
-                    ),
+                    label: const Text('Receive QR', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -566,43 +550,47 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
       itemCount: wallet.transactions.length,
       itemBuilder: (context, index) {
         final tx = wallet.transactions[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: KivoDarkTheme.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: KivoDarkTheme.surfaceBorder),
-          ),
-          child: Row(
-            children: [
-              Icon(tx.icon, color: tx.iconColor, size: 22),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        return InkWell(
+          onTap: () => _showCommentDialog(context, tx, wallet),
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: KivoDarkTheme.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: KivoDarkTheme.surfaceBorder),
+            ),
+            child: Row(
+              children: [
+                Icon(tx.icon, color: tx.iconColor, size: 22),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(tx.title, style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
+                      const SizedBox(height: 2),
+                      Text(tx.subtitle, style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(tx.title, style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
-                    const SizedBox(height: 2),
-                    Text(tx.subtitle, style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
+                    Text(
+                      '${tx.isCredit ? '+' : '-'}JMD \$${tx.amount.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: tx.isCredit ? KivoDarkTheme.primaryEmerald : KivoDarkTheme.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const Text('Completed', style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 10)),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${tx.isCredit ? '+' : '-'}JMD \$${tx.amount.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      color: tx.isCredit ? KivoDarkTheme.primaryEmerald : KivoDarkTheme.textPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const Text('Completed', style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 10)),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },

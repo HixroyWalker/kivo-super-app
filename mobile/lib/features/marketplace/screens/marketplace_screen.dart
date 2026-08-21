@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/dark_theme.dart';
 import '../../../core/services/marketplace_provider.dart';
 import '../../../core/services/wallet_provider.dart';
+import '../../merchant/screens/pos_cashier_screen.dart';
 import 'product_detail_screen.dart';
 
 class MarketplaceScreen extends StatelessWidget {
@@ -181,9 +182,53 @@ class MarketplaceScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
+          // Merchant POS Terminal Header Banner
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            child: InkWell(
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PosCashierScreen())),
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF0F382A), Color(0xFF13232F)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.4)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: KivoDarkTheme.primaryEmerald.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.point_of_sale, color: KivoDarkTheme.primaryEmerald, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Merchant POS Terminal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text('Accept Cash, Jam-Dex QR & Print Receipts', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios, size: 12, color: KivoDarkTheme.primaryEmerald),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
           // 1. Search Bar
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             child: TextField(
               onChanged: marketplace.setSearchQuery,
               style: const TextStyle(color: KivoDarkTheme.textPrimary),
