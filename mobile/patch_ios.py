@@ -23,12 +23,25 @@ if os.path.exists(podfile_path):
       end
     end"""
     
+    # 1. Ensure platform :ios, '14.0'
+    content = re.sub(r'#?\s*platform\s+:ios\s*,.*', "platform :ios, '14.0'", content)
+    if "platform :ios, '14.0'" not in content:
+        content = "platform :ios, '14.0'\n" + content
+
+    # 2. Ensure use_frameworks! :linkage => :static
+    if 'use_frameworks!' in content:
+        content = re.sub(r'#?\s*use_frameworks!.*', "use_frameworks! :linkage => :static", content)
+    else:
+        content = content.replace("target 'Runner' do", "target 'Runner' do\n  use_frameworks! :linkage => :static")
+
+    content = content.replace('use_modular_headers!', '')
+
+    # 3. Inject post_install build settings
     if 'flutter_additional_ios_build_settings(target)' in content:
-        content = re.sub(r'use_frameworks!.*', "use_frameworks! :linkage => :static", content)
-        content = content.replace('use_modular_headers!', '')
         content = content.replace('flutter_additional_ios_build_settings(target)', 'flutter_additional_ios_build_settings(target)\n' + patch)
-        with open(podfile_path, "w") as f:
-            f.write(content)
+        
+    with open(podfile_path, "w") as f:
+        f.write(content)
 
 # Clean any existing .xcconfig files in Pods
 pods_dir = "ios/Pods"
