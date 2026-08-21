@@ -8,6 +8,9 @@ import '../../notifications/screens/notifications_screen.dart';
 import '../../ads/screens/ads_screen.dart';
 import '../../merchant/screens/pos_cashier_screen.dart';
 import '../../merchant/screens/merchant_kyc_screen.dart';
+import '../../admin/screens/admin_dashboard_screen.dart';
+import '../../../ui/screens/social/social_feed_screen.dart';
+import '../../../ui/screens/wallet/standing_orders_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -673,6 +676,12 @@ class DashboardScreen extends StatelessWidget {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const AdsScreen()));
             } else if (s['route'] == '/merchant_pos') {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const PosCashierScreen()));
+            } else if (s['route'] == '/admin') {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminDashboardScreen()));
+            } else if (s['route'] == '/social_feed') {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const SocialFeedScreen()));
+            } else if (s['route'] == '/standing_orders') {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const StandingOrdersScreen()));
             } else {
               Navigator.pushNamed(context, s['route'] as String);
             }

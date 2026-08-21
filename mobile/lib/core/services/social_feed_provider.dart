@@ -16,34 +16,33 @@ class SocialFeedProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   SocialFeedProvider() {
+    _posts = _generateDefaultSeedPosts();
     _initializeFeed();
   }
 
   void _initializeFeed() {
-    _isLoading = true;
-    notifyListeners();
-
-    _firestore
-        .collection('posts')
-        .orderBy('createdAt', descending: true)
-        .limit(30)
-        .snapshots()
-        .listen((snapshot) {
-      if (snapshot.docs.isEmpty) {
-        _posts = _generateDefaultSeedPosts();
-      } else {
-        _posts = snapshot.docs.map((doc) => PostModel.fromFirestore(doc)).toList();
-      }
+    try {
+      _firestore
+          .collection('posts')
+          .orderBy('createdAt', descending: true)
+          .limit(30)
+          .snapshots()
+          .listen((snapshot) {
+        if (snapshot.docs.isNotEmpty) {
+          _posts = snapshot.docs.map((doc) => PostModel.fromFirestore(doc)).toList();
+        }
+        _isLoading = false;
+        notifyListeners();
+      }, onError: (error) {
+        debugPrint('Firestore feed error: $error.');
+        _isLoading = false;
+        notifyListeners();
+      });
+    } catch (e) {
+      debugPrint('Error starting feed listener: $e');
       _isLoading = false;
       notifyListeners();
-    }, onError: (error) {
-      debugPrint('Firestore feed error: $error. Falling back to local feed cache.');
-      if (_posts.isEmpty) {
-        _posts = _generateDefaultSeedPosts();
-      }
-      _isLoading = false;
-      notifyListeners();
-    });
+    }
   }
 
   List<PostModel> _generateDefaultSeedPosts() {

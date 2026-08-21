@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/dark_theme.dart';
 import '../../../core/services/auth_provider.dart';
 import '../../../core/services/wallet_provider.dart';
+import '../../admin/screens/admin_dashboard_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -134,7 +135,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     title: const Text('Master Admin Console', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
                     subtitle: const Text('Set fee charges, credit/debit balances, verify KYCs', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
                     trailing: const Icon(Icons.chevron_right, color: KivoDarkTheme.textSecondary),
-                    onTap: () => Navigator.pushNamed(context, '/admin'),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+                    ),
                   ),
                 ],
               ),

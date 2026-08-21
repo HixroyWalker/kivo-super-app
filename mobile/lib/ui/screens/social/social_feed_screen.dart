@@ -57,7 +57,7 @@ class SocialFeedScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: feedProvider.isLoading
+      body: posts.isEmpty && feedProvider.isLoading
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFFFFD700)),
             )
@@ -66,7 +66,7 @@ class SocialFeedScreen extends StatelessWidget {
               : RefreshIndicator(
                   color: const Color(0xFFFFD700),
                   onRefresh: () async {
-                    // Pull to refresh handled automatically by Firestore stream
+                    // Pull to refresh
                   },
                   child: ListView.builder(
                     itemCount: posts.length,

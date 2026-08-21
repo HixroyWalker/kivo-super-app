@@ -220,23 +220,131 @@ class StandingOrdersScreen extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Center(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.schedule, size: 64, color: Colors.white24),
-          const SizedBox(height: 16),
-          const Text(
-            'No Recurring Transfers',
-            style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF141E33), Color(0xFF0F172A)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.schedule_send, color: Color(0xFFFFD700), size: 28),
+                    SizedBox(width: 10),
+                    Text(
+                      'Automatic Standing Orders 🇯🇲',
+                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Set up recurring payments that execute automatically from your Kivo Wallet or Lynk Jam-Dex rail.',
+                  style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () => _showCreateScheduleModal(context),
+                  icon: const Icon(Icons.add_alarm, color: Colors.black),
+                  label: const Text('Create Standing Order', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFFD700),
+                    minimumSize: const Size(double.infinity, 44),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 24),
           const Text(
-            'Set up automatic Daily, Weekly, Fortnightly, or Monthly payments.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white38, fontSize: 13),
+            'Common Standing Order Presets',
+            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          _buildPresetTile(
+            title: 'Fortnightly Family Allowance',
+            subtitle: 'Auto-transfer to family every two weeks',
+            icon: Icons.family_restroom,
+            color: const Color(0xFF00E676),
+            onTap: () => _showCreateScheduleModal(context),
+          ),
+          _buildPresetTile(
+            title: 'Monthly Rent / Landlord',
+            subtitle: 'Scheduled apartment rent on the 1st of every month',
+            icon: Icons.home_work,
+            color: const Color(0xFF00B0FF),
+            onTap: () => _showCreateScheduleModal(context),
+          ),
+          _buildPresetTile(
+            title: 'Weekly Helper / Staff Wages',
+            subtitle: 'Automatic wage payments every Friday',
+            icon: Icons.badge,
+            color: Colors.amberAccent,
+            onTap: () => _showCreateScheduleModal(context),
+          ),
+          _buildPresetTile(
+            title: 'Utility & Internet Bills',
+            subtitle: 'Scheduled recurring JPS / Flow / Digicel bill pay',
+            icon: Icons.receipt_long,
+            color: Colors.purpleAccent,
+            onTap: () => _showCreateScheduleModal(context),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPresetTile({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF101726),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: color.withOpacity(0.15),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                ],
+              ),
+            ),
+            const Icon(Icons.add_circle_outline, color: Color(0xFFFFD700), size: 20),
+          ],
+        ),
       ),
     );
   }
