@@ -77,6 +77,7 @@ target 'Runner' do
   use_frameworks! :linkage => :static
   use_modular_headers!
 
+  pod 'Flutter', :path => 'Flutter'
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
@@ -85,7 +86,7 @@ post_install do |installer|
     flutter_additional_ios_build_settings(target)
     if target.respond_to?(:build_configurations)
       target.build_configurations.each do |config|
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
         config.build_settings['ENABLE_BITCODE'] = 'NO'
       end
     end
