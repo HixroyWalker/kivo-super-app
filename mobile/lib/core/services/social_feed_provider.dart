@@ -26,6 +26,7 @@ class SocialFeedProvider extends ChangeNotifier {
     _firestore
         .collection('posts')
         .orderBy('createdAt', descending: true)
+        .limit(30)
         .snapshots()
         .listen((snapshot) {
       if (snapshot.docs.isEmpty) {
