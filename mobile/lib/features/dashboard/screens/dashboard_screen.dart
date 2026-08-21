@@ -13,65 +13,92 @@ class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
   void _showTopUpDialog(BuildContext context) {
-    final amountController = TextEditingController();
-    showDialog(
+    final wallet = context.read<WalletProvider>();
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: KivoDarkTheme.surfaceElevated,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.account_balance, color: KivoDarkTheme.primaryEmerald),
-            SizedBox(width: 10),
-            Text('Lynk Instant Top-Up', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18)),
-          ],
-        ),
-        content: Column(
+      backgroundColor: KivoDarkTheme.surfaceElevated,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Enter amount in JMD to fund from your linked Bank of Jamaica / Lynk account:',
-              style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: KivoDarkTheme.primaryEmerald.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.account_balance, color: KivoDarkTheme.primaryEmerald, size: 28),
+                ),
+                const SizedBox(width: 14),
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Lynk Auto-Credit Bridge', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text('Bank of Jamaica Jam-Dex Network', style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 12, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
-              decoration: const InputDecoration(
-                prefixText: 'JMD \$ ',
-                prefixStyle: TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold),
-                hintText: '5,000.00',
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: KivoDarkTheme.surfaceDark,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.3)),
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: KivoDarkTheme.textSecondary)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final amount = double.tryParse(amountController.text.trim());
-              if (amount != null && amount > 0) {
-                context.read<WalletProvider>().topUpLynk(amount);
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    backgroundColor: KivoDarkTheme.surfaceElevated,
-                    content: Text(
-                      'Successfully topped up JMD \$${amount.toStringAsFixed(2)} via Lynk!',
-                      style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold),
+              child: const Row(
+                children: [
+                  Icon(Icons.check_circle, color: KivoDarkTheme.primaryEmerald, size: 20),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Automatic Platform Crediting is ACTIVE. All incoming transfers to your Lynk QR or handle credit directly without manual top-ups.',
+                      style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12),
                     ),
                   ),
-                );
-              }
-            },
-            child: const Text('Top Up Now'),
-          ),
-        ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Linked Account: ${wallet.lynkLinkedAccount}',
+              style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 13, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.flash_on, color: Colors.black),
+                label: const Text('Simulate Incoming Lynk Direct Credit (JMD \$5,000)'),
+                onPressed: () {
+                  wallet.processIncomingLynkCredit(
+                    amount: 5000.0,
+                    senderName: 'Lynk BOJ Transfer',
+                  );
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      backgroundColor: KivoDarkTheme.surfaceElevated,
+                      content: Text(
+                        '⚡ Automatically credited JMD \$5,000.00 from Lynk Network!',
+                        style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
       ),
     );
   }

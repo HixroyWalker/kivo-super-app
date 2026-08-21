@@ -135,14 +135,26 @@ class WalletProvider extends ChangeNotifier {
   // Weekly spending chart data (Mon -> Sun)
   final List<double> weeklySpending = [4200, 7800, 2500, 11200, 6400, 14500, 5100];
 
-  void topUpLynk(double amount) {
+  bool _isLynkAutoCreditActive = true;
+  String _lynkLinkedAccount = 'Lynk BOJ Jam-Dex Linked (****-4821)';
+
+  bool get isLynkAutoCreditActive => _isLynkAutoCreditActive;
+  String get lynkLinkedAccount => _lynkLinkedAccount;
+
+  /// Automatically process incoming Lynk transfers without manual user top-up
+  void processIncomingLynkCredit({
+    required double amount,
+    required String senderName,
+    String? referenceCode,
+  }) {
     _jmdBalance += amount;
+    final ref = referenceCode ?? 'LNK-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
     _transactions.insert(
       0,
       TransactionItem(
         id: 'tx-${DateTime.now().millisecondsSinceEpoch}',
-        title: 'Lynk Instant Top-Up',
-        subtitle: 'Processed via Lynk Jamaica Gateway',
+        title: 'Lynk Auto-Credit Received',
+        subtitle: 'Auto-credited from $senderName • Ref: $ref',
         amount: amount,
         timestamp: DateTime.now(),
         icon: Icons.account_balance,
@@ -151,6 +163,15 @@ class WalletProvider extends ChangeNotifier {
       ),
     );
     notifyListeners();
+  }
+
+  /// Legacy manual helper maintained for backwards compatibility
+  void topUpLynk(double amount) {
+    processIncomingLynkCredit(
+      amount: amount,
+      senderName: 'Lynk Digital Gateway',
+      referenceCode: 'AUTO-TOPUP',
+    );
   }
 
   bool sendMoney(String recipient, double amount, String note) {
