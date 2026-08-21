@@ -96,7 +96,8 @@ for cd in cache_dirs:
                     try:
                         with open(p, "r") as f:
                             c = f.read()
-                        c_new = re.sub(r'configurations\.all\b', 'configurations.configureEach', c)
+                        c_new = re.sub(r'(?s)configurations\.all\s*\{[^\}]*\}', '// configurations.all removed for AGP compatibility', c)
+                        c_new = re.sub(r'(?s)configurations\.configureEach\s*\{[^\}]*\}', '// configurations.configureEach removed for AGP compatibility', c_new)
                         c_new = re.sub(r'compileSdkVersion\s+[0-9]+', 'compileSdkVersion 34', c_new)
                         c_new = re.sub(r'compileSdk\s*=\s*[0-9]+', 'compileSdk = 34', c_new)
                         c_new = re.sub(r'flutter\.compileSdkVersion', '34', c_new)
