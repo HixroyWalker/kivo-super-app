@@ -32,22 +32,22 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          
-      - name: Generate Flutter Native Boilerplate & Install CocoaPods Dependencies
-        run: |
-          flutter create . --org com.kivowebb.app
-          flutter pub upgrade --major-versions firebase_core firebase_auth cloud_firestore firebase_messaging
-          flutter pub get
-          python3 patch_ios.py
-          cd ios && pod install --repo-update
-          cd .. && flutter build ios --release --no-codesign
-        
-      - name: Setup Ruby
+
+      - name: Setup Ruby & Bundler
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.0'
           bundler-cache: true
           working-directory: ./mobile/ios
           
+      - name: Generate Flutter Native Workspace & Patch Podfile
+        run: |
+          flutter create . --org com.kivowebb.app
+          flutter pub get
+          flutter build ios --config-only --no-codesign
+          python3 patch_ios.py
+          cd ios && bundle exec pod install
+          cd .. && flutter build ios --release --no-codesign
+        
       - name: Deploy via Fastlane
         run: cd ios && bundle exec fastlane beta
