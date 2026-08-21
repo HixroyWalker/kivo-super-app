@@ -44,7 +44,7 @@ FLUTTER_BUILD_NUMBER=130
 
 # 2. Write canonical Podfile
 podfile_path = "ios/Podfile"
-canonical_podfile = """platform :ios, '14.0'
+canonical_podfile = """platform :ios, '15.0'
 
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
@@ -85,7 +85,7 @@ post_install do |installer|
     flutter_additional_ios_build_settings(target)
     if target.respond_to?(:build_configurations)
       target.build_configurations.each do |config|
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
         config.build_settings['ENABLE_BITCODE'] = 'NO'
       end
     end
@@ -102,6 +102,7 @@ if os.path.exists(pbxproj_path):
     with open(pbxproj_path, "r") as f:
         pbx = f.read()
     pbx = re.sub(r'PRODUCT_BUNDLE_IDENTIFIER\s*=\s*[^;]+;', 'PRODUCT_BUNDLE_IDENTIFIER = com.kivowebb.app;', pbx)
+    pbx = re.sub(r'IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[^;]+;', 'IPHONEOS_DEPLOYMENT_TARGET = 15.0;', pbx)
     with open(pbxproj_path, "w") as f:
         f.write(pbx)
 
