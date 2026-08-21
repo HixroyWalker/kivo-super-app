@@ -2,43 +2,63 @@ import os
 import re
 
 podfile_path = "ios/Podfile"
-if os.path.exists(podfile_path):
-    with open(podfile_path, "r") as f:
-        content = f.read()
-        
-    patch = """    target.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
-      config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
-      config.build_settings['SWIFT_EMIT_APP_INTENTS_METADATA'] = 'NO'
-      config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
-      config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
-      
-      # Suppress Xcode 16 Explicit Module non-modular include errors
-      config.build_settings['OTHER_CFLAGS'] = ['$(inherited)', '-Wno-non-modular-include-in-framework-module', '-Wno-error=non-modular-include-in-framework-module']
-      config.build_settings['OTHER_CPLUSPLUSFLAGS'] = ['$(inherited)', '-Wno-non-modular-include-in-framework-module', '-Wno-error=non-modular-include-in-framework-module']
-      config.build_settings['OTHER_SWIFT_FLAGS'] = ['$(inherited)', '-Xcc', '-Wno-non-modular-include-in-framework-module']
-      
-      if target.name.start_with?('gRPC') || target.name == 'abseil'
-        config.build_settings['GCC_OPTIMIZATION_LEVEL'] = '0'
+os.makedirs("ios", exist_ok=True)
+
+canonical_podfile = """platform :ios, '14.0'
+
+ENV['COCOAPODS_DISABLE_STATS'] = 'true'
+
+project 'Runner', {
+  'Debug' => :debug,
+  'Profile' => :release,
+  'Release' => :release,
+}
+
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  if File.exist?(generated_xcode_build_settings_path)
+    File.foreach(generated_xcode_build_settings_path) do |line|
+      matches = line.match(/FLUTTER_ROOT\=(.*)/)
+      return matches[1].strip if matches
+    end
+  end
+  ENV['FLUTTER_ROOT'] || File.dirname(File.dirname(`which flutter`.strip))
+end
+
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+
+flutter_ios_podfile_setup
+
+target 'Runner' do
+  use_frameworks! :linkage => :static
+
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  target 'RunnerTests' do
+    inherit! :search_paths
+  end
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    flutter_additional_ios_build_settings(target)
+    if target.respond_to?(:build_configurations)
+      target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+        config.build_settings['SWIFT_EMIT_APP_INTENTS_METADATA'] = 'NO'
+        config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+        config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
+        config.build_settings['OTHER_CFLAGS'] = ['$(inherited)', '-Wno-non-modular-include-in-framework-module', '-Wno-error=non-modular-include-in-framework-module']
+        config.build_settings['OTHER_CPLUSPLUSFLAGS'] = ['$(inherited)', '-Wno-non-modular-include-in-framework-module', '-Wno-error=non-modular-include-in-framework-module']
+        config.build_settings['OTHER_SWIFT_FLAGS'] = ['$(inherited)', '-Xcc', '-Wno-non-modular-include-in-framework-module']
       end
-    end"""
-    
-    # 1. Clean out top-level use_frameworks! / use_modular_headers! comments
-    content = re.sub(r'#?\s*use_frameworks!.*', '', content)
-    content = re.sub(r'#?\s*use_modular_headers!.*', '', content)
-    content = re.sub(r'#?\s*platform\s+:ios\s*,.*', "platform :ios, '14.0'", content)
-    if "platform :ios, '14.0'" not in content:
-        content = "platform :ios, '14.0'\n" + content
+    end
+  end
+end
+"""
 
-    # 2. Inject use_frameworks! :linkage => :static strictly inside target 'Runner' do
-    content = content.replace("target 'Runner' do", "target 'Runner' do\n  use_frameworks! :linkage => :static")
-
-    # 3. Inject post_install build settings
-    if 'flutter_additional_ios_build_settings(target)' in content:
-        content = content.replace('flutter_additional_ios_build_settings(target)', 'flutter_additional_ios_build_settings(target)\n' + patch)
-        
-    with open(podfile_path, "w") as f:
-        f.write(content)
+with open(podfile_path, "w") as f:
+    f.write(canonical_podfile)
 
 # Clean any existing .xcconfig files in Pods
 pods_dir = "ios/Pods"

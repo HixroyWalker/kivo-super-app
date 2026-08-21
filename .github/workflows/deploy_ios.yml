@@ -42,11 +42,12 @@ jobs:
           
       - name: Generate Flutter Native Workspace & Install CocoaPods
         run: |
+          export FLUTTER_ROOT=$(dirname $(dirname $(which flutter)))
           flutter create . --org com.kivowebb.app
           flutter pub get
           python3 patch_ios.py
           cd ios
-          bundle exec pod install
+          bundle exec pod install --repo-update
         
       - name: Deploy via Fastlane
         run: cd ios && bundle exec fastlane beta
