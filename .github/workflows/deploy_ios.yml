@@ -45,7 +45,7 @@ jobs:
           flutter create . --org com.kivowebb.app
           flutter pub get
           python3 patch_ios.py
-          flutter build ios --no-codesign
+          cd ios && (pod install --repo-update || bundle exec pod install --repo-update)
         
       - name: Deploy via Fastlane
         run: cd ios && bundle exec fastlane beta
