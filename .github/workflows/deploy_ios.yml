@@ -33,14 +33,13 @@ jobs:
         with:
           channel: 'stable'
           
-      - name: Generate Flutter Native Workspace & CocoaPods
+      - name: Setup Workspace and Install CocoaPods
         run: |
           export FLUTTER_ROOT=$(dirname $(dirname $(which flutter)))
           flutter create . --org com.kivowebb.app
           flutter pub get
-          flutter build ios --config-only
           python3 patch_ios.py
-          cd ios && pod install
+          cd ios && pod install --repo-update
         
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
