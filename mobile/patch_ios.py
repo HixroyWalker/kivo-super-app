@@ -23,17 +23,12 @@ if os.path.exists(podfile_path):
       end
     end"""
     
-    # 1. Ensure platform :ios, '14.0'
-    content = re.sub(r'#?\s*platform\s+:ios\s*,.*', "platform :ios, '14.0'", content)
-    if "platform :ios, '14.0'" not in content:
-        content = "platform :ios, '14.0'\n" + content
-
-    # 2. Inject post_install build settings
     if 'flutter_additional_ios_build_settings(target)' in content:
+        content = re.sub(r'use_frameworks!.*', "use_frameworks! :linkage => :static", content)
+        content = content.replace('use_modular_headers!', '')
         content = content.replace('flutter_additional_ios_build_settings(target)', 'flutter_additional_ios_build_settings(target)\n' + patch)
-        
-    with open(podfile_path, "w") as f:
-        f.write(content)
+        with open(podfile_path, "w") as f:
+            f.write(content)
 
 # Clean any existing .xcconfig files in Pods
 pods_dir = "ios/Pods"
@@ -63,6 +58,15 @@ if os.path.exists(pbxproj_path):
             pbx = pbx.replace('buildSettings = {', f'buildSettings = {{\n\t\t\t\tDEVELOPMENT_TEAM = {team_id};')
         
     pbx = re.sub(r'PRODUCT_BUNDLE_IDENTIFIER\s*=\s*[^;]+;', 'PRODUCT_BUNDLE_IDENTIFIER = com.kivowebb.app;', pbx)
+    pbx = re.sub(r'CODE_SIGN_IDENTITY\s*=\s*"iPhone Developer";', 'CODE_SIGN_IDENTITY = "Apple Distribution";', pbx)
+    pbx = re.sub(r'CODE_SIGN_IDENTITY\s*=\s*"Apple Development";', 'CODE_SIGN_IDENTITY = "Apple Distribution";', pbx)
+    pbx = re.sub(r'CODE_SIGN_STYLE\s*=\s*Automatic;', 'CODE_SIGN_STYLE = Manual;', pbx)
+    
+    if "PROVISIONING_PROFILE_SPECIFIER" in pbx:
+        pbx = re.sub(r'PROVISIONING_PROFILE_SPECIFIER\s*=\s*".*?"', 'PROVISIONING_PROFILE_SPECIFIER = "com.kivowebb.app AppStore"', pbx)
+        pbx = re.sub(r'PROVISIONING_PROFILE_SPECIFIER\s*=\s*[^;]+;', 'PROVISIONING_PROFILE_SPECIFIER = "com.kivowebb.app AppStore";', pbx)
+    else:
+        pbx = pbx.replace('buildSettings = {', 'buildSettings = {\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "com.kivowebb.app AppStore";')
         
     with open(pbxproj_path, "w") as f:
         f.write(pbx)
