@@ -27,33 +27,20 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           
-      - name: Setup Workspace and Install CocoaPods
+      - name: Generate Flutter Native Boilerplate & Install CocoaPods Dependencies
         run: |
-          export FLUTTER_ROOT=$(dirname $(dirname $(which flutter)))
           flutter create . --org com.kivowebb.app
+          flutter pub upgrade --major-versions firebase_core firebase_auth cloud_firestore firebase_messaging google_sign_in sign_in_with_apple
           flutter pub get
           python3 patch_ios.py
-          cd ios
-          if ! pod install; then
-            echo "POD INSTALL FAILED. Capturing error log:"
-            pod install --verbose 2>&1 | tail -n 80 > /tmp/pod_error.txt
-            git config --global user.name "Antigravity CI"
-            git config --global user.email "ci@gemini.app"
-            git checkout -B ci-debug-log
-            cp /tmp/pod_error.txt ../pod_error.txt
-            git add ../pod_error.txt
-            git commit -m "Capture Pod Install Error"
-            git push -f origin ci-debug-log
-            exit 1
-          fi
+          cd ios && pod install --repo-update
+          cd .. && flutter build ios --release --no-codesign
         
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
