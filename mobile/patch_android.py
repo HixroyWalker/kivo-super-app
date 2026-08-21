@@ -96,8 +96,28 @@ for cd in cache_dirs:
                     try:
                         with open(p, "r") as f:
                             c = f.read()
-                        c_new = re.sub(r'(?s)configurations\.all\s*\{[^\}]*\}', '// configurations.all removed for AGP compatibility', c)
-                        c_new = re.sub(r'(?s)configurations\.configureEach\s*\{[^\}]*\}', '// configurations.configureEach removed for AGP compatibility', c_new)
+                        c_new = re.sub(r'configurations\.all\s*\{(?:\s*resolutionStrategy\s*\{[^}]*\})?\s*\}', '// configurations.all removed for AGP', c)
+                        c_new = re.sub(r'configurations\.configureEach\s*\{(?:\s*resolutionStrategy\s*\{[^}]*\})?\s*\}', '// configurations.configureEach removed for AGP', c_new)
+                        
+                        # Fallback line-by-line commenter for any remaining configurations.all
+                        lines = c_new.split('\n')
+                        clean_lines = []
+                        in_config_block = False
+                        brace_count = 0
+                        for line in lines:
+                            if 'configurations.all' in line or 'configurations.configureEach' in line:
+                                in_config_block = True
+                                brace_count += line.count('{') - line.count('}')
+                                clean_lines.append('// ' + line)
+                            elif in_config_block:
+                                brace_count += line.count('{') - line.count('}')
+                                clean_lines.append('// ' + line)
+                                if brace_count <= 0:
+                                    in_config_block = False
+                            else:
+                                clean_lines.append(line)
+                        c_new = '\n'.join(clean_lines)
+                        
                         c_new = re.sub(r'compileSdkVersion\s+[0-9]+', 'compileSdkVersion 34', c_new)
                         c_new = re.sub(r'compileSdk\s*=\s*[0-9]+', 'compileSdk = 34', c_new)
                         c_new = re.sub(r'flutter\.compileSdkVersion', '34', c_new)

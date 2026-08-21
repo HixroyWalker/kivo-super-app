@@ -79,12 +79,6 @@ platform :ios do
     end
 
     xcargs_opts = "DEVELOPMENT_TEAM=#{team_id} CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution'"
-    if profile_name
-      xcargs_opts += " PROVISIONING_PROFILE_SPECIFIER='#{profile_name}'"
-    end
-    if profile_uuid
-      xcargs_opts += " PROVISIONING_PROFILE='#{profile_uuid}'"
-    end
 
     build_app(
       workspace: "Runner.xcworkspace",
