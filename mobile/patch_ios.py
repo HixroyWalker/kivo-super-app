@@ -44,7 +44,7 @@ FLUTTER_BUILD_NUMBER=130
 
 # 2. Write canonical Podfile
 podfile_path = "ios/Podfile"
-canonical_podfile = """platform :ios, '14.0'
+canonical_podfile = """platform :ios, '15.0'
 
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
@@ -85,7 +85,7 @@ post_install do |installer|
     flutter_additional_ios_build_settings(target)
     if target.respond_to?(:build_configurations)
       target.build_configurations.each do |config|
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
         config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
         config.build_settings['SWIFT_EMIT_APP_INTENTS_METADATA'] = 'NO'
         config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'

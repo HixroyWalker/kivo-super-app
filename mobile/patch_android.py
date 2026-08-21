@@ -66,13 +66,6 @@ if os.path.exists(root_gradle):
         root_content = f.read()
     subproject_code = """
 subprojects {
-    project.configurations.all {
-        resolutionStrategy.eachDependency { details ->
-            if (details.requested.group == 'androidx.exifinterface') {
-                details.useVersion '1.3.7'
-            }
-        }
-    }
     afterEvaluate { project ->
         if (project.hasProperty('android')) {
             project.android {
