@@ -33,19 +33,19 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Generate Flutter Native Workspace & Build iOS Release
-        run: |
-          flutter create . --org com.kivowebb.app
-          flutter pub get
-          python3 patch_ios.py
-          flutter build ios --release --no-codesign
-        
-      - name: Setup Ruby
+      - name: Setup Ruby & Bundler
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.0'
           bundler-cache: true
           working-directory: ./mobile/ios
           
+      - name: Generate Flutter Native Workspace & Install CocoaPods
+        run: |
+          flutter create . --org com.kivowebb.app
+          flutter pub get
+          python3 patch_ios.py
+          cd ios && bundle exec pod install --repo-update
+        
       - name: Deploy via Fastlane
         run: cd ios && bundle exec fastlane beta

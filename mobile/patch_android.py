@@ -1,7 +1,7 @@
 import os
 import re
 
-# Clean AndroidManifest package attribute for AGP 8
+# 1. Clean AndroidManifest package attribute for AGP 8 and inject AdMob app ID
 manifest_path = "android/app/src/main/AndroidManifest.xml"
 if os.path.exists(manifest_path):
     with open(manifest_path, "r") as f:
@@ -13,18 +13,44 @@ if os.path.exists(manifest_path):
     with open(manifest_path, "w") as f:
         f.write(content)
 
-# Set compileSdk 36 and targetSdkVersion 34 in android/app/build.gradle
+# 2. Set compileSdk 36, targetSdkVersion 34, and configure release signing in android/app/build.gradle
 app_gradle = "android/app/build.gradle"
 if os.path.exists(app_gradle):
     with open(app_gradle, "r") as f:
         content = f.read()
+        
+    signing_preamble = """
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+"""
+    if 'keystoreProperties' not in content:
+        content = signing_preamble + "\n" + content
+        
     content = re.sub(r'compileSdk\s*=.*', 'compileSdk = 36', content)
     content = re.sub(r'compileSdkVersion\s+.*', 'compileSdkVersion 36', content)
     content = re.sub(r'targetSdkVersion\s+.*', 'targetSdkVersion 34', content)
+    
+    signing_config_block = """
+        release {
+            keyAlias = keystoreProperties['keyAlias']
+            keyPassword = keystoreProperties['keyPassword']
+            storeFile = keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+            storePassword = keystoreProperties['storePassword']
+        }
+"""
+    if 'signingConfigs {' in content and 'signingConfigs.release' not in content:
+        content = content.replace('signingConfigs {', 'signingConfigs {\n' + signing_config_block)
+        
+    if 'buildTypes {' in content and 'signingConfig = signingConfigs.release' not in content:
+        content = re.sub(r'signingConfig\s*=\s*signingConfigs\.debug', 'signingConfig = (keystorePropertiesFile.exists() ? signingConfigs.release : signingConfigs.debug)', content)
+        
     with open(app_gradle, "w") as f:
         f.write(content)
 
-# Prepend subprojects resolutionStrategy & compileSdk 36 to root android/build.gradle
+# 3. Prepend subprojects resolutionStrategy & compileSdk 36 to root android/build.gradle
 root_gradle = "android/build.gradle"
 if os.path.exists(root_gradle):
     with open(root_gradle, "r") as f:
@@ -51,7 +77,7 @@ subprojects {
     with open(root_gradle, "w") as f:
         f.write(subproject_code + "\n" + root_content)
 
-# Dynamically patch all pub-cache plugin build.gradle files to compileSdk 36
+# 4. Dynamically patch all pub-cache plugin build.gradle files to compileSdk 36
 pub_cache = os.path.expanduser("~/.pub-cache")
 if os.path.exists(pub_cache):
     for root_dir, dirs, files in os.walk(pub_cache):

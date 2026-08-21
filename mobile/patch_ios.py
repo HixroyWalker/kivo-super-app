@@ -1,30 +1,46 @@
 import os
 import re
+import subprocess
 
-os.makedirs("ios", exist_ok=True)
+os.makedirs("ios/Flutter", exist_ok=True)
+flutter_root = ""
+try:
+    flutter_bin = subprocess.check_output(["which", "flutter"]).decode().strip()
+    if flutter_bin:
+        flutter_root = os.path.dirname(os.path.dirname(flutter_bin))
+except Exception:
+    pass
+
+if not flutter_root:
+    flutter_root = os.environ.get("FLUTTER_ROOT", "")
+
+# 1. Write ios/Flutter/Generated.xcconfig
+gen_xcconfig_path = "ios/Flutter/Generated.xcconfig"
+with open(gen_xcconfig_path, "w") as f:
+    f.write(f"""// This is a generated file; do not edit or check into version control.
+FLUTTER_ROOT={flutter_root}
+FLUTTER_APPLICATION_PATH={os.path.abspath('.')}
+COCOAPODS_PARALLEL_CODE_SIGN=true
+FLUTTER_TARGET=lib/main.dart
+FLUTTER_BUILD_DIR=build
+FLUTTER_BUILD_NAME=1.0.22
+FLUTTER_BUILD_NUMBER=116
+""")
+
+# 2. Write canonical Podfile
 podfile_path = "ios/Podfile"
-
-canonical_podfile = """platform :ios, '14.0'
+canonical_podfile = f"""platform :ios, '14.0'
 
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
-project 'Runner', {
+project 'Runner', {{
   'Debug' => :debug,
   'Profile' => :release,
   'Release' => :release,
-}
+}}
 
 def flutter_root
-  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
-  unless File.exist?(generated_xcode_build_settings_path)
-    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
-  end
-
-  File.foreach(generated_xcode_build_settings_path) do |line|
-    matches = line.match(/FLUTTER_ROOT\=(.*)/)
-    return matches[1].strip if matches
-  end
-  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+  '{flutter_root}'
 end
 
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
@@ -62,6 +78,7 @@ end
 with open(podfile_path, "w") as f:
     f.write(canonical_podfile)
 
+# 3. Patch project.pbxproj
 pbxproj_path = "ios/Runner.xcodeproj/project.pbxproj"
 if os.path.exists(pbxproj_path):
     with open(pbxproj_path, "r") as f:
@@ -80,6 +97,7 @@ if os.path.exists(pbxproj_path):
     with open(pbxproj_path, "w") as f:
         f.write(pbx)
 
+# 4. Patch Info.plist
 info_plist_path = "ios/Runner/Info.plist"
 if os.path.exists(info_plist_path):
     with open(info_plist_path, "r") as f:
