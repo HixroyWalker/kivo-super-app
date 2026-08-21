@@ -57,7 +57,7 @@ if (keystorePropertiesFile.exists()) {
     with open(app_gradle, "w") as f:
         f.write(content)
 
-# 3. Prepend subprojects resolutionStrategy & compileSdk 34 to root android/build.gradle
+# 3. Append subprojects resolutionStrategy & compileSdk 34 to root android/build.gradle
 root_gradle = "android/build.gradle"
 if os.path.exists(root_gradle):
     with open(root_gradle, "r") as f:
@@ -81,8 +81,9 @@ subprojects {
     }
 }
 """
-    with open(root_gradle, "w") as f:
-        f.write(subproject_code + "\n" + root_content)
+    if "subprojects {" not in root_content:
+        with open(root_gradle, "a") as f:
+            f.write("\n" + subproject_code + "\n")
 
 # 4. Dynamically patch all pub-cache plugin build.gradle files to compileSdk 34
 pub_cache = os.path.expanduser("~/.pub-cache")
