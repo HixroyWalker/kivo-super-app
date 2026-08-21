@@ -148,7 +148,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          child: [
+          children: [
             // Caption Input
             TextField(
               controller: _captionController,
@@ -225,7 +225,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                         padding: const EdgeInsets.all(6),
                         decoration: const BoxDecoration(
                           color: Colors.black54,
-                          shape: BoxCircle,
+                          shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.close, color: Colors.white, size: 18),
                       ),

@@ -77,26 +77,32 @@ class _MessagingScreenState extends State<MessagingScreen> {
               ),
             ),
           ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Row(
-              children: ['All', 'Friend', 'Merchant', 'Client']
-                  .map((label) => Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: ChoiceChip(
-                          label: Text(label),
-                          selected: _selectedLabel == label,
-                          onSelected: (_) => setState(() => _selectedLabel = label),
-                          selectedColor: KivoDarkTheme.primaryEmerald.withOpacity(0.2),
-                          backgroundColor: KivoDarkTheme.surface,
-                          labelStyle: TextStyle(
-                            color: _selectedLabel == label ? KivoDarkTheme.primaryEmerald : KivoDarkTheme.textSecondary,
-                            fontWeight: _selectedLabel == label ? FontWeight.bold : FontWeight.normal,
-                          ),
-                        ),
-                      ))
-                  .toList(),
+          SizedBox(
+            height: 48,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: ['All', 'Friend', 'Merchant', 'Client'].map((label) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: FilterChip(
+                    label: Text(label),
+                    selected: _selectedLabel == label,
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedLabel = label;
+                      });
+                    },
+                    selectedColor: KivoDarkTheme.primaryEmerald.withOpacity(0.2),
+                    backgroundColor: KivoDarkTheme.surface,
+                    labelStyle: TextStyle(
+                      color: _selectedLabel == label ? KivoDarkTheme.primaryEmerald : KivoDarkTheme.textSecondary,
+                      fontWeight: _selectedLabel == label ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
           ),
           const SizedBox(height: 8),
           Expanded(

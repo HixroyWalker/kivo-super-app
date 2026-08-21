@@ -43,12 +43,14 @@ class WalletProvider extends ChangeNotifier {
   String get userEmail => 'user@kivo.app';
 
   Future<bool> transferFunds({
-    required String recipient,
+    String? recipient,
+    String? recipientIdentifier,
     required double amount,
     String note = '',
     String category = 'P2P',
   }) async {
-    return sendMoney(recipient, amount, note);
+    final target = recipientIdentifier ?? recipient ?? 'Recipient';
+    return sendMoney(target, amount, note);
   }
 
   String get formattedBalance {

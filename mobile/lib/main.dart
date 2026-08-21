@@ -68,7 +68,7 @@ class KivoApp extends StatelessWidget {
         '/messaging': (context) => const MessagingScreen(),
         '/accounting': (context) => const AccountingScreen(),
         '/merchant_pos': (context) => const PosCashierScreen(),
-        '/merchant_kyc': (context) => MerchantKycScreen(),
+        '/merchant_kyc': (context) => const MerchantKYCScreen(),
         '/notifications': (context) => const NotificationsScreen(),
         '/ads': (context) => const AdsScreen(),
         '/profile': (context) => const ProfileScreen(),
