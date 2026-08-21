@@ -41,7 +41,7 @@ jobs:
           echo '${{ secrets.ANDROID_KEYSTORE_BASE64 }}' | base64 --decode > ./android/app/upload-keystore.jks
         
       - name: Build Android App Bundle
-        run: flutter build appbundle --release --no-codesign
+        run: flutter build appbundle --release
         
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
