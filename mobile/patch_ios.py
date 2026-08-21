@@ -42,9 +42,31 @@ FLUTTER_BUILD_NAME=1.0.22
 FLUTTER_BUILD_NUMBER=130
 """)
 
+flutter_podspec = "ios/Flutter/Flutter.podspec"
+if os.path.exists(flutter_podspec):
+    with open(flutter_podspec, "r") as f:
+        fps = f.read()
+    fps = re.sub(r"deployment_target\s*=\s*['\"].*?['\"]", "deployment_target = '14.0'", fps)
+    with open(flutter_podspec, "w") as f:
+        f.write(fps)
+else:
+    with open(flutter_podspec, "w") as f:
+        f.write("""Pod::Spec.new do |s|
+  s.name             = 'Flutter'
+  s.version          = '1.0.0'
+  s.summary          = 'High-performance, high-fidelity mobile apps.'
+  s.homepage         = 'https://flutter.dev'
+  s.license          = { :type => 'MIT' }
+  s.author           = { 'Flutter Dev Team' => 'engineers@flutter.io' }
+  s.source           = { :git => 'https://github.com/flutter/engine', :tag => s.version.to_s }
+  s.ios.deployment_target = '14.0'
+  s.vendored_frameworks = 'Flutter.xcframework'
+end
+""")
+
 # 2. Write canonical Podfile
 podfile_path = "ios/Podfile"
-canonical_podfile = """platform :ios, '13.0'
+canonical_podfile = """platform :ios, '14.0'
 
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
@@ -103,7 +125,7 @@ if os.path.exists(pbxproj_path):
     with open(pbxproj_path, "r") as f:
         pbx = f.read()
     pbx = re.sub(r'PRODUCT_BUNDLE_IDENTIFIER\s*=\s*[^;]+;', 'PRODUCT_BUNDLE_IDENTIFIER = com.kivowebb.app;', pbx)
-    pbx = re.sub(r'IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[^;]+;', 'IPHONEOS_DEPLOYMENT_TARGET = 13.0;', pbx)
+    pbx = re.sub(r'IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[^;]+;', 'IPHONEOS_DEPLOYMENT_TARGET = 14.0;', pbx)
     with open(pbxproj_path, "w") as f:
         f.write(pbx)
 
