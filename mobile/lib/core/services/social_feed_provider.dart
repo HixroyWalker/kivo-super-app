@@ -51,17 +51,17 @@ class SocialFeedProvider extends ChangeNotifier {
       PostModel(
         id: 'seed_1',
         authorId: 'kivo_official',
-        authorName: 'Kivo Jamaica',
+        authorName: 'Kivo Jamaica Official',
         authorHandle: '@kivoja',
         authorPhoto: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
         isVerified: true,
-        caption: 'Welcome to the Kivo Social Feed! 🇯🇲 Share photos, drop YouTube videos, and tip your favorite Jamaican creators with 1 tap.',
+        caption: 'Kivo Super App Showcase & Tutorial 🇯🇲 Tap play to watch inline!',
         postType: PostType.youtube,
-        youtubeVideoId: '12qSgC1_H5M', // Jamaican Reggae / Tourism vibe video
-        likeCount: 342,
-        commentCount: 45,
-        tipCountJMD: 1500.0,
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+        youtubeVideoId: 'Iv7OdQMNzz0', // User requested test YouTube link
+        likeCount: 42,
+        commentCount: 8,
+        tipCountJMD: 0.0,
+        createdAt: DateTime.now().subtract(const Duration(minutes: 15)),
       ),
       PostModel(
         id: 'seed_2',

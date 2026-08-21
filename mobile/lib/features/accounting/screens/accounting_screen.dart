@@ -9,45 +9,8 @@ class AccountingScreen extends StatefulWidget {
 }
 
 class _AccountingScreenState extends State<AccountingScreen> {
-  final List<Map<String, dynamic>> _invoices = [
-    {
-      'id': 'INV-1001',
-      'customerName': 'Kingston Wholesale Ltd',
-      'subtotal': 45000.0,
-      'gctAmount': 6750.0,
-      'totalAmount': 51750.0,
-      'status': 'PAID',
-      'dueDate': '2026-08-10',
-    },
-    {
-      'id': 'INV-1002',
-      'customerName': 'Montego Bay Beach Resort',
-      'subtotal': 120000.0,
-      'gctAmount': 18000.0,
-      'totalAmount': 138000.0,
-      'status': 'PENDING',
-      'dueDate': '2026-08-25',
-    },
-  ];
-
-  final List<Map<String, dynamic>> _expenses = [
-    {
-      'id': 'EXP-501',
-      'category': 'Inventory',
-      'description': 'Bulk Coffee Beans & Packaging',
-      'amount': 28000.0,
-      'gctPaid': 4200.0,
-      'date': '2026-08-18',
-    },
-    {
-      'id': 'EXP-502',
-      'category': 'Utilities',
-      'description': 'JPS Commercial Electricity',
-      'amount': 14500.0,
-      'gctPaid': 2175.0,
-      'date': '2026-08-15',
-    },
-  ];
+  final List<Map<String, dynamic>> _invoices = [];
+  final List<Map<String, dynamic>> _expenses = [];
 
   void _showCreateInvoiceDialog() {
     final nameController = TextEditingController();
@@ -220,6 +183,10 @@ class _AccountingScreenState extends State<AccountingScreen> {
   }
 
   Widget _buildOverviewTab() {
+    final double totalInflow = _invoices.where((i) => i['status'] == 'PAID').fold<double>(0.0, (acc, i) => acc + ((i['totalAmount'] as num?)?.toDouble() ?? 0.0));
+    final double totalExpenses = _expenses.fold<double>(0.0, (acc, e) => acc + ((e['amount'] as num?)?.toDouble() ?? 0.0));
+    final double netCashflow = totalInflow - totalExpenses;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -236,18 +203,27 @@ class _AccountingScreenState extends State<AccountingScreen> {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.3)),
             ),
-            child: const Column(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Monthly Net Cashflow', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13)),
-                SizedBox(height: 8),
-                Text('JMD \$125,750.00', style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w800)),
-                SizedBox(height: 16),
+                const Text('Monthly Net Cashflow', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13)),
+                const SizedBox(height: 8),
+                Text(
+                  'JMD \$${netCashflow.toStringAsFixed(2)}',
+                  style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Total Inflow: +JMD \$189,750', style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold, fontSize: 12)),
-                    Text('Expenses: -JMD \$64,000', style: TextStyle(color: KivoDarkTheme.accentRose, fontWeight: FontWeight.bold, fontSize: 12)),
+                    Text(
+                      'Total Inflow: +JMD \$${totalInflow.toStringAsFixed(2)}',
+                      style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
+                    Text(
+                      'Expenses: -JMD \$${totalExpenses.toStringAsFixed(2)}',
+                      style: const TextStyle(color: KivoDarkTheme.accentRose, fontWeight: FontWeight.bold, fontSize: 12),
+                    ),
                   ],
                 ),
               ],

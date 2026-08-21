@@ -393,13 +393,6 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
         'colors': [const Color(0xFF00C853), const Color(0xFF1B5E20)],
         'icon': Icons.link,
       },
-      {
-        'title': 'Scotiabank Chequing',
-        'balance': 'JMD \$88,400.00',
-        'tag': 'Account **4821',
-        'colors': [const Color(0xFFD50000), const Color(0xFF880E4F)],
-        'icon': Icons.credit_card,
-      },
     ];
 
     return SizedBox(

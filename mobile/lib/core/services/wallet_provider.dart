@@ -31,10 +31,10 @@ class TransactionItem {
 }
 
 class WalletProvider extends ChangeNotifier {
-  double _jmdBalance = 124500.50;
-  double _usdBalance = 820.00;
+  double _jmdBalance = 0.00;
+  double _usdBalance = 0.00;
   bool _isJmd = true;
-  bool _isBalanceVisible = false;
+  bool _isBalanceVisible = true;
 
   double get jmdBalance => _jmdBalance;
   double get usdBalance => _usdBalance;
@@ -72,73 +72,17 @@ class WalletProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  final List<TransactionItem> _transactions = [
-    TransactionItem(
-      id: 'tx-1',
-      title: 'Lynk Wallet Top-Up',
-      subtitle: 'Instant Bank Transfer • Bank of Jamaica Rail',
-      amount: 15000.00,
-      timestamp: DateTime.now().subtract(const Duration(minutes: 25)),
-      icon: Icons.account_balance,
-      iconColor: const Color(0xFF00E676),
-      isCredit: true,
-      likes: 3,
-    ),
-    TransactionItem(
-      id: 'tx-2',
-      title: 'Sent to Marcus Sterling',
-      subtitle: 'Dinner & Drinks at Devon House 🍦🍹',
-      amount: 4500.00,
-      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-      icon: Icons.arrow_upward,
-      iconColor: const Color(0xFFFF5252),
-      isCredit: false,
-      likes: 12,
-      comments: ['Great times bro!', 'Next one on me 🙌'],
-    ),
-    TransactionItem(
-      id: 'tx-3',
-      title: 'Kivo Marketplace Purchase',
-      subtitle: 'Blue Mountain Coffee (Medium Roast 1lb)',
-      amount: 2800.00,
-      timestamp: DateTime.now().subtract(const Duration(hours: 5)),
-      icon: Icons.shopping_bag,
-      iconColor: const Color(0xFF00E5FF),
-      isCredit: false,
-      likes: 1,
-    ),
-    TransactionItem(
-      id: 'tx-4',
-      title: 'Received from Shenseea P.',
-      subtitle: 'Freelance Design Retainer 🎨',
-      amount: 45000.00,
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      icon: Icons.arrow_downward,
-      iconColor: const Color(0xFF00E676),
-      isCredit: true,
-      likes: 8,
-    ),
-    TransactionItem(
-      id: 'tx-5',
-      title: 'TAJ GCT Payment',
-      subtitle: 'Tax Administration Jamaica • Ref #89302',
-      amount: 6750.00,
-      timestamp: DateTime.now().subtract(const Duration(days: 2)),
-      icon: Icons.receipt_long,
-      iconColor: const Color(0xFFFFB300),
-      isCredit: false,
-    ),
-  ];
+  final List<TransactionItem> _transactions = [];
 
   List<TransactionItem> get transactions => _transactions;
 
   // Weekly spending chart data (Mon -> Sun)
-  final List<double> weeklySpending = [4200, 7800, 2500, 11200, 6400, 14500, 5100];
+  final List<double> weeklySpending = [0, 0, 0, 0, 0, 0, 0];
 
-  bool _isLynkAutoCreditActive = true;
-  String _lynkLinkedAccount = 'Lynk BOJ Jam-Dex Linked (@kivo_kingston)';
-  String? _lynkUsername = '@kivo_kingston';
-  bool _isLynkVerified = true;
+  bool _isLynkAutoCreditActive = false;
+  String _lynkLinkedAccount = 'No Lynk Account Linked';
+  String? _lynkUsername;
+  bool _isLynkVerified = false;
   String? _pendingVerificationCode;
   double _pendingVerificationAmount = 0.0;
   bool _isVerifying = false;

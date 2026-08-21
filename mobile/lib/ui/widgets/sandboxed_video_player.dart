@@ -23,9 +23,8 @@ class _SandboxedVideoPlayerState extends State<SandboxedVideoPlayer> {
   bool _isPlaying = false;
 
   void _startPlayback() {
-    setState(() {
-      _isPlaying = true;
-      _controller = YoutubePlayerController.fromVideoId(
+    try {
+      final controller = YoutubePlayerController.fromVideoId(
         videoId: widget.videoId,
         autoPlay: true,
         params: const YoutubePlayerParams(
@@ -38,12 +37,22 @@ class _SandboxedVideoPlayerState extends State<SandboxedVideoPlayer> {
           enableJavaScript: true,
         ),
       );
-    });
+      setState(() {
+        _isPlaying = true;
+        _controller = controller;
+      });
+    } catch (e) {
+      debugPrint('Error starting YouTube playback: $e');
+    }
   }
 
   @override
   void dispose() {
-    _controller?.close();
+    try {
+      _controller?.close();
+    } catch (e) {
+      debugPrint('Error disposing YouTube controller: $e');
+    }
     super.dispose();
   }
 

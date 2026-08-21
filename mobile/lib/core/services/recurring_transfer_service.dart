@@ -30,26 +30,29 @@ class RecurringTransferService extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    _firestore
-        .collection('recurring_transfers')
-        .where('senderId', isEqualTo: userId)
-        .snapshots()
-        .listen((snapshot) {
-      if (snapshot.docs.isEmpty) {
-        _schedules = _generateSampleSchedules();
-      } else {
-        _schedules = snapshot.docs.map((d) => RecurringTransferModel.fromFirestore(d)).toList();
-      }
+    try {
+      _firestore
+          .collection('recurring_transfers')
+          .where('senderId', isEqualTo: userId)
+          .snapshots()
+          .listen((snapshot) {
+        if (snapshot.docs.isEmpty) {
+          _schedules = [];
+        } else {
+          _schedules = snapshot.docs.map((d) => RecurringTransferModel.fromFirestore(d)).toList();
+        }
+        _isLoading = false;
+        notifyListeners();
+      }, onError: (e) {
+        debugPrint("Firestore recurring transfer stream error: $e");
+        _isLoading = false;
+        notifyListeners();
+      });
+    } catch (e) {
+      debugPrint("Error initializing recurring transfers listener: $e");
       _isLoading = false;
       notifyListeners();
-    }, onError: (e) {
-      debugPrint("Firestore recurring transfer stream error: $e");
-      if (_schedules.isEmpty) {
-        _schedules = _generateSampleSchedules();
-      }
-      _isLoading = false;
-      notifyListeners();
-    });
+    }
   }
 
   List<RecurringTransferModel> _generateSampleSchedules() {

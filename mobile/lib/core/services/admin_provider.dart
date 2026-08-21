@@ -92,38 +92,60 @@ class AdminProvider extends ChangeNotifier {
   }
 
   void _initAdminData() {
-    _kycSubmissions = _generateDefaultKYCSubmissions();
+    _kycSubmissions = [];
     _loadFeeConfigFromFirestore();
     _listenToKYCSubmissions();
   }
 
   void _loadFeeConfigFromFirestore() {
-    _firestore.collection('admin_settings').doc('fees').snapshots().listen((doc) {
-      if (doc.exists) {
-        final data = doc.data() ?? {};
-        _feeConfig = AdminFeeConfig(
-          p2pTransferFeePercent: (data['p2pTransferFeePercent'] as num?)?.toDouble() ?? 0.5,
-          merchantProcessingFeePercent: (data['merchantProcessingFeePercent'] as num?)?.toDouble() ?? 1.5,
-          cashoutFeePercent: (data['cashoutFeePercent'] as num?)?.toDouble() ?? 1.0,
-          marketplaceCommissionPercent: (data['marketplaceCommissionPercent'] as num?)?.toDouble() ?? 5.0,
-          gctTaxRatePercent: (data['gctTaxRatePercent'] as num?)?.toDouble() ?? 15.0,
-        );
-        notifyListeners();
-      }
-    }, onError: (e) {
-      debugPrint('Admin fee config stream fallback: $e');
-    });
+    try {
+      _firestore.collection('admin_settings').doc('fees').snapshots().listen((doc) {
+        if (doc.exists) {
+          final data = doc.data() ?? {};
+          _feeConfig = AdminFeeConfig(
+            p2pTransferFeePercent: (data['p2pTransferFeePercent'] as num?)?.toDouble() ?? 0.5,
+            merchantProcessingFeePercent: (data['merchantProcessingFeePercent'] as num?)?.toDouble() ?? 1.5,
+            cashoutFeePercent: (data['cashoutFeePercent'] as num?)?.toDouble() ?? 1.0,
+            marketplaceCommissionPercent: (data['marketplaceCommissionPercent'] as num?)?.toDouble() ?? 5.0,
+            gctTaxRatePercent: (data['gctTaxRatePercent'] as num?)?.toDouble() ?? 15.0,
+          );
+          notifyListeners();
+        } else {
+          // Initialize default document in Firestore if absent
+          _firestore.collection('admin_settings').doc('fees').set({
+            'p2pTransferFeePercent': 0.5,
+            'merchantProcessingFeePercent': 1.5,
+            'cashoutFeePercent': 1.0,
+            'marketplaceCommissionPercent': 5.0,
+            'gctTaxRatePercent': 15.0,
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+        }
+      }, onError: (e) {
+        debugPrint('Admin fee config stream fallback: $e');
+      });
+    } catch (e) {
+      debugPrint('Error loading fee config: $e');
+    }
   }
 
   void _listenToKYCSubmissions() {
-    _firestore.collection('kyc_submissions').orderBy('submittedAt', descending: true).limit(50).snapshots().listen((snap) {
-      if (snap.docs.isNotEmpty) {
-        _kycSubmissions = snap.docs.map((d) => KYCSubmission.fromFirestore(d)).toList();
+    try {
+      _firestore.collection('kyc_submissions').orderBy('submittedAt', descending: true).limit(50).snapshots().listen((snap) {
+        if (snap.docs.isNotEmpty) {
+          _kycSubmissions = snap.docs.map((d) => KYCSubmission.fromFirestore(d)).toList();
+        } else {
+          _kycSubmissions = [];
+        }
         notifyListeners();
-      }
-    }, onError: (e) {
-      debugPrint('KYC stream fallback to seed submissions: $e');
-    });
+      }, onError: (e) {
+        debugPrint('KYC stream error: $e');
+        _kycSubmissions = [];
+        notifyListeners();
+      });
+    } catch (e) {
+      debugPrint('Error listening to KYC submissions: $e');
+    }
   }
 
   List<KYCSubmission> _generateDefaultKYCSubmissions() {

@@ -12,7 +12,7 @@ class AdminBalanceAdjustmentScreen extends StatefulWidget {
 }
 
 class _AdminBalanceAdjustmentScreenState extends State<AdminBalanceAdjustmentScreen> {
-  final TextEditingController _userController = TextEditingController(text: 'usr_merch_4821');
+  final TextEditingController _userController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _reasonController = TextEditingController();
   bool _isCredit = true; // true = Credit (+), false = Debit (-)
