@@ -1,24 +1,29 @@
-import os
-import re
-import subprocess
+import shutil
 
 os.makedirs("ios/Flutter", exist_ok=True)
+flutter_bin = shutil.which("flutter")
 flutter_root = ""
-try:
-    flutter_bin = subprocess.check_output(["which", "flutter"]).decode().strip()
-    if flutter_bin:
-        flutter_root = os.path.dirname(os.path.dirname(flutter_bin))
-except Exception:
-    pass
+
+if flutter_bin:
+    flutter_root = os.path.dirname(os.path.dirname(os.path.realpath(flutter_bin)))
 
 if not flutter_root:
-    flutter_root = os.environ.get("FLUTTER_ROOT", "")
-if not flutter_root:
-    toolcache = os.path.expanduser("~/hostedtoolcache/flutter")
-    if os.path.exists(toolcache):
-        for root_dir, dirs, files in os.walk(toolcache):
-            if "bin" in dirs and os.path.exists(os.path.join(root_dir, "bin", "flutter")):
-                flutter_root = root_dir
+    candidates = [
+        os.environ.get("FLUTTER_ROOT", ""),
+        os.path.expanduser("~/hostedtoolcache/flutter"),
+        os.path.expanduser("~/flutter"),
+        "/opt/hostedtoolcache/flutter",
+    ]
+    for c in candidates:
+        if c and os.path.exists(c):
+            if os.path.exists(os.path.join(c, "bin", "flutter")):
+                flutter_root = c
+                break
+            for root_dir, dirs, files in os.walk(c):
+                if "bin" in dirs and os.path.exists(os.path.join(root_dir, "bin", "flutter")):
+                    flutter_root = root_dir
+                    break
+            if flutter_root:
                 break
 
 # 1. Write ios/Flutter/Generated.xcconfig
@@ -31,7 +36,7 @@ COCOAPODS_PARALLEL_CODE_SIGN=true
 FLUTTER_TARGET=lib/main.dart
 FLUTTER_BUILD_DIR=build
 FLUTTER_BUILD_NAME=1.0.22
-FLUTTER_BUILD_NUMBER=120
+FLUTTER_BUILD_NUMBER=121
 """)
 
 # 2. Write canonical Podfile
@@ -48,15 +53,17 @@ project 'Runner', {
 
 def flutter_root
   generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
-  unless File.exist?(generated_xcode_build_settings_path)
-    raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+  if File.exist?(generated_xcode_build_settings_path)
+    File.foreach(generated_xcode_build_settings_path) do |line|
+      matches = line.match(/FLUTTER_ROOT=(.*)/)
+      if matches && !matches[1].strip.empty?
+        return matches[1].strip
+      end
+    end
   end
-
-  File.foreach(generated_xcode_build_settings_path) do |line|
-    matches = line.match(/FLUTTER_ROOT\\=(.*)/)
-    return matches[1].strip if matches
-  end
-  raise "FLUTTER_ROOT not found in #{generated_xcode_build_settings_path}. Try deleting Generated.xcconfig, then run flutter pub get"
+  f = ENV['FLUTTER_ROOT']
+  return f if f && !f.empty?
+  Dir.glob('/Users/runner/hostedtoolcache/flutter/**/bin/flutter').first&.sub('/bin/flutter', '') || '/Users/runner/flutter'
 end
 
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
