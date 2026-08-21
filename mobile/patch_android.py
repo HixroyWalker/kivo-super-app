@@ -36,8 +36,8 @@ if (keystorePropertiesFile.exists()) {
     if 'keystoreProperties' not in content:
         content = signing_preamble + "\n" + content
         
-    content = re.sub(r'compileSdk\s*=.*', 'compileSdk = 36', content)
-    content = re.sub(r'compileSdkVersion\s+.*', 'compileSdkVersion 36', content)
+    content = re.sub(r'compileSdk\s*=.*', 'compileSdk = 34', content)
+    content = re.sub(r'compileSdkVersion\s+.*', 'compileSdkVersion 34', content)
     content = re.sub(r'targetSdkVersion\s+.*', 'targetSdkVersion 34', content)
     
     signing_config_block = """
@@ -57,7 +57,7 @@ if (keystorePropertiesFile.exists()) {
     with open(app_gradle, "w") as f:
         f.write(content)
 
-# 3. Prepend subprojects resolutionStrategy & compileSdk 36 to root android/build.gradle
+# 3. Prepend subprojects resolutionStrategy & compileSdk 34 to root android/build.gradle
 root_gradle = "android/build.gradle"
 if os.path.exists(root_gradle):
     with open(root_gradle, "r") as f:
@@ -74,8 +74,8 @@ subprojects {
     afterEvaluate { project ->
         if (project.hasProperty('android')) {
             project.android {
-                compileSdkVersion 36
-                compileSdk 36
+                compileSdkVersion 34
+                compileSdk 34
             }
         }
     }
@@ -84,7 +84,7 @@ subprojects {
     with open(root_gradle, "w") as f:
         f.write(subproject_code + "\n" + root_content)
 
-# 4. Dynamically patch all pub-cache plugin build.gradle files to compileSdk 36
+# 4. Dynamically patch all pub-cache plugin build.gradle files to compileSdk 34
 pub_cache = os.path.expanduser("~/.pub-cache")
 if os.path.exists(pub_cache):
     for root_dir, dirs, files in os.walk(pub_cache):
@@ -94,9 +94,9 @@ if os.path.exists(pub_cache):
                 try:
                     with open(p, "r") as f:
                         c = f.read()
-                    c_new = re.sub(r'compileSdkVersion\s+[0-9]+', 'compileSdkVersion 36', c)
-                    c_new = re.sub(r'compileSdk\s*=\s*[0-9]+', 'compileSdk = 36', c_new)
-                    c_new = re.sub(r'flutter\.compileSdkVersion', '36', c_new)
+                    c_new = re.sub(r'compileSdkVersion\s+[0-9]+', 'compileSdkVersion 34', c)
+                    c_new = re.sub(r'compileSdk\s*=\s*[0-9]+', 'compileSdk = 34', c_new)
+                    c_new = re.sub(r'flutter\.compileSdkVersion', '34', c_new)
                     if c_new != c:
                         with open(p, "w") as f:
                             f.write(c_new)
