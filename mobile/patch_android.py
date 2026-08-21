@@ -79,7 +79,7 @@ subprojects {
         with open(root_gradle, "a") as f:
             f.write("\n" + subproject_code + "\n")
 
-# 4. Dynamically patch all pub-cache plugin build.gradle files to compileSdk 34
+# 4. Dynamically patch all pub-cache plugin build.gradle files to compileSdk 34 and Gradle 9 compatibility
 pub_cache = os.path.expanduser("~/.pub-cache")
 if os.path.exists(pub_cache):
     for root_dir, dirs, files in os.walk(pub_cache):
@@ -89,7 +89,9 @@ if os.path.exists(pub_cache):
                 try:
                     with open(p, "r") as f:
                         c = f.read()
-                    c_new = re.sub(r'compileSdkVersion\s+[0-9]+', 'compileSdkVersion 34', c)
+                    c_new = re.sub(r'configurations\.all\s*\{', 'configurations.configureEach {', c)
+                    c_new = re.sub(r'project\.configurations\.all\s*\{', 'project.configurations.configureEach {', c_new)
+                    c_new = re.sub(r'compileSdkVersion\s+[0-9]+', 'compileSdkVersion 34', c_new)
                     c_new = re.sub(r'compileSdk\s*=\s*[0-9]+', 'compileSdk = 34', c_new)
                     c_new = re.sub(r'flutter\.compileSdkVersion', '34', c_new)
                     if c_new != c:
