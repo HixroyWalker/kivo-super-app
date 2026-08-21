@@ -44,7 +44,7 @@ FLUTTER_BUILD_NUMBER=130
 
 # 2. Write canonical Podfile
 podfile_path = "ios/Podfile"
-canonical_podfile = """platform :ios, '15.0'
+canonical_podfile = """# platform :ios, '14.0'
 
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
