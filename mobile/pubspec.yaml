@@ -2,7 +2,7 @@ name: kivo
 description: A closed-loop Super App for the Jamaican market.
 publish_to: 'none'
 
-version: 1.0.22+149
+version: 1.0.22+150
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -21,7 +21,7 @@ dependencies:
   cached_network_image: ^3.3.0
   fl_chart: ^0.66.0
   local_auth: ^2.1.8
-  sqflite: ^2.3.0
+  sqflite: 2.3.3+1
   device_info_plus: ^9.1.1
   google_mobile_ads: ^5.1.0
   webview_flutter: ^4.7.0
