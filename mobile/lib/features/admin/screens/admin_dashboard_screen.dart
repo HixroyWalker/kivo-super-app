@@ -52,7 +52,7 @@ class AdminDashboardScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    wallet.formattedBalance,
+                    'JMD \$${wallet.jmdBalance.toStringAsFixed(2)}',
                     style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),

@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/dark_theme.dart';
 import '../../../core/services/wallet_provider.dart';
 import '../widgets/transfer_modal.dart';
+import '../../../ui/screens/social/social_feed_screen.dart';
+import '../../../ui/screens/wallet/standing_orders_screen.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -170,16 +172,30 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => _showTransferModal(context),
-                    icon: const Icon(Icons.send, size: 18),
-                    label: const Text('Send / Pay'),
+                    icon: const Icon(Icons.send, size: 16),
+                    label: const Text('Send / Pay', style: TextStyle(fontSize: 12)),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _showReceiveQRModal(context, wallet),
-                    icon: const Icon(Icons.qr_code_scanner, size: 18),
-                    label: const Text('Receive QR'),
+                    icon: const Icon(Icons.qr_code_scanner, size: 16),
+                    label: const Text('Receive QR', style: TextStyle(fontSize: 12)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const StandingOrdersScreen()),
+                    ),
+                    icon: const Icon(Icons.schedule, color: KivoDarkTheme.accentAmber, size: 16),
+                    label: const Text('Standing', style: TextStyle(fontSize: 12, color: KivoDarkTheme.accentAmber)),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: KivoDarkTheme.accentAmber.withOpacity(0.5)),
+                    ),
                   ),
                 ),
               ],
@@ -502,87 +518,49 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
   }
 
   Widget _buildSocialFeed(WalletProvider wallet) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: wallet.transactions.length,
-      itemBuilder: (context, index) {
-        final tx = wallet.transactions[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      backgroundColor: tx.iconColor.withOpacity(0.15),
-                      child: Icon(tx.icon, color: tx.iconColor, size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(tx.title, style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                          Text('25 mins ago • Kingston, JM', style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      '${tx.isCredit ? '+' : '-'}JMD \$${tx.amount.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        color: tx.isCredit ? KivoDarkTheme.primaryEmerald : KivoDarkTheme.textPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(tx.subtitle, style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 13)),
-                const SizedBox(height: 12),
-                const Divider(color: KivoDarkTheme.surfaceBorder, height: 1),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    InkWell(
-                      onTap: () => wallet.toggleLike(tx.id),
-                      child: Row(
-                        children: [
-                          Icon(
-                            tx.isLiked ? Icons.favorite : Icons.favorite_border,
-                            color: tx.isLiked ? KivoDarkTheme.accentRose : KivoDarkTheme.textSecondary,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 4),
-                          Text('${tx.likes}', style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    InkWell(
-                      onTap: () => _showCommentDialog(context, tx, wallet),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.mode_comment_outlined, color: KivoDarkTheme.textSecondary, size: 18),
-                          const SizedBox(width: 4),
-                          Text('${tx.comments.length}', style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+    return const SocialFeedScreen();
   }
 
   Widget _buildPersonalStatements(WalletProvider wallet) {
+    if (wallet.transactions.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: KivoDarkTheme.surface,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: KivoDarkTheme.surfaceBorder),
+                ),
+                child: const Icon(Icons.receipt_long_outlined, size: 40, color: KivoDarkTheme.primaryEmerald),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'No Transactions Yet',
+                style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Send funds, link Lynk, or scan a QR code to start transacting.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () => _showTransferModal(context),
+                icon: const Icon(Icons.send, size: 16),
+                label: const Text('Make First Transfer'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: wallet.transactions.length,
