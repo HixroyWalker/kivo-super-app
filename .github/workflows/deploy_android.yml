@@ -39,6 +39,12 @@ jobs:
         run: |
           echo '${{ secrets.PLAY_STORE_CONFIG_JSON }}' > ./android/service-account.json
           echo '${{ secrets.ANDROID_KEYSTORE_BASE64 }}' | base64 --decode > ./android/app/upload-keystore.jks
+          cat <<EOF > ./android/key.properties
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=upload-keystore.jks
+          EOF
         
       - name: Build Android App Bundle
         run: flutter build appbundle --release

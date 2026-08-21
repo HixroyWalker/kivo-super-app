@@ -23,17 +23,12 @@ if os.path.exists(podfile_path):
       end
     end"""
     
-    # 1. Clean out existing directives
-    content = re.sub(r'#?\s*use_frameworks!.*', '', content)
-    content = re.sub(r'#?\s*use_modular_headers!.*', '', content)
+    # 1. Ensure platform :ios, '14.0'
     content = re.sub(r'#?\s*platform\s+:ios\s*,.*', "platform :ios, '14.0'", content)
     if "platform :ios, '14.0'" not in content:
         content = "platform :ios, '14.0'\n" + content
 
-    # 2. Inject use_frameworks! :linkage => :static strictly INSIDE target 'Runner' do
-    content = content.replace("target 'Runner' do", "target 'Runner' do\n  use_frameworks! :linkage => :static")
-
-    # 3. Inject post_install build settings
+    # 2. Inject post_install build settings
     if 'flutter_additional_ios_build_settings(target)' in content:
         content = content.replace('flutter_additional_ios_build_settings(target)', 'flutter_additional_ios_build_settings(target)\n' + patch)
         
