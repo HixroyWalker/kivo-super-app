@@ -80,24 +80,30 @@ subprojects {
             f.write("\n" + subproject_code + "\n")
 
 # 4. Dynamically patch all pub-cache plugin build.gradle files to compileSdk 34 and Gradle 9 compatibility
-pub_cache = os.path.expanduser("~/.pub-cache")
-if os.path.exists(pub_cache):
-    for root_dir, dirs, files in os.walk(pub_cache):
-        for f_name in files:
-            if f_name == "build.gradle":
-                p = os.path.join(root_dir, f_name)
-                try:
-                    with open(p, "r") as f:
-                        c = f.read()
-                    c_new = re.sub(r'configurations\.all\s*\{', 'configurations.configureEach {', c)
-                    c_new = re.sub(r'project\.configurations\.all\s*\{', 'project.configurations.configureEach {', c_new)
-                    c_new = re.sub(r'compileSdkVersion\s+[0-9]+', 'compileSdkVersion 34', c_new)
-                    c_new = re.sub(r'compileSdk\s*=\s*[0-9]+', 'compileSdk = 34', c_new)
-                    c_new = re.sub(r'flutter\.compileSdkVersion', '34', c_new)
-                    if c_new != c:
-                        with open(p, "w") as f:
-                            f.write(c_new)
-                except Exception:
-                    pass
+cache_dirs = [
+    os.path.expanduser("~/.pub-cache"),
+    os.environ.get("PUB_CACHE", ""),
+    "/home/runner/.pub-cache",
+    "/opt/hostedtoolcache",
+    "/Users/runner/.pub-cache",
+]
+for cd in cache_dirs:
+    if cd and os.path.exists(cd):
+        for root_dir, dirs, files in os.walk(cd):
+            for f_name in files:
+                if f_name.endswith(".gradle") or f_name.endswith(".gradle.kts"):
+                    p = os.path.join(root_dir, f_name)
+                    try:
+                        with open(p, "r") as f:
+                            c = f.read()
+                        c_new = re.sub(r'configurations\.all\b', 'configurations.configureEach', c)
+                        c_new = re.sub(r'compileSdkVersion\s+[0-9]+', 'compileSdkVersion 34', c_new)
+                        c_new = re.sub(r'compileSdk\s*=\s*[0-9]+', 'compileSdk = 34', c_new)
+                        c_new = re.sub(r'flutter\.compileSdkVersion', '34', c_new)
+                        if c_new != c:
+                            with open(p, "w") as f:
+                                f.write(c_new)
+                    except Exception:
+                        pass
 
 print("Android patching complete.")
