@@ -45,19 +45,26 @@ platform :ios do
       )
     end
 
-    if ENV["sigh_com.kivowebb.app_appstore_profile_path"]
+    profile_path = lane_context[SharedValues::SIGH_PROFILE_PATH] || ENV["sigh_com.kivowebb.app_appstore_profile_path"]
+    profile_name = lane_context[SharedValues::SIGH_NAME] || ENV["sigh_com.kivowebb.app_appstore_profile_name"]
+    profile_uuid = lane_context[SharedValues::SIGH_UDID] || ENV["sigh_com.kivowebb.app_appstore_uuid"]
+
+    if profile_path && File.exist?(profile_path)
       dest_dir = File.expand_path("~/Library/MobileDevice/Provisioning Profiles")
       FileUtils.mkdir_p(dest_dir)
-      uuid = ENV["sigh_com.kivowebb.app_appstore_uuid"]
-      FileUtils.cp(ENV["sigh_com.kivowebb.app_appstore_profile_path"], File.join(dest_dir, "#{uuid}.mobileprovision")) if uuid
-      FileUtils.cp(ENV["sigh_com.kivowebb.app_appstore_profile_path"], File.join(dest_dir, "profile.mobileprovision"))
+      FileUtils.cp(profile_path, File.join(dest_dir, "#{profile_uuid}.mobileprovision")) if profile_uuid
+      FileUtils.cp(profile_path, File.join(dest_dir, "profile.mobileprovision"))
     end
 
-    if ENV["sigh_com.kivowebb.app_appstore_profile_name"]
+    team_id = ENV["APPLE_TEAM_ID"] || "Z5W8VPPS7U"
+
+    if profile_name
       update_code_signing_settings(
         use_automatic_signing: false,
         path: "Runner.xcodeproj",
-        profile_name: ENV["sigh_com.kivowebb.app_appstore_profile_name"],
+        team_id: team_id,
+        bundle_identifier: "com.kivowebb.app",
+        profile_name: profile_name,
         code_sign_identity: "Apple Distribution"
       )
     end
@@ -65,19 +72,18 @@ platform :ios do
     export_opts = {
       method: "app-store"
     }
-    if ENV["sigh_com.kivowebb.app_appstore_profile_name"]
+    if profile_name
       export_opts[:provisioningProfiles] = {
-        "com.kivowebb.app" => ENV["sigh_com.kivowebb.app_appstore_profile_name"]
+        "com.kivowebb.app" => profile_name
       }
     end
 
-    team_id = ENV["APPLE_TEAM_ID"] || "Z5W8VPPS7U"
-    xcargs_opts = "DEVELOPMENT_TEAM=#{team_id} CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' -allowProvisioningUpdates"
-    if ENV["sigh_com.kivowebb.app_appstore_profile_name"]
-      xcargs_opts += " PROVISIONING_PROFILE_SPECIFIER='#{ENV["sigh_com.kivowebb.app_appstore_profile_name"]}'"
+    xcargs_opts = "DEVELOPMENT_TEAM=#{team_id} CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution'"
+    if profile_name
+      xcargs_opts += " PROVISIONING_PROFILE_SPECIFIER='#{profile_name}'"
     end
-    if ENV["sigh_com.kivowebb.app_appstore_uuid"]
-      xcargs_opts += " PROVISIONING_PROFILE='#{ENV["sigh_com.kivowebb.app_appstore_uuid"]}'"
+    if profile_uuid
+      xcargs_opts += " PROVISIONING_PROFILE='#{profile_uuid}'"
     end
 
     build_app(
