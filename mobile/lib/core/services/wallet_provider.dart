@@ -40,6 +40,16 @@ class WalletProvider extends ChangeNotifier {
   double get usdBalance => _usdBalance;
   bool get isJmd => _isJmd;
   bool get isBalanceVisible => _isBalanceVisible;
+  String get userEmail => 'user@kivo.app';
+
+  Future<bool> transferFunds({
+    required String recipient,
+    required double amount,
+    String note = '',
+    String category = 'P2P',
+  }) async {
+    return sendMoney(recipient, amount, note);
+  }
 
   String get formattedBalance {
     if (!_isBalanceVisible) return '••••••••';

@@ -53,7 +53,7 @@ class KivoDarkTheme {
         onSecondary: Colors.black,
         onSurface: textPrimary,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: surface,
         elevation: 0,
         shape: RoundedRectangleBorder(

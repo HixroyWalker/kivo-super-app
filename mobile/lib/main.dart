@@ -22,6 +22,7 @@ import 'core/services/recurring_transfer_service.dart';
 import 'ui/screens/social/social_feed_screen.dart';
 import 'ui/screens/social/create_post_screen.dart';
 import 'ui/screens/wallet/standing_orders_screen.dart';
+import 'core/services/admob_service.dart';
 import 'features/profile/screens/profile_screen.dart';
 
 void main() async {
@@ -67,7 +68,7 @@ class KivoApp extends StatelessWidget {
         '/messaging': (context) => const MessagingScreen(),
         '/accounting': (context) => const AccountingScreen(),
         '/merchant_pos': (context) => const PosCashierScreen(),
-        '/merchant_kyc': (context) => const MerchantKycScreen(),
+        '/merchant_kyc': (context) => MerchantKycScreen(),
         '/notifications': (context) => const NotificationsScreen(),
         '/ads': (context) => const AdsScreen(),
         '/profile': (context) => const ProfileScreen(),
