@@ -1,7 +1,7 @@
 import os
 import re
 
-# 1. Write Canonical Podfile with dynamic Flutter SDK detection
+# 1. Write Canonical Podfile
 podfile_content = """platform :ios, '14.0'
 
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -27,7 +27,7 @@ def flutter_root
 
   which_flutter = `which flutter`.strip
   unless which_flutter.empty?
-    return File.expand_path(File.join(File.dirname(File.realpath(which_flutter)), '..'))
+    return File.expand_path('../..', which_flutter)
   end
 
   '/Users/runner/hostedtoolcache/flutter/stable-arm64/flutter'
