@@ -50,7 +50,7 @@ class DashboardScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: KivoDarkTheme.surfaceDark,
+                color: KivoDarkTheme.surface,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.3)),
               ),
