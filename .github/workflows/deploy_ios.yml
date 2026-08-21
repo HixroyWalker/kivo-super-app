@@ -42,6 +42,7 @@ jobs:
           
       - name: Generate Flutter Native Workspace & Install CocoaPods
         run: |
+          flutter precache --ios
           flutter create . --org com.kivowebb.app
           flutter pub get
           python3 patch_ios.py
