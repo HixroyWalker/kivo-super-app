@@ -36,8 +36,8 @@ if (keystorePropertiesFile.exists()) {
     if 'keystoreProperties' not in content:
         content = signing_preamble + "\n" + content
         
-    content = re.sub(r'compileSdk\s*=.*', 'compileSdk = 34', content)
-    content = re.sub(r'compileSdkVersion\s+.*', 'compileSdkVersion 34', content)
+    content = re.sub(r'compileSdk\s*=.*', 'compileSdk = 36', content)
+    content = re.sub(r'compileSdkVersion\s+.*', 'compileSdkVersion 36', content)
     content = re.sub(r'targetSdkVersion\s+.*', 'targetSdkVersion 34', content)
     
     signing_config_block = """
@@ -59,27 +59,37 @@ if (keystorePropertiesFile.exists()) {
     with open(app_gradle, "w") as f:
         f.write(content)
 
-# 3. Append subprojects resolutionStrategy & compileSdk 34 to root android/build.gradle
+# 3. Append subprojects resolutionStrategy & compileSdk 36 to root android/build.gradle
 root_gradle = "android/build.gradle"
 if os.path.exists(root_gradle):
     with open(root_gradle, "r") as f:
         root_content = f.read()
     subproject_code = """
+allprojects {
+    configurations.all {
+        resolutionStrategy {
+            force 'androidx.activity:activity:1.9.3'
+            force 'androidx.activity:activity-ktx:1.9.3'
+            force 'androidx.core:core:1.13.1'
+            force 'androidx.core:core-ktx:1.13.1'
+        }
+    }
+}
 subprojects {
     afterEvaluate { project ->
         if (project.hasProperty('android')) {
             project.android {
-                compileSdkVersion 34
+                compileSdkVersion 36
             }
         }
     }
 }
 """
-    if "subprojects {" not in root_content:
+    if "compileSdkVersion 36" not in root_content:
         with open(root_gradle, "a") as f:
             f.write("\n" + subproject_code + "\n")
 
-# 4. Dynamically patch all pub-cache plugin build.gradle files to compileSdk 34 and Gradle 9 compatibility
+# 4. Dynamically patch all pub-cache plugin build.gradle files to compileSdk 36 and Gradle 9 compatibility
 cache_dirs = [
     os.path.expanduser("~/.pub-cache"),
     os.environ.get("PUB_CACHE", ""),
@@ -118,9 +128,9 @@ for cd in cache_dirs:
                                 clean_lines.append(line)
                         c_new = '\n'.join(clean_lines)
                         
-                        c_new = re.sub(r'compileSdkVersion\s+[0-9]+', 'compileSdkVersion 34', c_new)
-                        c_new = re.sub(r'compileSdk\s*=\s*[0-9]+', 'compileSdk = 34', c_new)
-                        c_new = re.sub(r'flutter\.compileSdkVersion', '34', c_new)
+                        c_new = re.sub(r'compileSdkVersion\s+[0-9]+', 'compileSdkVersion 36', c_new)
+                        c_new = re.sub(r'compileSdk\s*=\s*[0-9]+', 'compileSdk = 36', c_new)
+                        c_new = re.sub(r'flutter\.compileSdkVersion', '36', c_new)
                         if c_new != c:
                             with open(p, "w") as f:
                                 f.write(c_new)
