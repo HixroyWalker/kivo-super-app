@@ -25,6 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn(
+        clientId: '199273784188-3n62mvmk0s8ilveg3qm02hi2vgb07muh.apps.googleusercontent.com',
+        serverClientId: '199273784188-dvv335rgpnhb5334sp7qjmqc93ta0ptu.apps.googleusercontent.com',
         scopes: ['email', 'profile'],
       );
 

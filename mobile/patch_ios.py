@@ -132,7 +132,11 @@ if os.path.exists(pbxproj_path):
     with open(pbxproj_path, "w") as f:
         f.write(pbx)
 
-# 4. Patch Info.plist
+# 4. Patch Info.plist & copy GoogleService-Info.plist
+if os.path.exists("GoogleService-Info.plist"):
+    os.makedirs("ios/Runner", exist_ok=True)
+    shutil.copy("GoogleService-Info.plist", "ios/Runner/GoogleService-Info.plist")
+
 info_plist_path = "ios/Runner/Info.plist"
 if os.path.exists(info_plist_path):
     with open(info_plist_path, "r") as f:
@@ -144,6 +148,20 @@ if os.path.exists(info_plist_path):
         plist = plist.replace("<dict>", "<dict>\n\t<key>GADApplicationIdentifier</key>\n\t<string>ca-app-pub-3940256099942544~1458002511</string>")
     if "UIRequiresFullScreen" not in plist:
         plist = plist.replace("<dict>", "<dict>\n\t<key>UIRequiresFullScreen</key>\n\t<true/>")
+    if "CFBundleURLTypes" not in plist:
+        google_url_type = """
+\t<key>CFBundleURLTypes</key>
+\t<array>
+\t\t<dict>
+\t\t\t<key>CFBundleTypeRole</key>
+\t\t\t<string>Editor</string>
+\t\t\t<key>CFBundleURLSchemes</key>
+\t\t\t<array>
+\t\t\t\t<string>com.googleusercontent.apps.199273784188-3n62mvmk0s8ilveg3qm02hi2vgb07muh</string>
+\t\t\t</array>
+\t\t</dict>
+\t</array>"""
+        plist = plist.replace("<dict>", "<dict>" + google_url_type)
     if "NSFaceIDUsageDescription" not in plist:
         plist = plist.replace("<dict>", "<dict>\n\t<key>NSFaceIDUsageDescription</key>\n\t<string>Kivo requires FaceID / TouchID to secure your wallet transfers, biometric login, and merchant financials.</string>")
     if "NSPhotoLibraryUsageDescription" not in plist:

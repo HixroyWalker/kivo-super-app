@@ -1,7 +1,13 @@
 import os
 import re
+import shutil
 
-# 1. Clean AndroidManifest package attribute for AGP 8 and inject AdMob app ID
+# 1. Ensure google-services.json is copied to android/app/
+if os.path.exists("google-services.json"):
+    os.makedirs("android/app", exist_ok=True)
+    shutil.copy("google-services.json", "android/app/google-services.json")
+
+# Clean AndroidManifest package attribute for AGP 8 and inject AdMob app ID
 manifest_path = "android/app/src/main/AndroidManifest.xml"
 if os.path.exists(manifest_path):
     with open(manifest_path, "r") as f:

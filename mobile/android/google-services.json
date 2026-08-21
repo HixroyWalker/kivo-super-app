@@ -1,0 +1,106 @@
+{
+  "project_info": {
+    "project_number": "199273784188",
+    "project_id": "kivoapp-a83cf",
+    "storage_bucket": "kivoapp-a83cf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:199273784188:android:1d14c071f8b19a00b67af9",
+        "android_client_info": {
+          "package_name": "com.kivo.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "199273784188-t116gl7ulfaepm1ib1mh0kpquf7hcsgi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kivo.app",
+            "certificate_hash": "80d2e3fa56beab68e39ca975acfe77b74cd12de8"
+          }
+        },
+        {
+          "client_id": "199273784188-dvv335rgpnhb5334sp7qjmqc93ta0ptu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKHIwEVOJZUavXbsEi5keO7X9wGsb61Uw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "199273784188-dvv335rgpnhb5334sp7qjmqc93ta0ptu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "199273784188-3n62mvmk0s8ilveg3qm02hi2vgb07muh.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.kivowebb.app"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:199273784188:android:cda0ac037bd5e07fb67af9",
+        "android_client_info": {
+          "package_name": "com.kivowebb.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "199273784188-c1alutmsqi26ept8ljejrriiuiosco8c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kivowebb.app",
+            "certificate_hash": "80d2e3fa56beab68e39ca975acfe77b74cd12de8"
+          }
+        },
+        {
+          "client_id": "199273784188-o7buikq4rdaldgq0ur5f7joul08n2b2g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kivowebb.app",
+            "certificate_hash": "56084e4ec0d8131e3390056c6f5b41ff94abb3f2"
+          }
+        },
+        {
+          "client_id": "199273784188-dvv335rgpnhb5334sp7qjmqc93ta0ptu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKHIwEVOJZUavXbsEi5keO7X9wGsb61Uw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "199273784188-dvv335rgpnhb5334sp7qjmqc93ta0ptu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "199273784188-3n62mvmk0s8ilveg3qm02hi2vgb07muh.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.kivowebb.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
