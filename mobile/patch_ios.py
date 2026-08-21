@@ -106,8 +106,9 @@ if os.path.exists(pbxproj_path):
     with open(pbxproj_path, "r") as f:
         pbx = f.read()
         
-    team_id = os.environ.get("APPLE_TEAM_ID") or os.environ.get("DEVELOPMENT_TEAM", "")
-    if team_id:
+    team_id = os.environ.get("APPLE_TEAM_ID") or os.environ.get("DEVELOPMENT_TEAM") or "Z5W8VPPS7U"
+    if team_id and team_id.strip():
+        team_id = team_id.strip()
         if "DEVELOPMENT_TEAM" in pbx:
             pbx = re.sub(r'DEVELOPMENT_TEAM\s*=\s*".*?"', f'DEVELOPMENT_TEAM = "{team_id}"', pbx)
             pbx = re.sub(r'DEVELOPMENT_TEAM\s*=\s*[^;]+;', f'DEVELOPMENT_TEAM = {team_id};', pbx)
