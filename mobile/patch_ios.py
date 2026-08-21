@@ -28,17 +28,18 @@ if not flutter_root:
             if flutter_root:
                 break
 
-# 1. Write ios/Flutter/Generated.xcconfig
+# 1. Write ios/Flutter/Generated.xcconfig only if missing
 gen_xcconfig_path = "ios/Flutter/Generated.xcconfig"
-with open(gen_xcconfig_path, "w") as f:
-    f.write(f"""// This is a generated file; do not edit or check into version control.
+if not os.path.exists(gen_xcconfig_path):
+    with open(gen_xcconfig_path, "w") as f:
+        f.write(f"""// This is a generated file; do not edit or check into version control.
 FLUTTER_ROOT={flutter_root}
 FLUTTER_APPLICATION_PATH={os.path.abspath('.')}
 COCOAPODS_PARALLEL_CODE_SIGN=true
 FLUTTER_TARGET=lib/main.dart
 FLUTTER_BUILD_DIR=build
 FLUTTER_BUILD_NAME=1.0.22
-FLUTTER_BUILD_NUMBER=121
+FLUTTER_BUILD_NUMBER=130
 """)
 
 # 2. Write canonical Podfile
