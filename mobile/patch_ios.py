@@ -111,6 +111,12 @@ if os.path.exists(info_plist_path):
         plist = plist.replace("<dict>", "<dict>\n\t<key>UIRequiresFullScreen</key>\n\t<true/>")
     if "NSFaceIDUsageDescription" not in plist:
         plist = plist.replace("<dict>", "<dict>\n\t<key>NSFaceIDUsageDescription</key>\n\t<string>Kivo requires FaceID / TouchID to secure your wallet transfers, biometric login, and merchant financials.</string>")
+    if "NSPhotoLibraryUsageDescription" not in plist:
+        plist = plist.replace("<dict>", "<dict>\n\t<key>NSPhotoLibraryUsageDescription</key>\n\t<string>Kivo allows you to select photos to share in the social feed, marketplace, and profile.</string>")
+    if "NSCameraUsageDescription" not in plist:
+        plist = plist.replace("<dict>", "<dict>\n\t<key>NSCameraUsageDescription</key>\n\t<string>Kivo uses the camera to scan QR payment codes and capture photos for your social feed.</string>")
+    if "NSMicrophoneUsageDescription" not in plist:
+        plist = plist.replace("<dict>", "<dict>\n\t<key>NSMicrophoneUsageDescription</key>\n\t<string>Kivo uses the microphone for merchant soundbox audio and voice playback.</string>")
     if "CFBundleShortVersionString" in plist:
         plist = re.sub(r'<key>CFBundleShortVersionString</key>\s*<string>.*?</string>', '<key>CFBundleShortVersionString</key>\n\t<string>$(FLUTTER_BUILD_NAME)</string>', plist)
     if "CFBundleVersion" in plist:

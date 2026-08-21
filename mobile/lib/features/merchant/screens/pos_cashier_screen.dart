@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../core/services/voice_soundbox_service.dart';
 import '../../../core/theme/dark_theme.dart';
 
 class PosCashierScreen extends StatefulWidget {
@@ -105,12 +107,72 @@ class _PosCashierScreenState extends State<PosCashierScreen> {
       _inputAmount = '0';
     });
 
+    // Trigger Merchant Voice Soundbox Announcement
+    try {
+      context.read<VoiceSoundboxService>().announcePayment(
+        amountJMD: amount,
+        senderName: 'Customer',
+      );
+    } catch (_) {}
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: KivoDarkTheme.surfaceElevated,
         content: Text(
           'Payment of JMD \$${amount.toStringAsFixed(2)} Received! ($txId)',
           style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  void _showSoundboxSettings() {
+    final soundbox = context.read<VoiceSoundboxService>();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: KivoDarkTheme.surfaceElevated,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('🔊 Merchant Audio Soundbox', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                  Switch(
+                    value: soundbox.isEnabled,
+                    activeColor: KivoDarkTheme.primaryEmerald,
+                    onChanged: (val) {
+                      soundbox.toggleSoundbox(val);
+                      setModalState(() {});
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Announces incoming QR and Lynk customer payments aloud through the device speaker.',
+                style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                onPressed: () => soundbox.testAnnouncement(),
+                icon: const Icon(Icons.volume_up),
+                label: const Text('Test Voice Announcement'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: KivoDarkTheme.primaryEmerald,
+                  foregroundColor: Colors.black,
+                  minimumSize: const Size(double.infinity, 44),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -130,6 +192,11 @@ class _PosCashierScreenState extends State<PosCashierScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.volume_up_outlined, color: KivoDarkTheme.primaryEmerald),
+            tooltip: 'Soundbox Voice Settings',
+            onPressed: _showSoundboxSettings,
+          ),
           IconButton(
             icon: const Icon(Icons.print_outlined),
             tooltip: 'Print Receipt',

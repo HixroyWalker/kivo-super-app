@@ -7,6 +7,13 @@ if os.path.exists(manifest_path):
     with open(manifest_path, "r") as f:
         content = f.read()
     content = content.replace('package="com.kivo.app"', '')
+    perms = """
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+"""
+    if '<uses-permission android:name="android.permission.CAMERA"' not in content:
+        content = content.replace('<manifest', '<manifest\n' + perms)
     if 'com.google.android.gms.ads.APPLICATION_ID' not in content:
         admob_meta = '<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-3940256099942544~3347511713"/>'
         content = content.replace('</application>', f'    {admob_meta}\n    </application>')

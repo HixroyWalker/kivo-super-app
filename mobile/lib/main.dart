@@ -16,7 +16,13 @@ import 'features/merchant/screens/pos_cashier_screen.dart';
 import 'features/merchant/screens/merchant_kyc_screen.dart';
 import 'features/notifications/screens/notifications_screen.dart';
 import 'features/ads/screens/ads_screen.dart';
-import 'core/services/admob_service.dart';
+import 'core/services/social_feed_provider.dart';
+import 'core/services/voice_soundbox_service.dart';
+import 'core/services/recurring_transfer_service.dart';
+import 'ui/screens/social/social_feed_screen.dart';
+import 'ui/screens/social/create_post_screen.dart';
+import 'ui/screens/wallet/standing_orders_screen.dart';
+import 'features/profile/screens/profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +39,9 @@ void main() async {
         ChangeNotifierProvider(create: (_) => WalletProvider()),
         ChangeNotifierProvider(create: (_) => MarketplaceProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => SocialFeedProvider()),
+        ChangeNotifierProvider(create: (_) => VoiceSoundboxService()),
+        ChangeNotifierProvider(create: (_) => RecurringTransferService()),
       ],
       child: const KivoApp(),
     ),
@@ -62,6 +71,9 @@ class KivoApp extends StatelessWidget {
         '/notifications': (context) => const NotificationsScreen(),
         '/ads': (context) => const AdsScreen(),
         '/profile': (context) => const ProfileScreen(),
+        '/social_feed': (context) => const SocialFeedScreen(),
+        '/create_post': (context) => const CreatePostScreen(),
+        '/standing_orders': (context) => const StandingOrdersScreen(),
       },
     );
   }
