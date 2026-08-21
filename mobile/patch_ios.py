@@ -23,18 +23,15 @@ if os.path.exists(podfile_path):
       end
     end"""
     
-    # 1. Ensure platform :ios, '14.0'
+    # 1. Clean out top-level use_frameworks! / use_modular_headers! comments
+    content = re.sub(r'#?\s*use_frameworks!.*', '', content)
+    content = re.sub(r'#?\s*use_modular_headers!.*', '', content)
     content = re.sub(r'#?\s*platform\s+:ios\s*,.*', "platform :ios, '14.0'", content)
     if "platform :ios, '14.0'" not in content:
         content = "platform :ios, '14.0'\n" + content
 
-    # 2. Ensure use_frameworks! :linkage => :static
-    if 'use_frameworks!' in content:
-        content = re.sub(r'#?\s*use_frameworks!.*', "use_frameworks! :linkage => :static", content)
-    else:
-        content = content.replace("target 'Runner' do", "target 'Runner' do\n  use_frameworks! :linkage => :static")
-
-    content = content.replace('use_modular_headers!', '')
+    # 2. Inject use_frameworks! :linkage => :static strictly inside target 'Runner' do
+    content = content.replace("target 'Runner' do", "target 'Runner' do\n  use_frameworks! :linkage => :static")
 
     # 3. Inject post_install build settings
     if 'flutter_additional_ios_build_settings(target)' in content:
@@ -71,15 +68,6 @@ if os.path.exists(pbxproj_path):
             pbx = pbx.replace('buildSettings = {', f'buildSettings = {{\n\t\t\t\tDEVELOPMENT_TEAM = {team_id};')
         
     pbx = re.sub(r'PRODUCT_BUNDLE_IDENTIFIER\s*=\s*[^;]+;', 'PRODUCT_BUNDLE_IDENTIFIER = com.kivowebb.app;', pbx)
-    pbx = re.sub(r'CODE_SIGN_IDENTITY\s*=\s*"iPhone Developer";', 'CODE_SIGN_IDENTITY = "Apple Distribution";', pbx)
-    pbx = re.sub(r'CODE_SIGN_IDENTITY\s*=\s*"Apple Development";', 'CODE_SIGN_IDENTITY = "Apple Distribution";', pbx)
-    pbx = re.sub(r'CODE_SIGN_STYLE\s*=\s*Automatic;', 'CODE_SIGN_STYLE = Manual;', pbx)
-    
-    if "PROVISIONING_PROFILE_SPECIFIER" in pbx:
-        pbx = re.sub(r'PROVISIONING_PROFILE_SPECIFIER\s*=\s*".*?"', 'PROVISIONING_PROFILE_SPECIFIER = "com.kivowebb.app AppStore"', pbx)
-        pbx = re.sub(r'PROVISIONING_PROFILE_SPECIFIER\s*=\s*[^;]+;', 'PROVISIONING_PROFILE_SPECIFIER = "com.kivowebb.app AppStore";', pbx)
-    else:
-        pbx = pbx.replace('buildSettings = {', 'buildSettings = {\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "com.kivowebb.app AppStore";')
         
     with open(pbxproj_path, "w") as f:
         f.write(pbx)
