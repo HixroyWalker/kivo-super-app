@@ -7,7 +7,6 @@ import 'package:printing/printing.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/services/voice_soundbox_service.dart';
 import '../../../core/services/marketplace_provider.dart';
-import '../../../core/models/product_model.dart';
 import '../../../core/theme/dark_theme.dart';
 
 class PosCashierScreen extends StatefulWidget {
@@ -55,7 +54,7 @@ class _PosCashierScreenState extends State<PosCashierScreen> {
   }
 
   // Calculate ticket subtotal from store inventory
-  double _calculateTicketSubtotal(List<ProductModel> products) {
+  double _calculateTicketSubtotal(List<Product> products) {
     double total = 0.0;
     _ticketItems.forEach((productId, qty) {
       final p = products.firstWhere((item) => item.id == productId, orElse: () => products.first);
@@ -64,7 +63,7 @@ class _PosCashierScreenState extends State<PosCashierScreen> {
     return total;
   }
 
-  double _getCurrentTotalAmount(List<ProductModel> products) {
+  double _getCurrentTotalAmount(List<Product> products) {
     if (_activeMode == 0) {
       return _calculateTicketSubtotal(products);
     } else {
@@ -218,7 +217,7 @@ class _PosCashierScreenState extends State<PosCashierScreen> {
   }
 
   // Show Payment Selector Modal (Cash vs Wallet QR)
-  void _showPaymentModal(double amount, List<ProductModel> products) {
+  void _showPaymentModal(double amount, List<Product> products) {
     if (amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select products or enter an amount first.')),
@@ -338,7 +337,7 @@ class _PosCashierScreenState extends State<PosCashierScreen> {
   }
 
   // Cash Tendered & Change Due Calculator Modal
-  void _showCashTenderedModal(double amountDue, List<ProductModel> products) {
+  void _showCashTenderedModal(double amountDue, List<Product> products) {
     final tenderedController = TextEditingController(text: amountDue.toStringAsFixed(0));
     double changeDue = 0.0;
 
@@ -477,7 +476,7 @@ class _PosCashierScreenState extends State<PosCashierScreen> {
   }
 
   // Live Dynamic QR Modal
-  void _showLiveDynamicQRModal(double amount, List<ProductModel> products) {
+  void _showLiveDynamicQRModal(double amount, List<Product> products) {
     final orderId = 'POS-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
     final payload = 'kivo://pay?merchant=${Uri.encodeComponent(widget.merchantName)}&cashier=${Uri.encodeComponent(_currentCashier)}&amount=$amount&orderId=$orderId&currency=JMD';
 
@@ -562,7 +561,7 @@ class _PosCashierScreenState extends State<PosCashierScreen> {
     required String paymentMethod,
     double? cashTendered,
     double? changeDue,
-    required List<ProductModel> products,
+    required List<Product> products,
   }) {
     final txId = 'POS-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
 
@@ -950,7 +949,7 @@ class _PosCashierScreenState extends State<PosCashierScreen> {
     );
   }
 
-  Widget _buildStoreCatalogView(List<ProductModel> filtered, List<ProductModel> allProducts) {
+  Widget _buildStoreCatalogView(List<Product> filtered, List<Product> allProducts) {
     return Column(
       children: [
         // Search & Category Filters
@@ -1137,7 +1136,7 @@ class _PosCashierScreenState extends State<PosCashierScreen> {
     );
   }
 
-  Widget _buildCheckoutBar(double totalAmount, List<ProductModel> products) {
+  Widget _buildCheckoutBar(double totalAmount, List<Product> products) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

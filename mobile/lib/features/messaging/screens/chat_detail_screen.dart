@@ -189,7 +189,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     ),
                     title: Text(p.name, style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
                     subtitle: Text(
-                      'JMD \$${p.price.toStringAsFixed(2)} • Stock: ${p.stock}',
+                      'JMD \$${p.price.toStringAsFixed(2)} • ${p.sellerName}',
                       style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 12, fontWeight: FontWeight.bold),
                     ),
                     trailing: ElevatedButton(

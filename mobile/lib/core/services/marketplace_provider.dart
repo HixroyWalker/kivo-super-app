@@ -118,6 +118,9 @@ class MarketplaceProvider extends ChangeNotifier {
   int get cartCount => _cart.values.fold(0, (sum, item) => sum + item.quantity);
   double get cartSubtotal => _cart.values.fold(0.0, (sum, item) => sum + item.total);
 
+  List<Product> get allProducts => _products;
+  List<Product> get products => _products;
+
   List<Product> get filteredProducts {
     return _products.where((product) {
       final matchesCategory = _selectedCategory == 'All' || product.category == _selectedCategory;
