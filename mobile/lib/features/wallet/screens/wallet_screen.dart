@@ -217,6 +217,166 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
     );
   }
 
+
+  void _showLynkVerificationSheet(BuildContext context, WalletProvider wallet) {
+    final usernameController = TextEditingController(text: wallet.lynkUsername ?? '');
+    final codeController = TextEditingController();
+    String? generatedCode;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: KivoDarkTheme.surfaceElevated,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(top: 24, left: 20, right: 20, bottom: MediaQuery.of(ctx).viewInsets.bottom + 24),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: KivoDarkTheme.primaryEmerald.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.account_balance, color: KivoDarkTheme.primaryEmerald, size: 28),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Lynk Account Verification', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text('Bank of Jamaica Jam-Dex Rail', style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 12, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                    IconButton(onPressed: () => Navigator.pop(ctx), icon: const Icon(Icons.close, color: Colors.white54)),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                if (wallet.isLynkVerified && generatedCode == null) ...[
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: KivoDarkTheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.4)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.verified, color: KivoDarkTheme.primaryEmerald, size: 22),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Verified Handle: ${wallet.lynkUsername}\nAutomatic direct-crediting active.',
+                            style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 13, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        setModalState(() {
+                          usernameController.text = wallet.lynkUsername ?? '';
+                          generatedCode = '';
+                        });
+                      },
+                      child: const Text('Re-test / Change Lynk Handle'),
+                    ),
+                  ),
+                ] else ...[
+                  const Text('Enter Lynk Handle to Verify Ownership:', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: usernameController,
+                    style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: KivoDarkTheme.surface,
+                      prefixIcon: const Icon(Icons.alternate_email, color: KivoDarkTheme.accentCyan),
+                      hintText: '@username',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  if (generatedCode == null || generatedCode!.isEmpty) ...[
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final res = await wallet.initiateLynkVerification(usernameController.text.trim());
+                        setModalState(() => generatedCode = res['code']);
+                      },
+                      icon: const Icon(Icons.send, color: Colors.black),
+                      label: const Text('Send Micro-Test PIN to Jam-Dex Rail', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: KivoDarkTheme.accentAmber,
+                        minimumSize: const Size(double.infinity, 48),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ] else ...[
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(color: KivoDarkTheme.surface, borderRadius: BorderRadius.circular(10)),
+                      child: Text('Test code sent: #$generatedCode (in transaction reference memo).', style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 12)),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: codeController,
+                      keyboardType: TextInputType.number,
+                      maxLength: 4,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 6),
+                      decoration: InputDecoration(
+                        counterText: '',
+                        filled: true,
+                        fillColor: KivoDarkTheme.surface,
+                        hintText: 'PIN',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () {
+                        final ok = wallet.confirmLynkVerificationCode(codeController.text.trim());
+                        if (ok) {
+                          Navigator.pop(ctx);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('✅ Lynk Account ownership verified successfully!')),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Invalid code. Please try again.')),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: KivoDarkTheme.primaryEmerald,
+                        minimumSize: const Size(double.infinity, 48),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Confirm Ownership', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ],
+                const SizedBox(height: 10),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildBankCardsCarousel(WalletProvider wallet) {
     final cards = [
       {
@@ -228,8 +388,8 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
       },
       {
         'title': 'Lynk Jamaica',
-        'balance': 'JMD \$35,000.00',
-        'tag': 'BOJ Jam-Dex Linked',
+        'balance': wallet.isLynkVerified ? (wallet.lynkUsername ?? '@kivo_kingston') : 'Tap to Verify Handle',
+        'tag': wallet.isLynkVerified ? 'Verified • Auto-Credit ON' : 'Unverified • Tap to Link',
         'colors': [const Color(0xFF00C853), const Color(0xFF1B5E20)],
         'icon': Icons.link,
       },
@@ -251,59 +411,51 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final c = cards[index];
-          return Container(
-            width: 260,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: c['colors'] as List<Color>,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          return GestureDetector(
+            onTap: () {
+              if (c['title'] == 'Lynk Jamaica') {
+                _showLynkVerificationSheet(context, wallet);
+              }
+            },
+            child: Container(
+              width: 260,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: c['colors'] as List<Color>,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: (c['colors'] as List<Color>).first.withOpacity(0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: (c['colors'] as List<Color>).first.withOpacity(0.2),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(c['title'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                    Icon(c['icon'] as IconData, color: Colors.white, size: 20),
-                  ],
-                ),
-                InkWell(
-                  onTap: wallet.toggleBalanceVisibility,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2.0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(c['balance'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 20)),
-                        const SizedBox(width: 6),
-                        Icon(wallet.isBalanceVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined, color: Colors.white70, size: 16),
-                      ],
-                    ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(c['title'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                      Icon(c['icon'] as IconData, color: Colors.white, size: 20),
+                    ],
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.25),
-                    borderRadius: BorderRadius.circular(8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(c['balance'] as String, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                      const SizedBox(height: 4),
+                      Text(c['tag'] as String, style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 11)),
+                    ],
                   ),
-                  child: Text(c['tag'] as String, style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w600)),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },

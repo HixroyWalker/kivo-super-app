@@ -54,31 +54,61 @@ class RecurringTransferModel {
     final data = doc.data() as Map<String, dynamic>? ?? {};
 
     RecurringFrequency freq = RecurringFrequency.monthly;
-    final freqStr = data['frequency'] as String? ?? 'monthly';
+    final freqStr = data['frequency']?.toString() ?? 'monthly';
     if (freqStr == 'daily') freq = RecurringFrequency.daily;
     if (freqStr == 'weekly') freq = RecurringFrequency.weekly;
     if (freqStr == 'fortnightly') freq = RecurringFrequency.fortnightly;
 
     RecurringStatus st = RecurringStatus.active;
-    final statusStr = data['status'] as String? ?? 'active';
+    final statusStr = data['status']?.toString() ?? 'active';
     if (statusStr == 'paused') st = RecurringStatus.paused;
     if (statusStr == 'cancelled') st = RecurringStatus.cancelled;
 
+    DateTime _parseDate(dynamic val) {
+      if (val == null) return DateTime.now();
+      if (val is Timestamp) return val.toDate();
+      if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
+      if (val is int) return DateTime.fromMillisecondsSinceEpoch(val);
+      return DateTime.now();
+    }
+
+    DateTime? _parseNullableDate(dynamic val) {
+      if (val == null) return null;
+      if (val is Timestamp) return val.toDate();
+      if (val is String) return DateTime.tryParse(val);
+      if (val is int) return DateTime.fromMillisecondsSinceEpoch(val);
+      return null;
+    }
+
+    double _parseNum(dynamic val) {
+      if (val == null) return 0.0;
+      if (val is num) return val.toDouble();
+      if (val is String) return double.tryParse(val) ?? 0.0;
+      return 0.0;
+    }
+
+    int _parseInt(dynamic val) {
+      if (val == null) return 0;
+      if (val is num) return val.toInt();
+      if (val is String) return int.tryParse(val) ?? 0;
+      return 0;
+    }
+
     return RecurringTransferModel(
       scheduleId: doc.id,
-      senderId: data['senderId'] ?? '',
-      senderName: data['senderName'] ?? '',
-      recipientIdentifier: data['recipientIdentifier'] ?? '',
-      recipientName: data['recipientName'] ?? '',
-      amount: (data['amount'] ?? 0).toDouble(),
+      senderId: data['senderId']?.toString() ?? '',
+      senderName: data['senderName']?.toString() ?? 'Kivo User',
+      recipientIdentifier: data['recipientIdentifier']?.toString() ?? '',
+      recipientName: data['recipientName']?.toString() ?? 'Recipient',
+      amount: _parseNum(data['amount']),
       frequency: freq,
-      startDate: (data['startDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      nextExecutionDate: (data['nextExecutionDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      startDate: _parseDate(data['startDate']),
+      nextExecutionDate: _parseDate(data['nextExecutionDate']),
       status: st,
-      note: data['note'] ?? '',
-      executionCount: data['executionCount'] ?? 0,
-      totalTransferred: (data['totalTransferred'] ?? 0).toDouble(),
-      lastExecutionDate: (data['lastExecutionDate'] as Timestamp?)?.toDate(),
+      note: data['note']?.toString() ?? '',
+      executionCount: _parseInt(data['executionCount']),
+      totalTransferred: _parseNum(data['totalTransferred']),
+      lastExecutionDate: _parseNullableDate(data['lastExecutionDate']),
     );
   }
 

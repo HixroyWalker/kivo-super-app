@@ -26,6 +26,12 @@ import 'ui/screens/wallet/standing_orders_screen.dart';
 import 'core/services/admob_service.dart';
 import 'features/profile/screens/profile_screen.dart';
 
+import 'core/services/admin_provider.dart';
+import 'features/admin/screens/admin_dashboard_screen.dart';
+import 'features/admin/screens/admin_fee_settings_screen.dart';
+import 'features/admin/screens/admin_balance_adjustment_screen.dart';
+import 'features/admin/screens/admin_kyc_verification_screen.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
@@ -48,6 +54,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => SocialFeedProvider()),
         ChangeNotifierProvider(create: (_) => VoiceSoundboxService()),
         ChangeNotifierProvider(create: (_) => RecurringTransferService()),
+        ChangeNotifierProvider(create: (_) => AdminProvider()),
       ],
       child: const KivoApp(),
     ),
@@ -80,6 +87,10 @@ class KivoApp extends StatelessWidget {
         '/social_feed': (context) => const SocialFeedScreen(),
         '/create_post': (context) => const CreatePostScreen(),
         '/standing_orders': (context) => const StandingOrdersScreen(),
+        '/admin': (context) => const AdminDashboardScreen(),
+        '/admin_fees': (context) => const AdminFeeSettingsScreen(),
+        '/admin_balance': (context) => const AdminBalanceAdjustmentScreen(),
+        '/admin_kyc': (context) => const AdminKYCVerificationScreen(),
       },
     );
   }

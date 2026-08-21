@@ -136,10 +136,92 @@ class WalletProvider extends ChangeNotifier {
   final List<double> weeklySpending = [4200, 7800, 2500, 11200, 6400, 14500, 5100];
 
   bool _isLynkAutoCreditActive = true;
-  String _lynkLinkedAccount = 'Lynk BOJ Jam-Dex Linked (****-4821)';
+  String _lynkLinkedAccount = 'Lynk BOJ Jam-Dex Linked (@kivo_kingston)';
+  String? _lynkUsername = '@kivo_kingston';
+  bool _isLynkVerified = true;
+  String? _pendingVerificationCode;
+  double _pendingVerificationAmount = 0.0;
+  bool _isVerifying = false;
 
   bool get isLynkAutoCreditActive => _isLynkAutoCreditActive;
   String get lynkLinkedAccount => _lynkLinkedAccount;
+  String? get lynkUsername => _lynkUsername;
+  bool get isLynkVerified => _isLynkVerified;
+  String? get pendingVerificationCode => _pendingVerificationCode;
+  double get pendingVerificationAmount => _pendingVerificationAmount;
+  bool get isVerifying => _isVerifying;
+
+  /// Initiate Lynk account verification test handshake
+  Future<Map<String, dynamic>> initiateLynkVerification(String inputUsername) async {
+    _isVerifying = true;
+    notifyListeners();
+
+    final formatted = inputUsername.trim().startsWith('@')
+        ? inputUsername.trim()
+        : '@${inputUsername.trim()}';
+
+    await Future.delayed(const Duration(milliseconds: 1200));
+
+    // Generate deterministic 4-digit verification code
+    final code = (1000 + (DateTime.now().millisecondsSinceEpoch % 9000)).toString();
+    _pendingVerificationCode = code;
+    _pendingVerificationAmount = 1.25;
+    _lynkUsername = formatted;
+    _isLynkVerified = false;
+    _isVerifying = false;
+
+    // Send micro-credit test transfer to prove ownership on Jamaican rail
+    processIncomingLynkCredit(
+      amount: _pendingVerificationAmount,
+      senderName: 'Lynk BOJ Jam-Dex Test Rail ($formatted)',
+      referenceCode: 'LNK-AUTH-$code',
+    );
+
+    notifyListeners();
+    return {
+      'success': true,
+      'code': code,
+      'amount': _pendingVerificationAmount,
+      'username': formatted,
+    };
+  }
+
+  /// Confirm the 4-digit security code received in the Lynk test transaction
+  bool confirmLynkVerificationCode(String inputCode) {
+    if (_pendingVerificationCode != null && inputCode.trim() == _pendingVerificationCode) {
+      _isLynkVerified = true;
+      _isLynkAutoCreditActive = true;
+      _lynkLinkedAccount = 'Lynk BOJ Jam-Dex Linked ($_lynkUsername)';
+      _pendingVerificationCode = null;
+
+      _transactions.insert(
+        0,
+        TransactionItem(
+          id: 'tx-${DateTime.now().millisecondsSinceEpoch}',
+          title: 'Lynk Account Ownership Verified 🇯🇲',
+          subtitle: 'Linked $_lynkUsername • Real-time auto-crediting enabled',
+          amount: 0.0,
+          timestamp: DateTime.now(),
+          icon: Icons.verified_user,
+          iconColor: const Color(0xFF00E676),
+          isCredit: true,
+        ),
+      );
+
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  /// Unlink Lynk account
+  void unlinkLynkAccount() {
+    _lynkUsername = null;
+    _isLynkVerified = false;
+    _isLynkAutoCreditActive = false;
+    _lynkLinkedAccount = 'Not Linked';
+    notifyListeners();
+  }
 
   /// Automatically process incoming Lynk transfers without manual user top-up
   void processIncomingLynkCredit({

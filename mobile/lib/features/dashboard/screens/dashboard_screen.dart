@@ -12,93 +12,296 @@ import '../../merchant/screens/merchant_kyc_screen.dart';
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
-  void _showTopUpDialog(BuildContext context) {
-    final wallet = context.read<WalletProvider>();
+  void _showLynkAutoCreditModal(BuildContext context) {
+    final usernameController = TextEditingController(text: context.read<WalletProvider>().lynkUsername ?? '');
+    final codeController = TextEditingController();
+    bool isVerifyingStep = false;
+    String? generatedCode;
+
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: KivoDarkTheme.surfaceElevated,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: KivoDarkTheme.primaryEmerald.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.account_balance, color: KivoDarkTheme.primaryEmerald, size: 28),
-                ),
-                const SizedBox(width: 14),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Lynk Auto-Credit Bridge', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
-                    Text('Bank of Jamaica Jam-Dex Network', style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 12, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          final wallet = context.watch<WalletProvider>();
+
+          return Padding(
+            padding: EdgeInsets.only(
+              top: 24,
+              left: 20,
+              right: 20,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
             ),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: KivoDarkTheme.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.3)),
-              ),
-              child: const Row(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.check_circle, color: KivoDarkTheme.primaryEmerald, size: 20),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Automatic Platform Crediting is ACTIVE. All incoming transfers to your Lynk QR or handle credit directly without manual top-ups.',
-                      style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12),
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: KivoDarkTheme.primaryEmerald.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.account_balance, color: KivoDarkTheme.primaryEmerald, size: 28),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Lynk Account Verification', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                            Text('Bank of Jamaica Jam-Dex Gateway', style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 12, fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        icon: const Icon(Icons.close, color: Colors.white54),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 20),
+
+                  if (wallet.isLynkVerified && !isVerifyingStep) ...[
+                    // Verified Status Card
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: KivoDarkTheme.surface,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.verified, color: KivoDarkTheme.primaryEmerald, size: 20),
+                              const SizedBox(width: 8),
+                              Text('Verified Lynk Account: ${wallet.lynkUsername ?? "@kivo_kingston"}',
+                                  style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Ownership confirmed on Jam-Dex ledger. All incoming transfers to your Lynk handle automatically credit your Kivo balance in real time.',
+                            style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              setModalState(() {
+                                isVerifyingStep = true;
+                                usernameController.text = wallet.lynkUsername ?? '';
+                              });
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: KivoDarkTheme.surfaceBorder),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text('Re-test / Change Handle', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.bolt, color: Colors.black, size: 16),
+                            label: const Text('Test Auto-Credit', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: KivoDarkTheme.primaryEmerald,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            onPressed: () {
+                              wallet.processIncomingLynkCredit(
+                                amount: 2500.0,
+                                senderName: 'Lynk Network (${wallet.lynkUsername})',
+                              );
+                              Navigator.pop(ctx);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  backgroundColor: KivoDarkTheme.surfaceElevated,
+                                  content: Text(
+                                    '⚡ Automatically received and credited JMD \$2,500.00 from Lynk!',
+                                    style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ] else ...[
+                    // Username Input & Verification Test Form
+                    const Text('Enter your Lynk Username / Handle:', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: usernameController,
+                      style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: KivoDarkTheme.surface,
+                        prefixIcon: const Icon(Icons.alternate_email, color: KivoDarkTheme.accentCyan),
+                        hintText: 'e.g. yourname or @merchant_ja',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    if (generatedCode == null) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: KivoDarkTheme.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: KivoDarkTheme.surfaceBorder),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.security, color: KivoDarkTheme.accentAmber, size: 20),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Kivo will ping the Jam-Dex rail with a \$1.25 JMD test transaction containing a 4-digit security code to verify account ownership.',
+                                style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton.icon(
+                          onPressed: wallet.isVerifying
+                              ? null
+                              : () async {
+                                  final uname = usernameController.text.trim();
+                                  if (uname.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Please enter your Lynk username.')),
+                                    );
+                                    return;
+                                  }
+                                  final res = await wallet.initiateLynkVerification(uname);
+                                  setModalState(() {
+                                    generatedCode = res['code'];
+                                  });
+                                },
+                          icon: wallet.isVerifying
+                              ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                              : const Icon(Icons.send_to_mobile, color: Colors.black),
+                          label: Text(
+                            wallet.isVerifying ? 'Running Test Handshake...' : 'Run Handshake & Send Micro-Test Code',
+                            style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: KivoDarkTheme.accentAmber,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                    ] else ...[
+                      // Code Confirmation Step
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: KivoDarkTheme.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.4)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.mark_email_read, color: KivoDarkTheme.primaryEmerald, size: 18),
+                                SizedBox(width: 8),
+                                Text('Test Transaction Initiated!', style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold, fontSize: 13)),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Test code sent to Jam-Dex rail: #$generatedCode (in transaction reference memo).',
+                              style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Enter 4-Digit Verification PIN:', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: codeController,
+                        keyboardType: TextInputType.number,
+                        maxLength: 4,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 8),
+                        decoration: InputDecoration(
+                          counterText: '',
+                          filled: true,
+                          fillColor: KivoDarkTheme.surface,
+                          hintText: '••••',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            final success = wallet.confirmLynkVerificationCode(codeController.text.trim());
+                            if (success) {
+                              Navigator.pop(ctx);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  backgroundColor: KivoDarkTheme.surfaceElevated,
+                                  content: Text(
+                                    '✅ Lynk Account ${wallet.lynkUsername} verified successfully! Real-time auto-crediting is active.',
+                                    style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  backgroundColor: Colors.redAccent,
+                                  content: Text('Invalid verification code. Please check and try again.'),
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.check_circle, color: Colors.black),
+                          label: const Text('Confirm Account Ownership', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 15)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: KivoDarkTheme.primaryEmerald,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                  const SizedBox(height: 10),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Linked Account: ${wallet.lynkLinkedAccount}',
-              style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 13, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                icon: const Icon(Icons.flash_on, color: Colors.black),
-                label: const Text('Simulate Incoming Lynk Direct Credit (JMD \$5,000)'),
-                onPressed: () {
-                  wallet.processIncomingLynkCredit(
-                    amount: 5000.0,
-                    senderName: 'Lynk BOJ Transfer',
-                  );
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      backgroundColor: KivoDarkTheme.surfaceElevated,
-                      content: Text(
-                        '⚡ Automatically credited JMD \$5,000.00 from Lynk Network!',
-                        style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 10),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -440,6 +643,7 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _buildServicesGrid(BuildContext context) {
     final services = [
+      {'title': 'Admin Hub', 'icon': Icons.admin_panel_settings, 'color': KivoDarkTheme.accentCyan, 'route': '/admin'},
       {'title': 'Social Feed', 'icon': Icons.dynamic_feed, 'color': const Color(0xFFFFD700), 'route': '/social_feed'},
       {'title': 'Standing Orders', 'icon': Icons.schedule_send, 'color': KivoDarkTheme.accentCyan, 'route': '/standing_orders'},
       {'title': 'P2P Wallet', 'icon': Icons.account_balance_wallet, 'color': KivoDarkTheme.primaryEmerald, 'route': '/wallet'},
@@ -447,7 +651,6 @@ class DashboardScreen extends StatelessWidget {
       {'title': 'Message', 'icon': Icons.chat_bubble_outline, 'color': Colors.purpleAccent, 'route': '/messaging'},
       {'title': 'TAJ GCT Tax', 'icon': Icons.receipt_long, 'color': Colors.tealAccent, 'route': '/accounting'},
       {'title': 'Merchant POS', 'icon': Icons.point_of_sale, 'color': KivoDarkTheme.primaryEmerald, 'route': '/merchant_pos'},
-      {'title': 'Watch & Earn', 'icon': Icons.monetization_on_outlined, 'color': KivoDarkTheme.accentAmber, 'route': '/ads'},
     ];
 
     return GridView.builder(

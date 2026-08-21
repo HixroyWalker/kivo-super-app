@@ -87,22 +87,74 @@ class PostModel {
       type = PostType.youtube;
     }
 
+    DateTime parsedDate = DateTime.now();
+    final rawDate = data['createdAt'];
+    if (rawDate is Timestamp) {
+      parsedDate = rawDate.toDate();
+    } else if (rawDate is String) {
+      parsedDate = DateTime.tryParse(rawDate) ?? DateTime.now();
+    } else if (rawDate is int) {
+      parsedDate = DateTime.fromMillisecondsSinceEpoch(rawDate);
+    }
+
+    double parsedTips = 0.0;
+    final rawTips = data['tipCountJMD'];
+    if (rawTips is num) {
+      parsedTips = rawTips.toDouble();
+    } else if (rawTips is String) {
+      parsedTips = double.tryParse(rawTips) ?? 0.0;
+    }
+
+    int parsedLikes = 0;
+    final rawLikes = data['likeCount'];
+    if (rawLikes is num) {
+      parsedLikes = rawLikes.toInt();
+    } else if (rawLikes is String) {
+      parsedLikes = int.tryParse(rawLikes) ?? 0;
+    }
+
+    int parsedComments = 0;
+    final rawComments = data['commentCount'];
+    if (rawComments is num) {
+      parsedComments = rawComments.toInt();
+    } else if (rawComments is String) {
+      parsedComments = int.tryParse(rawComments) ?? 0;
+    }
+
+    List<String> parsedImages = [];
+    if (data['imageUrls'] is List) {
+      parsedImages = (data['imageUrls'] as List)
+          .map((e) => e?.toString() ?? '')
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+
+    List<String> parsedLikedBy = [];
+    if (data['likedBy'] is List) {
+      parsedLikedBy = (data['likedBy'] as List)
+          .map((e) => e?.toString() ?? '')
+          .where((s) => s.isNotEmpty)
+          .toList();
+    }
+
     return PostModel(
       id: doc.id,
-      authorId: data['authorId'] ?? '',
-      authorName: data['authorName'] ?? 'Kivo User',
-      authorHandle: data['authorHandle'] ?? '@kivouser',
-      authorPhoto: data['authorPhoto'] ?? '',
-      isVerified: data['isVerified'] ?? false,
-      caption: data['caption'] ?? '',
+      authorId: data['authorId']?.toString() ?? 'kivo_user',
+      authorName: data['authorName']?.toString() ?? 'Kivo User',
+      authorHandle: data['authorHandle']?.toString() ?? '@kivouser',
+      authorPhoto: (data['authorPhoto'] != null && data['authorPhoto'].toString().isNotEmpty)
+          ? data['authorPhoto'].toString()
+          : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+      isVerified: data['isVerified'] == true,
+      caption: data['caption']?.toString() ?? '',
       postType: type,
-      imageUrls: List<String>.from(data['imageUrls'] ?? []),
-      youtubeVideoId: data['youtubeVideoId'],
-      likeCount: data['likeCount'] ?? 0,
-      commentCount: data['commentCount'] ?? 0,
-      tipCountJMD: (data['tipCountJMD'] ?? 0).toDouble(),
-      likedBy: List<String>.from(data['likedBy'] ?? []),
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      imageUrls: parsedImages,
+      youtubeVideoId: data['youtubeVideoId']?.toString(),
+      likeCount: parsedLikes,
+      commentCount: parsedComments,
+      tipCountJMD: parsedTips,
+      likedBy: parsedLikedBy,
+      createdAt: parsedDate,
     );
   }
 
