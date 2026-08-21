@@ -12,6 +12,8 @@ import '../../merchant/screens/merchant_kyc_screen.dart';
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
+  void _showTopUpDialog(BuildContext context) => _showLynkAutoCreditModal(context);
+
   void _showLynkAutoCreditModal(BuildContext context) {
     final usernameController = TextEditingController(text: context.read<WalletProvider>().lynkUsername ?? '');
     final codeController = TextEditingController();
@@ -518,9 +520,9 @@ class DashboardScreen extends StatelessWidget {
             children: [
               _buildActionButton(
                 icon: Icons.add,
-                label: 'Top Up',
+                label: 'Lynk Link',
                 color: KivoDarkTheme.primaryEmerald,
-                onTap: () => _showTopUpDialog(context),
+                onTap: () => _showLynkAutoCreditModal(context),
               ),
               _buildActionButton(
                 icon: Icons.arrow_upward,
