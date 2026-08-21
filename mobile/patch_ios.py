@@ -13,6 +13,13 @@ except Exception:
 
 if not flutter_root:
     flutter_root = os.environ.get("FLUTTER_ROOT", "")
+if not flutter_root:
+    toolcache = os.path.expanduser("~/hostedtoolcache/flutter")
+    if os.path.exists(toolcache):
+        for root_dir, dirs, files in os.walk(toolcache):
+            if "bin" in dirs and os.path.exists(os.path.join(root_dir, "bin", "flutter")):
+                flutter_root = root_dir
+                break
 
 # 1. Write ios/Flutter/Generated.xcconfig
 gen_xcconfig_path = "ios/Flutter/Generated.xcconfig"
@@ -24,7 +31,7 @@ COCOAPODS_PARALLEL_CODE_SIGN=true
 FLUTTER_TARGET=lib/main.dart
 FLUTTER_BUILD_DIR=build
 FLUTTER_BUILD_NAME=1.0.22
-FLUTTER_BUILD_NUMBER=116
+FLUTTER_BUILD_NUMBER=120
 """)
 
 # 2. Write canonical Podfile
