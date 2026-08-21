@@ -13,6 +13,10 @@ project 'Runner', {
 }
 
 def flutter_root
+  if ENV['FLUTTER_ROOT'] && !ENV['FLUTTER_ROOT'].empty?
+    return ENV['FLUTTER_ROOT']
+  end
+
   generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
   if File.exist?(generated_xcode_build_settings_path)
     File.foreach(generated_xcode_build_settings_path) do |line|
@@ -20,14 +24,10 @@ def flutter_root
       return matches[1].strip if matches
     end
   end
-  
-  if ENV['FLUTTER_ROOT'] && !ENV['FLUTTER_ROOT'].empty?
-    return ENV['FLUTTER_ROOT']
-  end
 
   which_flutter = `which flutter`.strip
   unless which_flutter.empty?
-    return File.expand_path('../..', which_flutter)
+    return File.dirname(File.dirname(File.realpath(which_flutter)))
   end
 
   '/Users/runner/hostedtoolcache/flutter/stable-arm64/flutter'
