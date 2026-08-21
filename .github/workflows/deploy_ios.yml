@@ -40,14 +40,12 @@ jobs:
           bundler-cache: true
           working-directory: ./mobile/ios
           
-      - name: Generate Flutter Native Workspace & Install CocoaPods
+      - name: Generate Flutter Native Workspace & Configure iOS
         run: |
-          set -o pipefail
           flutter create . --org com.kivowebb.app
           flutter pub get
           python3 patch_ios.py
-          cd ios
-          bundle exec pod install --verbose 2>&1 | tee /tmp/pod.log || (echo "=== COCOAPODS ERROR ===" && tail -n 100 /tmp/pod.log && exit 1)
+          flutter build ios --config-only --no-codesign
           
       - name: Deploy via Fastlane
         run: cd ios && bundle exec fastlane beta

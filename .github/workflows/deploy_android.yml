@@ -27,16 +27,21 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          
-      - name: Generate Flutter Native Boilerplate & Force All Gradle Subprojects to compileSdk 36
+
+      - name: Generate Flutter Native Boilerplate & Patch Gradle
         run: |
           flutter create . --org com.kivo.app
           flutter pub get
           find ~/.pub-cache -name "build.gradle" -exec sed -i 's/proguard-android.txt/proguard-android-optimize.txt/g' {} +
           python3 patch_android.py
+          
+      - name: Create Google Play Service Account Key & Android Keystore
+        run: |
+          echo '${{ secrets.PLAY_STORE_CONFIG_JSON }}' > ./android/service-account.json
+          echo '${{ secrets.ANDROID_KEYSTORE_BASE64 }}' | base64 --decode > ./android/app/upload-keystore.jks
         
       - name: Build Android App Bundle
-        run: flutter build appbundle --release
+        run: flutter build appbundle --release --no-codesign
         
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -44,12 +49,6 @@ jobs:
           ruby-version: '3.0'
           bundler-cache: true
           working-directory: ./mobile/android
-          
-      - name: Create Google Play Service Account Key
-        run: echo '${{ secrets.PLAY_STORE_CONFIG_JSON }}' > ./android/service-account.json
-        
-      - name: Create Android Keystore
-        run: echo '${{ secrets.ANDROID_KEYSTORE_BASE64 }}' | base64 --decode > ./android/app/upload-keystore.jks
         
       - name: Deploy via Fastlane
         run: cd android && bundle exec fastlane beta
