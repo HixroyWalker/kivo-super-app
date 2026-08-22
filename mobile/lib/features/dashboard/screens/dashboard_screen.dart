@@ -403,12 +403,7 @@ class DashboardScreen extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            // 2. Quick Business & Store Services Banner
-            _buildBusinessShortcutCard(context),
-
-            const SizedBox(height: 20),
-
-            // 3. Live Activity Feed
+            // 2. Live Activity Feed
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

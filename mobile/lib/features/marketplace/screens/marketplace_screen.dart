@@ -4,8 +4,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/theme/dark_theme.dart';
 import '../../../core/services/marketplace_provider.dart';
 import '../../../core/services/wallet_provider.dart';
-import '../../merchant/screens/pos_cashier_screen.dart';
 import 'product_detail_screen.dart';
+import 'merchant_store_screen.dart';
 
 class MarketplaceScreen extends StatelessWidget {
   const MarketplaceScreen({super.key});
@@ -24,7 +24,7 @@ class MarketplaceScreen extends StatelessWidget {
           return Container(
             padding: const EdgeInsets.all(20),
             decoration: const BoxDecoration(
-              color: KivoDarkTheme.surface,
+              color: KivoDarkTheme.surfaceElevated,
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             ),
             child: Column(
@@ -93,7 +93,8 @@ class MarketplaceScreen extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(item.product.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-                                  Text('JMD \$${item.product.price.toStringAsFixed(2)}', style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 12, fontWeight: FontWeight.bold)),
+                                  Text('Sold by: ${item.product.sellerName}', style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 11, fontWeight: FontWeight.bold)),
+                                  Text('JMD \$${item.product.price.toStringAsFixed(2)}', style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
                                 ],
                               ),
                             ),
@@ -102,7 +103,7 @@ class MarketplaceScreen extends StatelessWidget {
                                 IconButton(
                                   icon: const Icon(Icons.remove_circle_outline, size: 20, color: KivoDarkTheme.textSecondary),
                                   onPressed: () {
-                                    marketplace.updateQuantity(item.product.id, item.quantity - 1);
+                                    marketplace.removeFromCart(item.product.id);
                                     setSheetState(() {});
                                   },
                                 ),
@@ -110,7 +111,7 @@ class MarketplaceScreen extends StatelessWidget {
                                 IconButton(
                                   icon: const Icon(Icons.add_circle_outline, size: 20, color: KivoDarkTheme.primaryEmerald),
                                   onPressed: () {
-                                    marketplace.updateQuantity(item.product.id, item.quantity + 1);
+                                    marketplace.addToCart(item.product);
                                     setSheetState(() {});
                                   },
                                 ),
@@ -125,7 +126,7 @@ class MarketplaceScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Total (incl. GCT)', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 14)),
+                      const Text('Subtotal:', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 14)),
                       Text(
                         'JMD \$${marketplace.cartSubtotal.toStringAsFixed(2)}',
                         style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 20, fontWeight: FontWeight.w800),
@@ -135,25 +136,25 @@ class MarketplaceScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
-                      final success = marketplace.checkout(wallet);
-                      if (success) {
-                        Navigator.pop(ctx);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            backgroundColor: KivoDarkTheme.surfaceElevated,
-                            content: Text('Order Placed Successfully! Paid from Kivo Wallet.', style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold)),
+                      Navigator.pop(ctx);
+                      if (items.isNotEmpty) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ProductDetailScreen(product: items.first.product),
                           ),
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Insufficient wallet balance to checkout.')),
                         );
                       }
                     },
-                    child: const Text('Pay with Kivo Balance'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: KivoDarkTheme.primaryEmerald,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: const Text('Proceed to Delivery & Checkout', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
-                const SizedBox(height: 16),
               ],
             ),
           );
@@ -168,80 +169,106 @@ class MarketplaceScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kivo Marketplace'),
+        title: const Text('Kivo Market 🇯🇲'),
         actions: [
           IconButton(
             icon: Badge(
               isLabelVisible: marketplace.cartCount > 0,
               label: Text('${marketplace.cartCount}'),
-              child: const Icon(Icons.shopping_cart_outlined),
+              child: const Icon(Icons.shopping_bag_outlined),
             ),
             onPressed: () => _showCartSheet(context),
           ),
         ],
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Merchant POS Terminal Header Banner
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-            child: InkWell(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const PosCashierScreen())),
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF0F382A), Color(0xFF13232F)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.4)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: KivoDarkTheme.primaryEmerald.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(Icons.point_of_sale, color: KivoDarkTheme.primaryEmerald, size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Merchant POS Terminal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                          Text('Accept Cash, Jam-Dex QR & Print Receipts', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.arrow_forward_ios, size: 12, color: KivoDarkTheme.primaryEmerald),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
           // 1. Search Bar
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TextField(
               onChanged: marketplace.setSearchQuery,
               style: const TextStyle(color: KivoDarkTheme.textPrimary),
               decoration: const InputDecoration(
-                hintText: 'Search Jamaican coffee, produce, crafts...',
+                hintText: 'Search coffee, baked goods, artisan crafts...',
                 prefixIcon: Icon(Icons.search, color: KivoDarkTheme.textSecondary),
               ),
             ),
           ),
 
-          // 2. Category Filter Pills
+          // 2. Featured Stores Carousel (Single Merchant Store Access)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Jamaican Stores & Artisans',
+                  style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '${marketplace.merchants.length} Verified',
+                  style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+
           SizedBox(
-            height: 44,
+            height: 94,
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              scrollDirection: Axis.horizontal,
+              itemCount: marketplace.merchants.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, idx) {
+                final m = marketplace.merchants[idx];
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => MerchantStoreScreen(merchant: m)),
+                    );
+                  },
+                  child: Container(
+                    width: 130,
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: KivoDarkTheme.surface,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: KivoDarkTheme.surfaceBorder),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundImage: CachedNetworkImageProvider(m.avatarUrl),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          m.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 11, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          m.parish,
+                          style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // 3. Category Filter Pills
+          SizedBox(
+            height: 40,
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               scrollDirection: Axis.horizontal,
@@ -269,9 +296,9 @@ class MarketplaceScreen extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
 
-          // 3. Product Grid
+          // 4. Product Grid
           Expanded(
             child: marketplace.filteredProducts.isEmpty
                 ? const Center(
@@ -283,11 +310,13 @@ class MarketplaceScreen extends StatelessWidget {
                       crossAxisCount: 2,
                       mainAxisSpacing: 14,
                       crossAxisSpacing: 14,
-                      childAspectRatio: 0.72,
+                      childAspectRatio: 0.70,
                     ),
                     itemCount: marketplace.filteredProducts.length,
                     itemBuilder: (context, index) {
                       final p = marketplace.filteredProducts[index];
+                      final merchant = marketplace.getMerchant(p.merchantId);
+
                       return InkWell(
                         onTap: () {
                           Navigator.push(
@@ -298,7 +327,12 @@ class MarketplaceScreen extends StatelessWidget {
                           );
                         },
                         borderRadius: BorderRadius.circular(16),
-                        child: Card(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: KivoDarkTheme.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: KivoDarkTheme.surfaceBorder),
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -340,22 +374,47 @@ class MarketplaceScreen extends StatelessWidget {
                                       p.name,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 13),
+                                      style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 12),
                                     ),
                                     const SizedBox(height: 2),
-                                    Text(
-                                      p.sellerName,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11),
+
+                                    // Merchant Name with Store Link
+                                    GestureDetector(
+                                      onTap: () {
+                                        if (merchant != null) {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(builder: (_) => MerchantStoreScreen(merchant: merchant)),
+                                          );
+                                        }
+                                      },
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.storefront, size: 12, color: KivoDarkTheme.primaryEmerald),
+                                          const SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              p.sellerName,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                color: KivoDarkTheme.primaryEmerald,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                     const SizedBox(height: 6),
+
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
                                           'JMD \$${p.price.toStringAsFixed(0)}',
-                                          style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.w800, fontSize: 14),
+                                          style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.w800, fontSize: 14),
                                         ),
                                         InkWell(
                                           onTap: () {

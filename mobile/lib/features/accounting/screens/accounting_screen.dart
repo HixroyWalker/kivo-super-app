@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:fl_chart/fl_chart.dart';
 import '../../../core/theme/dark_theme.dart';
+import '../../../core/services/auth_provider.dart';
 import '../../../core/services/wallet_provider.dart';
+import '../../../core/services/marketplace_provider.dart';
+import '../../merchant/screens/pos_cashier_screen.dart';
+import '../../merchant/screens/merchant_kyc_screen.dart';
 
 class AccountingScreen extends StatefulWidget {
   const AccountingScreen({super.key});
@@ -11,9 +14,206 @@ class AccountingScreen extends StatefulWidget {
   State<AccountingScreen> createState() => _AccountingScreenState();
 }
 
-class _AccountingScreenState extends State<AccountingScreen> {
-  final List<Map<String, dynamic>> _invoices = [];
-  final List<Map<String, dynamic>> _expenses = [];
+class _AccountingScreenState extends State<AccountingScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  final List<Map<String, dynamic>> _invoices = [
+    {
+      'id': 'INV-1001',
+      'customerName': 'Blue Mountain Coffee Exporters',
+      'subtotal': 45000.0,
+      'gctAmount': 6750.0,
+      'totalAmount': 51750.0,
+      'status': 'PAID',
+      'dueDate': '2026-08-20',
+    },
+    {
+      'id': 'INV-1002',
+      'customerName': 'Pegasus Hotel Catering',
+      'subtotal': 18500.0,
+      'gctAmount': 2775.0,
+      'totalAmount': 21275.0,
+      'status': 'PENDING',
+      'dueDate': '2026-08-28',
+    },
+  ];
+
+  final List<Map<String, dynamic>> _expenses = [
+    {
+      'description': 'Packaging & Roasted Coffee Bags',
+      'category': 'Inventory & Stock',
+      'amount': 14200.0,
+      'gctPaid': 2130.0,
+      'date': '2026-08-19',
+    },
+    {
+      'description': 'Store Utilities & Power',
+      'category': 'Operations',
+      'amount': 8500.0,
+      'gctPaid': 1275.0,
+      'date': '2026-08-16',
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void _showMerchantRegistrationModal(BuildContext context) {
+    final auth = context.read<AuthProvider>();
+    final businessNameCtrl = TextEditingController();
+    final trnCtrl = TextEditingController();
+    final phoneCtrl = TextEditingController();
+    String selectedParish = 'Kingston';
+    String selectedCategory = 'Local Produce & Agro';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: KivoDarkTheme.surfaceElevated,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            top: 20,
+            left: 20,
+            right: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.storefront, color: KivoDarkTheme.primaryEmerald, size: 24),
+                        SizedBox(width: 10),
+                        Text('Register as Kivo Merchant', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    IconButton(icon: const Icon(Icons.close, color: Colors.white54), onPressed: () => Navigator.pop(ctx)),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Upgrade your individual user account to a verified Merchant Account to unlock the POS Cashier Terminal, Marketplace store, and GCT invoicing.',
+                  style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12),
+                ),
+                const SizedBox(height: 16),
+
+                TextField(
+                  controller: businessNameCtrl,
+                  style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 14),
+                  decoration: const InputDecoration(
+                    labelText: 'Registered Business or Trading Name',
+                    prefixIcon: Icon(Icons.business, color: KivoDarkTheme.primaryEmerald),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                TextField(
+                  controller: trnCtrl,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 14),
+                  decoration: const InputDecoration(
+                    labelText: 'Tax Registration Number (TRN - 9 Digits)',
+                    prefixIcon: Icon(Icons.badge, color: KivoDarkTheme.accentAmber),
+                    hintText: 'XXX-XXX-XXX',
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                TextField(
+                  controller: phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 14),
+                  decoration: const InputDecoration(
+                    labelText: 'Business WhatsApp / Phone Number',
+                    prefixIcon: Icon(Icons.phone, color: KivoDarkTheme.accentCyan),
+                    hintText: '+1 (876) XXX-XXXX',
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Parish Dropdown
+                const Text('Operating Parish 🇯🇲', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: KivoDarkTheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: KivoDarkTheme.surfaceBorder),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: selectedParish,
+                      isExpanded: true,
+                      dropdownColor: KivoDarkTheme.surfaceElevated,
+                      items: MarketplaceProvider.jamaicanParishes.map((p) => DropdownMenuItem(value: p, child: Text(p, style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 13)))).toList(),
+                      onChanged: (val) {
+                        if (val != null) setModalState(() => selectedParish = val);
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    if (businessNameCtrl.text.trim().isEmpty || trnCtrl.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(backgroundColor: Colors.redAccent, content: Text('Please provide your business name and TRN.')),
+                      );
+                      return;
+                    }
+
+                    await auth.registerAsMerchant(
+                      businessName: businessNameCtrl.text.trim(),
+                      trnNumber: trnCtrl.text.trim(),
+                      parish: selectedParish,
+                      category: selectedCategory,
+                      contactPhone: phoneCtrl.text.trim(),
+                    );
+
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        backgroundColor: KivoDarkTheme.surfaceElevated,
+                        content: Text(
+                          '🎉 Congratulations! "${businessNameCtrl.text.trim()}" is now registered as a Kivo Merchant.',
+                          style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.check_circle, color: Colors.black),
+                  label: const Text('ACTIVATE MERCHANT ACCOUNT', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: KivoDarkTheme.primaryEmerald,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   void _showCreateInvoiceDialog() {
     final nameController = TextEditingController();
@@ -24,7 +224,7 @@ class _AccountingScreenState extends State<AccountingScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: KivoDarkTheme.surfaceElevated,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Create New Invoice', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18)),
+        title: const Text('Create New GCT Invoice', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,7 +243,7 @@ class _AccountingScreenState extends State<AccountingScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Standard 15% GCT will be automatically itemized.',
+              'Standard 15% TAJ GCT will be automatically computed.',
               style: TextStyle(fontSize: 11, color: KivoDarkTheme.textSecondary),
             ),
           ],
@@ -70,7 +270,7 @@ class _AccountingScreenState extends State<AccountingScreen> {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   backgroundColor: KivoDarkTheme.surfaceElevated,
-                  content: Text('Invoice created and sent to customer!', style: TextStyle(color: KivoDarkTheme.primaryEmerald)),
+                  content: Text('Tax Invoice created and saved to ledger!', style: TextStyle(color: KivoDarkTheme.primaryEmerald)),
                 ),
               );
             },
@@ -84,7 +284,7 @@ class _AccountingScreenState extends State<AccountingScreen> {
   void _showAddExpenseDialog() {
     final descController = TextEditingController();
     final amountController = TextEditingController();
-    String category = 'Inventory';
+    String category = 'Inventory & Stock';
 
     showDialog(
       context: context,
@@ -99,25 +299,24 @@ class _AccountingScreenState extends State<AccountingScreen> {
               DropdownButtonFormField<String>(
                 value: category,
                 dropdownColor: KivoDarkTheme.surfaceElevated,
-                style: const TextStyle(color: KivoDarkTheme.textPrimary),
-                items: ['Inventory', 'Utilities', 'Rent', 'Payroll', 'Marketing', 'Supplies']
-                    .map((cat) => DropdownMenuItem(value: cat, child: Text(cat, style: const TextStyle(color: KivoDarkTheme.textPrimary))))
+                items: ['Inventory & Stock', 'Operations & Utilities', 'Salaries & Staff', 'Marketing & Ads', 'Logistics & Fuel']
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 13))))
                     .toList(),
                 onChanged: (val) => setDialogState(() => category = val!),
-                decoration: const InputDecoration(labelText: 'Category'),
+                decoration: const InputDecoration(labelText: 'Expense Category'),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: descController,
                 style: const TextStyle(color: KivoDarkTheme.textPrimary),
-                decoration: const InputDecoration(labelText: 'Description / Vendor'),
+                decoration: const InputDecoration(labelText: 'Description / Vendor Name'),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: amountController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                style: const TextStyle(color: KivoDarkTheme.textPrimary),
-                decoration: const InputDecoration(labelText: 'Total Amount (JMD)', prefixText: 'JMD \$ '),
+                style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
+                decoration: const InputDecoration(labelText: 'Expense Amount (JMD)', prefixText: 'JMD \$ '),
               ),
             ],
           ),
@@ -125,25 +324,19 @@ class _AccountingScreenState extends State<AccountingScreen> {
             TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel', style: TextStyle(color: KivoDarkTheme.textSecondary))),
             ElevatedButton(
               onPressed: () {
-                if (amountController.text.trim().isEmpty) return;
+                if (descController.text.trim().isEmpty || amountController.text.trim().isEmpty) return;
                 final amt = double.tryParse(amountController.text.trim()) ?? 0.0;
+                final gctPaid = amt * 0.15;
                 setState(() {
                   _expenses.insert(0, {
-                    'id': 'EXP-${500 + _expenses.length + 1}',
+                    'description': descController.text.trim(),
                     'category': category,
-                    'description': descController.text.trim().isEmpty ? category : descController.text.trim(),
                     'amount': amt,
-                    'gctPaid': amt * 0.15,
-                    'date': '2026-08-20',
+                    'gctPaid': gctPaid,
+                    'date': '2026-08-21',
                   });
                 });
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    backgroundColor: KivoDarkTheme.surfaceElevated,
-                    content: Text('Expense logged successfully!', style: TextStyle(color: KivoDarkTheme.primaryEmerald)),
-                  ),
-                );
               },
               child: const Text('Save Expense'),
             ),
@@ -155,155 +348,202 @@ class _AccountingScreenState extends State<AccountingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 4,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Business & TAJ Tax'),
-          bottom: const TabBar(
-            isScrollable: true,
-            indicatorColor: KivoDarkTheme.primaryEmerald,
-            labelColor: KivoDarkTheme.primaryEmerald,
-            unselectedLabelColor: KivoDarkTheme.textSecondary,
-            tabs: [
-              Tab(icon: Icon(Icons.dashboard_outlined), text: 'Overview'),
-              Tab(icon: Icon(Icons.receipt_long_outlined), text: 'Invoices'),
-              Tab(icon: Icon(Icons.money_off_outlined), text: 'Expenses'),
-              Tab(icon: Icon(Icons.pie_chart_outline), text: 'TAJ GCT-03'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            _buildOverviewTab(),
-            _buildInvoicesTab(),
-            _buildExpensesTab(),
-            _buildPnLTab(),
+    final auth = context.watch<AuthProvider>();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Business & Merchant Hub 💼'),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: KivoDarkTheme.primaryEmerald,
+          labelColor: KivoDarkTheme.primaryEmerald,
+          unselectedLabelColor: KivoDarkTheme.textSecondary,
+          isScrollable: true,
+          tabs: const [
+            Tab(text: 'Overview & POS 💳'),
+            Tab(text: 'Invoices 🧾'),
+            Tab(text: 'Expenses 📉'),
+            Tab(text: 'TAJ Tax & P&L 📊'),
           ],
         ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildOverviewAndPOSTab(auth),
+          _buildInvoicesTab(),
+          _buildExpensesTab(),
+          _buildPnLTab(),
+        ],
       ),
     );
   }
 
-  Widget _buildOverviewTab() {
-    final wallet = context.watch<WalletProvider>();
-    final double totalInflow = _invoices.where((i) => i['status'] == 'PAID').fold<double>(0.0, (acc, i) => acc + ((i['totalAmount'] as num?)?.toDouble() ?? 0.0));
-    final double totalExpenses = _expenses.fold<double>(0.0, (acc, e) => acc + ((e['amount'] as num?)?.toDouble() ?? 0.0));
-    final double netCashflow = totalInflow - totalExpenses;
+  Widget _buildOverviewAndPOSTab(AuthProvider auth) {
+    final isMerchant = auth.isMerchant;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF004D40), Color(0xFF0B1F1C)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          // 1. Merchant Status or Sign-up Banner
+          if (!isMerchant)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1E3A2F), Color(0xFF0F1E2A)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: KivoDarkTheme.primaryEmerald),
               ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.3)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Monthly Net Cashflow', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13)),
-                const SizedBox(height: 8),
-                Text(
-                  'JMD \$${netCashflow.toStringAsFixed(2)}',
-                  style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Total Inflow: +JMD \$${totalInflow.toStringAsFixed(2)}',
-                      style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold, fontSize: 12),
-                    ),
-                    Text(
-                      'Expenses: -JMD \$${totalExpenses.toStringAsFixed(2)}',
-                      style: const TextStyle(color: KivoDarkTheme.accentRose, fontWeight: FontWeight.bold, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Weekly Activity & Spending Trends Chart
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: KivoDarkTheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: KivoDarkTheme.surfaceBorder),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Weekly Spending & Cash Flow', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 15, fontWeight: FontWeight.bold)),
-                    Text('Past 7 Days', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 120,
-                  child: BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      maxY: 16000,
-                      barTouchData: BarTouchData(enabled: true),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                              if (value.toInt() >= 0 && value.toInt() < days.length) {
-                                return Text(days[value.toInt()], style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 10));
-                              }
-                              return const Text('');
-                            },
-                          ),
-                        ),
-                      ),
-                      gridData: const FlGridData(show: false),
-                      borderData: FlBorderData(show: false),
-                      barGroups: List.generate(7, (i) {
-                        return BarChartGroupData(
-                          x: i,
-                          barRods: [
-                            BarChartRodData(
-                              toY: wallet.weeklySpending[i],
-                              color: i == 5 ? KivoDarkTheme.primaryEmerald : KivoDarkTheme.accentCyan.withOpacity(0.6),
-                              width: 14,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ],
-                        );
-                      }),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.store, color: KivoDarkTheme.primaryEmerald, size: 24),
+                      SizedBox(width: 10),
+                      Text('Start Selling on Kivo Jamaica', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Register your business to accept in-store Jam-Dex QR & Cash payments with POS Cashier management, inventory catalog, and island-wide delivery.',
+                    style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12),
+                  ),
+                  const SizedBox(height: 14),
+                  ElevatedButton.icon(
+                    onPressed: () => _showMerchantRegistrationModal(context),
+                    icon: const Icon(Icons.app_registration, color: Colors.black, size: 18),
+                    label: const Text('Sign Up as a Merchant (1-Min)', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: KivoDarkTheme.primaryEmerald,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
+            )
+          else
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: KivoDarkTheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.4)),
+              ),
+              child: Row(
+                children: [
+                  const CircleAvatar(
+                    backgroundColor: KivoDarkTheme.primaryEmerald,
+                    radius: 20,
+                    child: Icon(Icons.verified, color: Colors.black),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(auth.merchantBusinessName ?? 'Verified Kivo Merchant', style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text('TRN: ${auth.merchantTRN ?? "124-582-901"} • ${auth.merchantParish ?? "Kingston & St. Andrew"}', style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+
           const SizedBox(height: 20),
 
-          const Text('Quick Financial Actions', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
+          // 2. Main Merchant Tools (POS Terminal & KYC)
+          const Text('Merchant Operating Tools', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
+
+          // POS Terminal Card
+          InkWell(
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PosCashierScreen())),
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF132F27), Color(0xFF0F1E2A)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.4)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: KivoDarkTheme.primaryEmerald.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.point_of_sale, color: KivoDarkTheme.primaryEmerald, size: 28),
+                  ),
+                  const SizedBox(width: 16),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Merchant POS Terminal', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+                        SizedBox(height: 4),
+                        Text('Cashier PINs, Live Dynamic QR, Tender Change & PDF Receipts', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios, color: KivoDarkTheme.primaryEmerald, size: 16),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // KYC Tier Verification
+          InkWell(
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MerchantKYCScreen())),
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: KivoDarkTheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: KivoDarkTheme.surfaceBorder),
+              ),
+              child: const Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Color(0x269C27B0),
+                    radius: 20,
+                    child: Icon(Icons.verified_user, color: Colors.purpleAccent, size: 22),
+                  ),
+                  SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('KYC Verification Tier', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                        SizedBox(height: 2),
+                        Text('Upload Companies Office of Jamaica (COJ) & TRN', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: KivoDarkTheme.textSecondary),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // 3. Quick Action Buttons
           Row(
             children: [
               Expanded(
@@ -311,14 +551,23 @@ class _AccountingScreenState extends State<AccountingScreen> {
                   onPressed: _showCreateInvoiceDialog,
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('New Invoice'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: KivoDarkTheme.primaryEmerald,
+                    foregroundColor: Colors.black,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: _showAddExpenseDialog,
-                  icon: const Icon(Icons.remove_circle_outline, size: 18),
-                  label: const Text('Log Expense'),
+                  icon: const Icon(Icons.remove_circle_outline, size: 18, color: KivoDarkTheme.accentRose),
+                  label: const Text('Log Expense', style: TextStyle(color: KivoDarkTheme.textPrimary)),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: KivoDarkTheme.surfaceBorder),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
               ),
             ],
@@ -330,6 +579,7 @@ class _AccountingScreenState extends State<AccountingScreen> {
 
   Widget _buildInvoicesTab() {
     return Scaffold(
+      backgroundColor: KivoDarkTheme.background,
       floatingActionButton: FloatingActionButton(
         onPressed: _showCreateInvoiceDialog,
         backgroundColor: KivoDarkTheme.primaryEmerald,
@@ -390,6 +640,7 @@ class _AccountingScreenState extends State<AccountingScreen> {
 
   Widget _buildExpensesTab() {
     return Scaffold(
+      backgroundColor: KivoDarkTheme.background,
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddExpenseDialog,
         backgroundColor: KivoDarkTheme.accentAmber,
@@ -449,7 +700,7 @@ class _AccountingScreenState extends State<AccountingScreen> {
           const Text('Tax Administration Jamaica (TAJ) Summary', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: KivoDarkTheme.surface,
               borderRadius: BorderRadius.circular(16),
@@ -457,40 +708,49 @@ class _AccountingScreenState extends State<AccountingScreen> {
             ),
             child: Column(
               children: [
-                _buildReportRow('GCT Output Tax (Collected 15%)', 'JMD \$${gctCollected.toStringAsFixed(2)}', KivoDarkTheme.primaryEmerald),
+                _buildSummaryRow('Gross Invoiced Sales', 'JMD \$${totalRevenue.toStringAsFixed(2)}', KivoDarkTheme.textPrimary),
                 const Divider(color: KivoDarkTheme.surfaceBorder),
-                _buildReportRow('GCT Input Tax (Paid on Expenses)', '- JMD \$${gctPaid.toStringAsFixed(2)}', KivoDarkTheme.accentCyan),
-                const Divider(color: KivoDarkTheme.surfaceBorder, thickness: 1.5),
-                _buildReportRow('Net GCT Payable to TAJ', 'JMD \$${(gctCollected - gctPaid).toStringAsFixed(2)}', Colors.amberAccent, isBold: true),
+                _buildSummaryRow('GCT Output Tax Collected (15%)', 'JMD \$${gctCollected.toStringAsFixed(2)}', KivoDarkTheme.primaryEmerald),
+                const Divider(color: KivoDarkTheme.surfaceBorder),
+                _buildSummaryRow('GCT Input Tax Paid (15%)', 'JMD \$${gctPaid.toStringAsFixed(2)}', KivoDarkTheme.accentRose),
+                const Divider(color: KivoDarkTheme.surfaceBorder),
+                _buildSummaryRow('Net GCT Payable to TAJ', 'JMD \$${(gctCollected - gctPaid).clamp(0.0, double.infinity).toStringAsFixed(2)}', KivoDarkTheme.accentAmber, isBold: true),
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  backgroundColor: KivoDarkTheme.surfaceElevated,
-                  content: Text('TAJ GCT-03 Tax Return Form generated and ready for eServices upload! 🇯🇲', style: TextStyle(color: KivoDarkTheme.primaryEmerald)),
-                ),
-              );
-            },
-            icon: const Icon(Icons.description_outlined),
-            label: const Text('Export TAJ GCT-03 Return (CSV/PDF)'),
+          const SizedBox(height: 20),
+          const Text('Income Statement (P&L)', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: KivoDarkTheme.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: KivoDarkTheme.surfaceBorder),
+            ),
+            child: Column(
+              children: [
+                _buildSummaryRow('Total Operating Revenue', 'JMD \$${totalRevenue.toStringAsFixed(2)}', KivoDarkTheme.primaryEmerald),
+                const Divider(color: KivoDarkTheme.surfaceBorder),
+                _buildSummaryRow('Total Operating Expenses', 'JMD \$${totalExpenses.toStringAsFixed(2)}', KivoDarkTheme.accentRose),
+                const Divider(color: KivoDarkTheme.surfaceBorder),
+                _buildSummaryRow('Net Operating Profit', 'JMD \$${netIncome.toStringAsFixed(2)}', netIncome >= 0 ? KivoDarkTheme.primaryEmerald : KivoDarkTheme.accentRose, isBold: true),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildReportRow(String label, String value, Color color, {bool isBold = false}) {
+  Widget _buildSummaryRow(String label, String value, Color color, {bool isBold = false}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: isBold ? 15 : 13, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
-          Text(value, style: TextStyle(fontSize: isBold ? 16 : 14, fontWeight: FontWeight.bold, color: color)),
+          Text(label, style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          Text(value, style: TextStyle(color: color, fontSize: 14, fontWeight: isBold ? FontWeight.bold : FontWeight.w600)),
         ],
       ),
     );

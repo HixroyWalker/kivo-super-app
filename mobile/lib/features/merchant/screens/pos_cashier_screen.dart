@@ -167,12 +167,18 @@ class _PosCashierScreenState extends State<PosCashierScreen> {
                           ),
                   )),
               const Divider(color: KivoDarkTheme.surfaceBorder),
-              const Text('Create New Cashier Profile', style: TextStyle(color: KivoDarkTheme.accentCyan, fontWeight: FontWeight.bold, fontSize: 13)),
-              const SizedBox(height: 10),
+              const Text('Enable Kivo User as POS Cashier', style: TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold, fontSize: 14)),
+              const SizedBox(height: 4),
+              const Text('Cashiers must be registered Kivo users before they can be authorized.', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
+              const SizedBox(height: 12),
               TextField(
                 controller: nameController,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: 'Cashier Full Name', hintText: 'e.g. Usain Bolt'),
+                decoration: const InputDecoration(
+                  labelText: 'Kivo Phone / Handle / User Name',
+                  hintText: 'e.g. @marcuscrafts or +1 (876) 812-3309',
+                  prefixIcon: Icon(Icons.person_search, color: KivoDarkTheme.primaryEmerald),
+                ),
               ),
               const SizedBox(height: 10),
               TextField(
@@ -181,15 +187,25 @@ class _PosCashierScreenState extends State<PosCashierScreen> {
                 maxLength: 4,
                 obscureText: true,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(labelText: '4-Digit Terminal Access PIN', hintText: '1234'),
+                decoration: const InputDecoration(
+                  labelText: 'Assign 4-Digit Terminal Access PIN',
+                  hintText: '1234',
+                  prefixIcon: Icon(Icons.lock, color: KivoDarkTheme.accentAmber),
+                ),
               ),
               const SizedBox(height: 10),
               ElevatedButton.icon(
                 onPressed: () {
-                  if (nameController.text.trim().isEmpty || pinController.text.trim().length < 4) return;
+                  final input = nameController.text.trim();
+                  if (input.isEmpty || pinController.text.trim().length < 4) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(backgroundColor: Colors.redAccent, content: Text('Please enter a registered Kivo user and 4-digit PIN.')),
+                    );
+                    return;
+                  }
                   final newCashier = {
-                    'name': 'Cashier #${_cashiers.length + 1} (${nameController.text.trim()})',
-                    'id': 'EMP-${100 + _cashiers.length + 1}',
+                    'name': 'Cashier: $input',
+                    'id': 'KV-STAFF-${100 + _cashiers.length + 1}',
                     'pin': pinController.text.trim(),
                   };
                   setState(() {
@@ -198,15 +214,18 @@ class _PosCashierScreenState extends State<PosCashierScreen> {
                   });
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('New cashier ${newCashier['name']} created and activated!')),
+                    SnackBar(
+                      backgroundColor: KivoDarkTheme.surfaceElevated,
+                      content: Text('Kivo User "$input" authorized and activated as POS Cashier!'),
+                    ),
                   );
                 },
-                icon: const Icon(Icons.add),
-                label: const Text('Save & Assign Cashier'),
+                icon: const Icon(Icons.how_to_reg, color: Colors.black),
+                label: const Text('VERIFY USER & ENABLE CASHIER', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: KivoDarkTheme.primaryEmerald,
-                  foregroundColor: Colors.black,
-                  minimumSize: const Size(double.infinity, 44),
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
               ),
             ],

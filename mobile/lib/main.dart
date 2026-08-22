@@ -13,6 +13,8 @@ import 'features/wallet/screens/wallet_screen.dart';
 import 'features/marketplace/screens/marketplace_screen.dart';
 import 'features/messaging/screens/messaging_screen.dart';
 import 'features/accounting/screens/accounting_screen.dart';
+import 'features/games/screens/games_hub_screen.dart';
+import 'features/games/screens/checkers_game_screen.dart';
 import 'features/merchant/screens/pos_cashier_screen.dart';
 import 'features/merchant/screens/merchant_kyc_screen.dart';
 import 'features/notifications/screens/notifications_screen.dart';
@@ -44,6 +46,7 @@ void main() async {
   } catch (e) {
     debugPrint('Firebase/AdMob init fallback: $e');
   }
+
   runApp(
     MultiProvider(
       providers: [
@@ -78,6 +81,8 @@ class KivoApp extends StatelessWidget {
         '/wallet': (context) => const WalletScreen(),
         '/marketplace': (context) => const MarketplaceScreen(),
         '/messaging': (context) => const MessagingScreen(),
+        '/games': (context) => const GamesHubScreen(),
+        '/checkers': (context) => const CheckersGameScreen(),
         '/accounting': (context) => const AccountingScreen(),
         '/merchant_pos': (context) => const PosCashierScreen(),
         '/merchant_kyc': (context) => const MerchantKYCScreen(),
@@ -125,6 +130,7 @@ class _MainShellState extends State<MainShell> {
     WalletScreen(),
     MarketplaceScreen(),
     MessagingScreen(),
+    GamesHubScreen(),
     AccountingScreen(),
   ];
 
@@ -191,6 +197,11 @@ class _MainShellState extends State<MainShell> {
                 child: const Icon(Icons.chat_bubble),
               ),
               label: 'Message',
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.sports_esports_outlined),
+              selectedIcon: Icon(Icons.sports_esports),
+              label: 'Games',
             ),
             const NavigationDestination(
               icon: Icon(Icons.analytics_outlined),

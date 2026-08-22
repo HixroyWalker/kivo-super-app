@@ -149,7 +149,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('P2P Wallet & Social'),
+        title: const Text('P2P Wallet'),
         actions: [
           IconButton(
             icon: const Icon(Icons.qr_code_2),
@@ -162,7 +162,8 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
           // Bank Accounts & Cards Carousel
           _buildBankCardsCarousel(wallet),
 
-          const SizedBox(height: 12),          // Quick Action Bar
+          const SizedBox(height: 12),
+          // Quick Action Bar
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -196,8 +197,8 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
             labelColor: KivoDarkTheme.primaryEmerald,
             unselectedLabelColor: KivoDarkTheme.textSecondary,
             tabs: const [
-              Tab(text: 'Social Feed 💬'),
               Tab(text: 'My Transactions 🧾'),
+              Tab(text: 'Lynk Gateway ⚡'),
             ],
           ),
 
@@ -205,10 +206,10 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
             child: TabBarView(
               controller: _tabController,
               children: [
-                // 1. Social Feed Tab
-                _buildSocialFeed(wallet),
-                // 2. Personal Statements Tab
+                // 1. Personal Statements Tab
                 _buildPersonalStatements(wallet),
+                // 2. Lynk Gateway Auto-Credit Tab
+                _buildLynkGatewayTab(wallet),
               ],
             ),
           ),
@@ -501,8 +502,94 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildSocialFeed(WalletProvider wallet) {
-    return const SocialFeedScreen(isEmbedded: true);
+  Widget _buildLynkGatewayTab(WalletProvider wallet) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF132F27), Color(0xFF0F1E2A)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: KivoDarkTheme.primaryEmerald.withOpacity(0.4)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.bolt, color: KivoDarkTheme.primaryEmerald, size: 24),
+                    const SizedBox(width: 8),
+                    Text(
+                      wallet.isLynkVerified ? 'Lynk Jam-Dex Gateway Active ⚡' : 'Connect Lynk Account',
+                      style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  wallet.isLynkVerified
+                      ? 'Transfers sent to ${wallet.lynkUsername ?? "@kivo_kingston"} automatically credit your Kivo balance in real-time.'
+                      : 'Link your Lynk username to receive instant automated Jam-Dex transfers from any Jamaican bank.',
+                  style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12),
+                ),
+                const SizedBox(height: 14),
+                ElevatedButton.icon(
+                  onPressed: () => _showLynkVerificationSheet(context, wallet),
+                  icon: const Icon(Icons.settings, color: Colors.black, size: 16),
+                  label: Text(wallet.isLynkVerified ? 'Manage Lynk Handle' : 'Verify Lynk Account', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: KivoDarkTheme.primaryEmerald,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text('Recent Automated Lynk Inflows', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 15)),
+          const SizedBox(height: 10),
+          ...wallet.transactions.where((t) => t.isCredit).take(5).map((tx) => Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: KivoDarkTheme.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: KivoDarkTheme.surfaceBorder),
+                ),
+                child: Row(
+                  children: [
+                    const CircleAvatar(
+                      backgroundColor: Color(0x2600E676),
+                      radius: 16,
+                      child: Icon(Icons.bolt, color: KivoDarkTheme.primaryEmerald, size: 16),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(tx.title, style: const TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text(
+                            '${tx.timestamp.day}/${tx.timestamp.month} • ${tx.timestamp.hour.toString().padLeft(2, '0')}:${tx.timestamp.minute.toString().padLeft(2, '0')}',
+                            style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 10),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text('+ JMD \$${tx.amount.toStringAsFixed(2)}', style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontWeight: FontWeight.bold, fontSize: 13)),
+                  ],
+                ),
+              )),
+        ],
+      ),
+    );
   }
 
   Widget _buildPersonalStatements(WalletProvider wallet) {

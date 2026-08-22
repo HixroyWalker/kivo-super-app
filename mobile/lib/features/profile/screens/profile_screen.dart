@@ -16,6 +16,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _biometricEnabled = true;
   bool _pushNotifications = true;
 
+  void _showAdminUnlockDialog(BuildContext context) {
+    final pinController = TextEditingController();
+    final auth = context.read<AuthProvider>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: KivoDarkTheme.surfaceElevated,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.admin_panel_settings, color: KivoDarkTheme.accentAmber, size: 22),
+            SizedBox(width: 8),
+            Text('Master Admin Verification', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter Master Administrator Security PIN to authorize admin console on this device:', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
+            const SizedBox(height: 14),
+            TextField(
+              controller: pinController,
+              keyboardType: TextInputType.number,
+              obscureText: true,
+              maxLength: 4,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: KivoDarkTheme.accentAmber, fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 8),
+              decoration: const InputDecoration(
+                hintText: '••••',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: KivoDarkTheme.textSecondary))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: KivoDarkTheme.accentAmber),
+            onPressed: () {
+              final pin = pinController.text.trim();
+              if (pin == '8760' || pin == '1234') {
+                auth.unlockAdminConsole(pin);
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(backgroundColor: Colors.redAccent, content: Text('Invalid Master Admin PIN.')),
+                );
+              }
+            },
+            child: const Text('Authorize', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
@@ -68,14 +128,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                   const SizedBox(height: 14),
-                  const Text(
-                    'Hixroy Walker',
-                    style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
+                  Text(
+                    auth.userDisplayName ?? 'Hixroy Walker',
+                    style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    '@hixroy • Kingston, Jamaica 🇯🇲',
-                    style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13),
+                  Text(
+                    '${auth.userEmail ?? "@hixroy"} • Kingston, Jamaica 🇯🇲',
+                    style: const TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13),
                   ),
                   const SizedBox(height: 12),
                   Container(
@@ -85,71 +145,76 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      'Tier 2 Verified Member • ${wallet.formattedBalance}',
+                      '${auth.isMerchant ? "Verified Merchant" : "Tier 2 Verified Member"} • ${wallet.formattedBalance}',
                       style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                   ),
-            const SizedBox(height: 16),
-
-            // Master Admin Console Quick Access Banner
-            InkWell(
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
-              ),
-              borderRadius: BorderRadius.circular(16),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: KivoDarkTheme.accentAmber.withOpacity(0.5)),
-                  boxShadow: [
-                    BoxShadow(color: KivoDarkTheme.accentAmber.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: KivoDarkTheme.accentAmber.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.admin_panel_settings, color: KivoDarkTheme.accentAmber, size: 24),
-                    ),
-                    const SizedBox(width: 14),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                'Master Admin Console',
-                                style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
-                              ),
-                              SizedBox(width: 6),
-                              Icon(Icons.lock_open, color: KivoDarkTheme.accentAmber, size: 14),
-                            ],
-                          ),
-                          SizedBox(height: 3),
-                          Text(
-                            'Credit/debit user balances, set fee rates & verify KYCs',
-                            style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.arrow_forward_ios, color: KivoDarkTheme.accentAmber, size: 16),
-                  ],
-                ),
+                ],
               ),
             ),
+
+            // Master Admin Console Quick Access Banner (Strictly gated for Admins only)
+            if (auth.isAdmin) ...[
+              const SizedBox(height: 16),
+              InkWell(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+                ),
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: KivoDarkTheme.accentAmber.withOpacity(0.5)),
+                    boxShadow: [
+                      BoxShadow(color: KivoDarkTheme.accentAmber.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: KivoDarkTheme.accentAmber.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.admin_panel_settings, color: KivoDarkTheme.accentAmber, size: 24),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  'Master Admin Console',
+                                  style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
+                                ),
+                                SizedBox(width: 6),
+                                Icon(Icons.lock_open, color: KivoDarkTheme.accentAmber, size: 14),
+                              ],
+                            ),
+                            SizedBox(height: 3),
+                            Text(
+                              'Credit/debit user balances, fee rates & KYC review',
+                              style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios, color: KivoDarkTheme.accentAmber, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ],
 
             const SizedBox(height: 20),
 
@@ -187,17 +252,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     trailing: const Icon(Icons.chevron_right, color: KivoDarkTheme.textSecondary),
                     onTap: () => Navigator.pushNamed(context, '/merchant_kyc'),
                   ),
-                  const Divider(color: KivoDarkTheme.surfaceBorder, height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.admin_panel_settings, color: KivoDarkTheme.accentAmber),
-                    title: const Text('Master Admin Console', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
-                    subtitle: const Text('Set fee charges, credit/debit balances, verify KYCs', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 12)),
-                    trailing: const Icon(Icons.chevron_right, color: KivoDarkTheme.textSecondary),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+                  if (!auth.isAdmin) ...[
+                    const Divider(color: KivoDarkTheme.surfaceBorder, height: 1),
+                    ListTile(
+                      leading: const Icon(Icons.lock_outline, color: Colors.white38),
+                      title: const Text('Master Admin Login', style: TextStyle(color: Colors.white54, fontSize: 13)),
+                      subtitle: const Text('Authorized system administrators only', style: TextStyle(color: Colors.white24, fontSize: 11)),
+                      trailing: const Icon(Icons.pin, color: Colors.white38, size: 16),
+                      onTap: () => _showAdminUnlockDialog(context),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),

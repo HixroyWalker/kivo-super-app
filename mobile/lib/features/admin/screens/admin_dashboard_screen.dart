@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/dark_theme.dart';
 import '../../../core/services/admin_provider.dart';
 import '../../../core/services/wallet_provider.dart';
+import '../../../core/services/auth_provider.dart';
 import 'admin_fee_settings_screen.dart';
 import 'admin_balance_adjustment_screen.dart';
 import 'admin_kyc_verification_screen.dart';
@@ -12,8 +13,37 @@ class AdminDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     final admin = context.watch<AdminProvider>();
     final wallet = context.watch<WalletProvider>();
+
+    if (!auth.isAdmin) {
+      return Scaffold(
+        backgroundColor: KivoDarkTheme.background,
+        appBar: AppBar(title: const Text('Access Restricted')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.lock_outline, size: 64, color: KivoDarkTheme.accentRose),
+                const SizedBox(height: 16),
+                const Text('Master Admin Privileges Required', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                const Text('Your current account is not registered with system administrator permissions.', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13), textAlign: TextAlign.center),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: KivoDarkTheme.primaryEmerald, foregroundColor: Colors.black),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Return to Profile', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: KivoDarkTheme.background,
