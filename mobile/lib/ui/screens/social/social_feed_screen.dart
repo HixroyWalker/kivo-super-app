@@ -8,12 +8,45 @@ import '../../widgets/sandboxed_video_player.dart';
 import 'create_post_screen.dart';
 
 class SocialFeedScreen extends StatelessWidget {
-  const SocialFeedScreen({Key? key}) : super(key: key);
+  final bool isEmbedded;
+  const SocialFeedScreen({Key? key, this.isEmbedded = false}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final feedProvider = context.watch<SocialFeedProvider>();
     final posts = feedProvider.posts;
+
+    Widget content;
+    if (posts.isEmpty && feedProvider.isLoading) {
+      content = const Center(
+        child: CircularProgressIndicator(color: Color(0xFFFFD700)),
+      );
+    } else if (posts.isEmpty) {
+      content = _buildEmptyState(context);
+    } else {
+      content = RefreshIndicator(
+        color: const Color(0xFFFFD700),
+        onRefresh: () async {
+          // Pull to refresh
+        },
+        child: ListView.builder(
+          padding: EdgeInsets.only(top: isEmbedded ? 8 : 0, bottom: 80),
+          itemCount: posts.length + (isEmbedded ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (isEmbedded && index == 0) {
+              return _buildEmbeddedHeader(context);
+            }
+            final postIndex = isEmbedded ? index - 1 : index;
+            final post = posts[postIndex];
+            return _PostCard(post: post);
+          },
+        ),
+      );
+    }
+
+    if (isEmbedded) {
+      return content;
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E17),
@@ -57,25 +90,57 @@ class SocialFeedScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: posts.isEmpty && feedProvider.isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFFFFD700)),
-            )
-          : posts.isEmpty
-              ? _buildEmptyState(context)
-              : RefreshIndicator(
-                  color: const Color(0xFFFFD700),
-                  onRefresh: () async {
-                    // Pull to refresh
-                  },
-                  child: ListView.builder(
-                    itemCount: posts.length,
-                    itemBuilder: (context, index) {
-                      final post = posts[index];
-                      return _PostCard(post: post);
-                    },
-                  ),
+      body: content,
+    );
+  }
+
+  Widget _buildEmbeddedHeader(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF161F30),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF223048)),
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 18,
+            backgroundColor: Color(0xFFFFD700),
+            child: Icon(Icons.person, color: Colors.black, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CreatePostScreen()),
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0A0E17),
+                  borderRadius: BorderRadius.circular(20),
                 ),
+                child: const Text(
+                  'Share an update, photo, or YouTube link...',
+                  style: TextStyle(color: Colors.white38, fontSize: 13),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.add_photo_alternate, color: Color(0xFFFFD700), size: 22),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CreatePostScreen()),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

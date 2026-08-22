@@ -89,11 +89,69 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: const TextStyle(color: KivoDarkTheme.primaryEmerald, fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                   ),
-                ],
+            const SizedBox(height: 16),
+
+            // Master Admin Console Quick Access Banner
+            InkWell(
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AdminDashboardScreen()),
+              ),
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: KivoDarkTheme.accentAmber.withOpacity(0.5)),
+                  boxShadow: [
+                    BoxShadow(color: KivoDarkTheme.accentAmber.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: KivoDarkTheme.accentAmber.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.admin_panel_settings, color: KivoDarkTheme.accentAmber, size: 24),
+                    ),
+                    const SizedBox(width: 14),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'Master Admin Console',
+                                style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
+                              ),
+                              SizedBox(width: 6),
+                              Icon(Icons.lock_open, color: KivoDarkTheme.accentAmber, size: 14),
+                            ],
+                          ),
+                          SizedBox(height: 3),
+                          Text(
+                            'Credit/debit user balances, set fee rates & verify KYCs',
+                            style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios, color: KivoDarkTheme.accentAmber, size: 16),
+                  ],
+                ),
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             // Settings Group
             Container(

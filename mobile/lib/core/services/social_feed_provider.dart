@@ -29,23 +29,31 @@ class SocialFeedProvider extends ChangeNotifier {
           .snapshots()
           .listen((snapshot) {
         if (snapshot.docs.isNotEmpty) {
-          _posts = snapshot.docs.map((doc) => PostModel.fromFirestore(doc)).toList();
+          final firestorePosts = snapshot.docs.map((doc) => PostModel.fromFirestore(doc)).toList();
+          final seedPosts = _generateDefaultSeedPosts();
+          final existingIds = firestorePosts.map((p) => p.id).toSet();
+          _posts = [...firestorePosts, ...seedPosts.where((p) => !existingIds.contains(p.id))];
+        } else {
+          _posts = _generateDefaultSeedPosts();
         }
         _isLoading = false;
         notifyListeners();
       }, onError: (error) {
         debugPrint('Firestore feed error: $error.');
+        _posts = _generateDefaultSeedPosts();
         _isLoading = false;
         notifyListeners();
       });
     } catch (e) {
       debugPrint('Error starting feed listener: $e');
+      _posts = _generateDefaultSeedPosts();
       _isLoading = false;
       notifyListeners();
     }
   }
 
   List<PostModel> _generateDefaultSeedPosts() {
+    final now = DateTime.now();
     return [
       PostModel(
         id: 'seed_1',
@@ -54,13 +62,13 @@ class SocialFeedProvider extends ChangeNotifier {
         authorHandle: '@kivoja',
         authorPhoto: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
         isVerified: true,
-        caption: 'Kivo Super App Showcase & Tutorial 🇯🇲 Tap play to watch inline!',
+        caption: 'Welcome to Kivo Social! 🇯🇲 Send P2P money, tip creators, and shop local Jamaican merchants. Tap play to watch our overview!',
         postType: PostType.youtube,
-        youtubeVideoId: 'Iv7OdQMNzz0', // User requested test YouTube link
-        likeCount: 42,
-        commentCount: 8,
-        tipCountJMD: 0.0,
-        createdAt: DateTime.now().subtract(const Duration(minutes: 15)),
+        youtubeVideoId: 'Iv7OdQMNzz0',
+        likeCount: 142,
+        commentCount: 28,
+        tipCountJMD: 2500.0,
+        createdAt: now.subtract(const Duration(minutes: 15)),
       ),
       PostModel(
         id: 'seed_2',
@@ -68,16 +76,16 @@ class SocialFeedProvider extends ChangeNotifier {
         authorName: 'Keisha Kingston Bakes',
         authorHandle: '@keishabakes',
         authorPhoto: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
-        isVerified: false,
-        caption: 'Fresh batch of Jamaican rum cakes ready for delivery in New Kingston! Order directly via Kivo Marketplace. 🍰✨',
+        isVerified: true,
+        caption: 'Fresh batch of Jamaican rum cakes and spiced patties ready in New Kingston! Order directly via Kivo Marketplace or send a tip below! 🍰✨',
         postType: PostType.image,
         imageUrls: [
           'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800',
         ],
-        likeCount: 189,
-        commentCount: 24,
-        tipCountJMD: 500.0,
-        createdAt: DateTime.now().subtract(const Duration(hours: 5)),
+        likeCount: 289,
+        commentCount: 44,
+        tipCountJMD: 1500.0,
+        createdAt: now.subtract(const Duration(hours: 3)),
       ),
       PostModel(
         id: 'seed_3',
@@ -86,13 +94,30 @@ class SocialFeedProvider extends ChangeNotifier {
         authorHandle: '@soundsessions',
         authorPhoto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
         isVerified: true,
-        caption: 'Live acoustic session recorded in Blue Mountains. Tap play and enjoy the soundscape 🎸⛰️',
+        caption: 'Live acoustic reggae session recorded in the Blue Mountains. Tap play and enjoy the soundscape 🎸⛰️🇯🇲',
         postType: PostType.youtube,
         youtubeVideoId: 'M7lc1UVf-VE',
         likeCount: 512,
         commentCount: 68,
-        tipCountJMD: 2500.0,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
+        tipCountJMD: 4200.0,
+        createdAt: now.subtract(const Duration(hours: 7)),
+      ),
+      PostModel(
+        id: 'seed_4',
+        authorId: 'marcus_crafts',
+        authorName: 'Marcus Blue Mountain Woodcraft',
+        authorHandle: '@marcuscrafts',
+        authorPhoto: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+        isVerified: false,
+        caption: 'Handcrafted Jamaican blue mahoe salad bowls and cedar carvings finished today. Delivery available across Kingston & St. Andrew! 🪵🎨',
+        postType: PostType.image,
+        imageUrls: [
+          'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800',
+        ],
+        likeCount: 95,
+        commentCount: 16,
+        tipCountJMD: 800.0,
+        createdAt: now.subtract(const Duration(days: 1)),
       ),
     ];
   }

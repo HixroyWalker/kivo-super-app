@@ -502,7 +502,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
   }
 
   Widget _buildSocialFeed(WalletProvider wallet) {
-    return const SocialFeedScreen();
+    return const SocialFeedScreen(isEmbedded: true);
   }
 
   Widget _buildPersonalStatements(WalletProvider wallet) {
