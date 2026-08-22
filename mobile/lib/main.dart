@@ -15,6 +15,7 @@ import 'features/messaging/screens/messaging_screen.dart';
 import 'features/accounting/screens/accounting_screen.dart';
 import 'features/games/screens/games_hub_screen.dart';
 import 'features/games/screens/checkers_game_screen.dart';
+import 'features/games/screens/dominoes_game_screen.dart';
 import 'features/merchant/screens/pos_cashier_screen.dart';
 import 'features/merchant/screens/merchant_kyc_screen.dart';
 import 'features/notifications/screens/notifications_screen.dart';
@@ -83,6 +84,7 @@ class KivoApp extends StatelessWidget {
         '/messaging': (context) => const MessagingScreen(),
         '/games': (context) => const GamesHubScreen(),
         '/checkers': (context) => const CheckersGameScreen(),
+        '/dominoes': (context) => const DominoesGameScreen(),
         '/accounting': (context) => const AccountingScreen(),
         '/merchant_pos': (context) => const PosCashierScreen(),
         '/merchant_kyc': (context) => const MerchantKYCScreen(),

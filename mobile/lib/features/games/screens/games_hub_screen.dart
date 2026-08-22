@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/dark_theme.dart';
 import 'checkers_game_screen.dart';
+import 'dominoes_game_screen.dart';
 
 class GamesHubScreen extends StatelessWidget {
   const GamesHubScreen({super.key});
 
-  void _showGameModeDialog(BuildContext context) {
+  void _showCheckersModeDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -56,6 +57,66 @@ class GamesHubScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const CheckersGameScreen(gameMode: 'pass_and_play')),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDominoesModeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: KivoDarkTheme.surfaceElevated,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.casino, color: Color(0xFFFFD700), size: 24),
+            SizedBox(width: 10),
+            Text('Jamaican Dominoes 🁓 🇯🇲', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Double-Six Cut Throat & Six-Love Rules:', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13)),
+            const SizedBox(height: 16),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: Color(0x26FFD700),
+                child: Icon(Icons.smart_toy, color: Color(0xFFFFD700)),
+              ),
+              title: const Text('Play vs Buju (Jamaican AI)', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+              subtitle: const Text('Authentic 28-bone cut throat game with boneyard', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFFFFD700)),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DominoesGameScreen(gameMode: 'vs_ai')),
+                );
+              },
+            ),
+            const Divider(color: KivoDarkTheme.surfaceBorder),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: Color(0x2600E676),
+                child: Icon(Icons.people, color: KivoDarkTheme.primaryEmerald),
+              ),
+              title: const Text('Pass & Play (2-Player)', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+              subtitle: const Text('Play heads-up against a friend on 1 device', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: KivoDarkTheme.primaryEmerald),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DominoesGameScreen(gameMode: 'pass_and_play')),
                 );
               },
             ),
@@ -124,7 +185,7 @@ class GamesHubScreen extends StatelessWidget {
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton.icon(
-                      onPressed: () => _showGameModeDialog(context),
+                      onPressed: () => _showCheckersModeDialog(context),
                       icon: const Icon(Icons.play_arrow, color: Colors.black, size: 22),
                       label: const Text('PLAY CHECKERS NOW', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 14)),
                       style: ElevatedButton.styleFrom(
@@ -136,80 +197,109 @@ class GamesHubScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 20),
 
-            // 2. Upcoming Games Grid
-            const Text('Island Games Arcade', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 17, fontWeight: FontWeight.bold)),
+            // 2. Playable Game 2: Jamaican Dominoes
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF3E2723), Color(0xFF1B1B1B)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.6)),
+                boxShadow: [
+                  BoxShadow(color: const Color(0xFFFFD700).withOpacity(0.12), blurRadius: 15, offset: const Offset(0, 6)),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFD700),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text('READY TO PLAY', style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('🁓 Double-Six Cut Throat', style: TextStyle(color: Color(0xFFFFD700), fontSize: 12, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Jamaican Dominoes (Six Love 🇯🇲)',
+                    style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Authentic Caribbean domino table with 28 bones, chain matching, boneyard drawing, hard knocks, and Six-Love tournament scoring!',
+                    style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13, height: 1.4),
+                  ),
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _showDominoesModeDialog(context),
+                      icon: const Icon(Icons.casino, color: Colors.black, size: 22),
+                      label: const Text('PLAY DOMINOES NOW', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 14)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFFD700),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // 3. Upcoming Games
+            const Text('More Island Games', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 17, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
 
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: KivoDarkTheme.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: KivoDarkTheme.surfaceBorder),
-                    ),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: KivoDarkTheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: KivoDarkTheme.surfaceBorder),
+              ),
+              child: Row(
+                children: [
+                  const CircleAvatar(
+                    backgroundColor: Color(0x2600E5FF),
+                    radius: 20,
+                    child: Icon(Icons.grid_view_rounded, color: KivoDarkTheme.accentCyan, size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const CircleAvatar(
-                          backgroundColor: Color(0x26FFD700),
-                          radius: 20,
-                          child: Icon(Icons.casino, color: Color(0xFFFFD700), size: 22),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text('Jamaican Dominoes', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                        const SizedBox(height: 4),
-                        const Text('Cut Throat & Six Love rules coming soon', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
-                        const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(6)),
-                          child: const Text('COMING SOON', style: TextStyle(color: Colors.white60, fontSize: 9, fontWeight: FontWeight.bold)),
-                        ),
+                        Text('Ludo & Crown & Anchor', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+                        SizedBox(height: 2),
+                        Text('Traditional 4-player multiplayer arcade board', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
                       ],
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: KivoDarkTheme.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: KivoDarkTheme.surfaceBorder),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const CircleAvatar(
-                          backgroundColor: Color(0x2600E5FF),
-                          radius: 20,
-                          child: Icon(Icons.grid_view_rounded, color: KivoDarkTheme.accentCyan, size: 22),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text('Ludo & Crown', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                        const SizedBox(height: 4),
-                        const Text('Traditional 4-player multiplayer arcade', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
-                        const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(6)),
-                          child: const Text('COMING SOON', style: TextStyle(color: Colors.white60, fontSize: 9, fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(6)),
+                    child: const Text('COMING SOON', style: TextStyle(color: Colors.white60, fontSize: 9, fontWeight: FontWeight.bold)),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 24),
 
-            // 3. Leaderboard & Stats
+            // 4. Leaderboard & Stats
             const Text('Arcade Leaderboard & Stats', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 17, fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
 
