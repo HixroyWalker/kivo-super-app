@@ -9,8 +9,12 @@ import '../../../core/services/marketplace_provider.dart';
 import '../../marketplace/screens/marketplace_screen.dart';
 
 class ChatDetailScreen extends StatefulWidget {
-  final String merchantName;
-  const ChatDetailScreen({super.key, required this.merchantName});
+  final String? merchantName;
+  final String? contactName;
+  final bool isOnline;
+  const ChatDetailScreen({super.key, this.merchantName, this.contactName, this.isOnline = true});
+
+  String get effectiveName => contactName ?? merchantName ?? 'Chat';
 
   @override
   State<ChatDetailScreen> createState() => _ChatDetailScreenState();
@@ -284,7 +288,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: KivoDarkTheme.surfaceElevated,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Transfer to ${widget.merchantName}', style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18)),
+        title: Text('Transfer to ${widget.effectiveName}', style: const TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 18)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,7 +314,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               final amt = double.tryParse(amountController.text.trim());
               if (amt != null && amt > 0) {
                 if (wallet.jmdBalance >= amt) {
-                  wallet.sendMoney(widget.merchantName, amt, 'In-Chat Transfer');
+                  wallet.sendMoney(widget.effectiveName, amt, 'In-Chat Transfer');
                   Navigator.pop(context);
                   _sendMessage(type: 'MONEY_TRANSFER', amount: amt);
                 } else {
@@ -359,7 +363,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             CircleAvatar(
               radius: 18,
               backgroundColor: KivoDarkTheme.primaryEmerald,
-              child: Text(widget.merchantName[0], style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+              child: Text(widget.effectiveName.isNotEmpty ? widget.effectiveName[0] : 'C', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
             ),
             const SizedBox(width: 10),
             Column(
@@ -367,7 +371,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               children: [
                 Row(
                   children: [
-                    Text(widget.merchantName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text(widget.effectiveName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                     const SizedBox(width: 4),
                     const Icon(Icons.verified, color: KivoDarkTheme.accentCyan, size: 16),
                   ],
@@ -405,7 +409,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 );
               } else if (action == 'block') {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('${widget.merchantName} blocked and reported to Admin.')),
+                  SnackBar(content: Text('${widget.effectiveName} blocked and reported to Admin.')),
                 );
               }
             },
@@ -601,7 +605,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 onPressed: () {
                   final wallet = context.read<WalletProvider>();
                   if (wallet.jmdBalance >= price) {
-                    wallet.sendMoney(widget.merchantName, price, 'Purchase: $title');
+                    wallet.sendMoney(widget.effectiveName, price, 'Purchase: $title');
                     _sendMessage(type: 'MONEY_TRANSFER', amount: price, content: 'Paid for $title');
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(

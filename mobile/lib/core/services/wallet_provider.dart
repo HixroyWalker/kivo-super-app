@@ -41,6 +41,7 @@ class WalletProvider extends ChangeNotifier {
   bool get isJmd => _isJmd;
   bool get isBalanceVisible => _isBalanceVisible;
   String get userEmail => 'user@kivo.app';
+  String get accountNumber => 'KV-876-0041';
 
   Future<bool> transferFunds({
     String? recipient,
