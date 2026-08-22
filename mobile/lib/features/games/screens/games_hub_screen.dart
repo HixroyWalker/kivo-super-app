@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/dark_theme.dart';
 import 'checkers_game_screen.dart';
 import 'dominoes_game_screen.dart';
+import 'ludo_game_screen.dart';
 
 class GamesHubScreen extends StatelessWidget {
   const GamesHubScreen({super.key});
@@ -126,6 +127,66 @@ class GamesHubScreen extends StatelessWidget {
     );
   }
 
+  void _showLudoModeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: KivoDarkTheme.surfaceElevated,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.grid_view_rounded, color: KivoDarkTheme.accentCyan, size: 24),
+            SizedBox(width: 10),
+            Text('Jamaican Ludo 🎲 🇯🇲', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Classic 4-Player Caribbean Board Game:', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13)),
+            const SizedBox(height: 16),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: Color(0x2600E5FF),
+                child: Icon(Icons.smart_toy, color: KivoDarkTheme.accentCyan),
+              ),
+              title: const Text('Play vs 3 Kivo AI Bots', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+              subtitle: const Text('Red (You) vs Blue, Green & Yellow AI players', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: KivoDarkTheme.accentCyan),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LudoGameScreen(gameMode: 'vs_ai')),
+                );
+              },
+            ),
+            const Divider(color: KivoDarkTheme.surfaceBorder),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: Color(0x2600E676),
+                child: Icon(Icons.people, color: KivoDarkTheme.primaryEmerald),
+              ),
+              title: const Text('4-Player Pass & Play', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+              subtitle: const Text('Play with up to 4 friends on 1 phone', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: KivoDarkTheme.primaryEmerald),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LudoGameScreen(gameMode: 'pass_and_play')),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -138,7 +199,7 @@ class GamesHubScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Featured Playable Game Hero: Jamaican Checkers
+            // 1. Playable Game 1: Jamaican Checkers
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -258,41 +319,63 @@ class GamesHubScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
-            // 3. Upcoming Games
-            const Text('More Island Games', style: TextStyle(color: KivoDarkTheme.textPrimary, fontSize: 17, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-
+            // 3. Playable Game 3: Jamaican Ludo
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: KivoDarkTheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: KivoDarkTheme.surfaceBorder),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF0D253F), Color(0xFF1E1B4B)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: KivoDarkTheme.accentCyan.withOpacity(0.6)),
+                boxShadow: [
+                  BoxShadow(color: KivoDarkTheme.accentCyan.withOpacity(0.12), blurRadius: 15, offset: const Offset(0, 6)),
+                ],
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const CircleAvatar(
-                    backgroundColor: Color(0x2600E5FF),
-                    radius: 20,
-                    child: Icon(Icons.grid_view_rounded, color: KivoDarkTheme.accentCyan, size: 22),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: KivoDarkTheme.accentCyan,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text('READY TO PLAY', style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('🎲 4-Player Caribbean Classic', style: TextStyle(color: KivoDarkTheme.accentCyan, fontSize: 12, fontWeight: FontWeight.bold)),
+                    ],
                   ),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Ludo & Crown & Anchor', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
-                        SizedBox(height: 2),
-                        Text('Traditional 4-player multiplayer arcade board', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
-                      ],
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Jamaican Ludo & Crown 🎲',
+                    style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Classic 4-color Caribbean Ludo board with 3D dice rolls, home base deployment, opponent token captures, and victory podium!',
+                    style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13, height: 1.4),
+                  ),
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _showLudoModeDialog(context),
+                      icon: const Icon(Icons.grid_view_rounded, color: Colors.black, size: 22),
+                      label: const Text('PLAY LUDO NOW', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 14)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: KivoDarkTheme.accentCyan,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(6)),
-                    child: const Text('COMING SOON', style: TextStyle(color: Colors.white60, fontSize: 9, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
