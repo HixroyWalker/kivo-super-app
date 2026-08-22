@@ -5,8 +5,8 @@ import '../models/recurring_transfer_model.dart';
 import 'wallet_provider.dart';
 
 class RecurringTransferService extends ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
 
   List<RecurringTransferModel> _schedules = [];
   bool _isLoading = false;
@@ -21,7 +21,12 @@ class RecurringTransferService extends ChangeNotifier {
   }
 
   void _initSchedules() {
-    final userId = _auth.currentUser?.uid;
+    String? userId;
+    try {
+      userId = _auth.currentUser?.uid;
+    } catch (e) {
+      debugPrint('Auth listener fallback: $e');
+    }
     if (userId == null) {
       _schedules = _generateSampleSchedules();
       return;

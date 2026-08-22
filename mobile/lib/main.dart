@@ -35,15 +35,19 @@ import 'features/admin/screens/admin_dashboard_screen.dart';
 import 'features/admin/screens/admin_fee_settings_screen.dart';
 import 'features/admin/screens/admin_balance_adjustment_screen.dart';
 import 'features/admin/screens/admin_kyc_verification_screen.dart';
+import 'features/merchant/screens/business_messaging_settings_screen.dart';
+import 'core/services/vendor_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await Firebase.initializeApp();
-    FirebaseFirestore.instance.settings = const Settings(
-      persistenceEnabled: true,
-      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-    );
+    if (Firebase.apps.isNotEmpty) {
+      FirebaseFirestore.instance.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      );
+    }
     await AdMobService.initialize();
   } catch (e) {
     debugPrint('Firebase/AdMob init fallback: $e');
@@ -60,6 +64,10 @@ void main() async {
         ChangeNotifierProvider(create: (_) => VoiceSoundboxService()),
         ChangeNotifierProvider(create: (_) => RecurringTransferService()),
         ChangeNotifierProvider(create: (_) => AdminProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, VendorProvider>(
+          create: (ctx) => VendorProvider(ctx.read<AuthProvider>()),
+          update: (_, auth, vendor) => vendor ?? VendorProvider(auth),
+        ),
       ],
       child: const KivoApp(),
     ),
@@ -100,6 +108,7 @@ class KivoApp extends StatelessWidget {
         '/admin_fees': (context) => const AdminFeeSettingsScreen(),
         '/admin_balance': (context) => const AdminBalanceAdjustmentScreen(),
         '/admin_kyc': (context) => const AdminKYCVerificationScreen(),
+        '/merchant_messaging': (context) => const BusinessMessagingSettingsScreen(),
       },
     );
   }

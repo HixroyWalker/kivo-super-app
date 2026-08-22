@@ -118,7 +118,7 @@ class AdminAuditLog {
 }
 
 class AdminProvider extends ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   AdminFeeConfig _feeConfig = AdminFeeConfig();
   List<KYCSubmission> _kycSubmissions = [];

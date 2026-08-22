@@ -364,9 +364,9 @@ class _CheckersGameScreenState extends State<CheckersGameScreen> {
                               color: isDarkSquare
                                   ? (isSelected
                                       ? const Color(0xFF1E5128)
-                                      : (isValidTarget ? const Color(0xFF00E676).withOpacity(0.3) : const Color(0xFF1B2430)))
-                                  : const Color(0xFF334155),
-                              border: isValidTarget ? Border.all(color: const Color(0xFF00E676), width: 2) : null,
+                                      : (isValidTarget ? const Color(0xFF00E676).withOpacity(0.2) : const Color(0xFF0F172A)))
+                                  : const Color(0xFF1E293B),
+                              border: isValidTarget ? Border.all(color: const Color(0xFF00E676).withOpacity(0.8), width: 2) : null,
                             ),
                             child: Stack(
                               alignment: Alignment.center,
@@ -434,20 +434,33 @@ class _CheckersGameScreenState extends State<CheckersGameScreen> {
   Widget _buildPieceWidget(CheckersPiece piece, bool isSelected) {
     final isRed = piece.isRed;
     return Container(
-      width: 34,
-      height: 34,
+      width: 36,
+      height: 36,
       decoration: BoxDecoration(
-        color: isRed ? const Color(0xFFD32F2F) : const Color(0xFF212121),
+        gradient: RadialGradient(
+          center: const Alignment(-0.3, -0.3),
+          radius: 0.8,
+          colors: isRed
+              ? [const Color(0xFFFF5252), const Color(0xFFB71C1C)]
+              : [const Color(0xFF616161), const Color(0xFF111111)],
+        ),
         shape: BoxShape.circle,
         border: Border.all(
           color: isSelected ? const Color(0xFF00E676) : (isRed ? const Color(0xFFFF8A80) : const Color(0xFFFFD700)),
           width: isSelected ? 3 : 1.5,
         ),
         boxShadow: [
+          // Inner bevel highlight
           BoxShadow(
-            color: isRed ? const Color(0x66D32F2F) : Colors.black54,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: Colors.white.withOpacity(0.2),
+            blurRadius: 2,
+            offset: const Offset(-1, -1),
+          ),
+          // Drop shadow
+          BoxShadow(
+            color: Colors.black.withOpacity(0.6),
+            blurRadius: 6,
+            offset: const Offset(2, 4),
           ),
         ],
       ),

@@ -71,6 +71,7 @@ class _TransferModalState extends State<TransferModal> {
     }
 
     // 2. Execute transfer via WalletProvider
+    if (!mounted) return;
     final wallet = context.read<WalletProvider>();
     final success = wallet.sendMoney(recipient, amount, note.isEmpty ? 'P2P Transfer' : note);
 
@@ -90,6 +91,8 @@ class _TransferModalState extends State<TransferModal> {
           debugPrint('Failed to save recurring schedule: $e');
         }
       }
+
+      if (!mounted) return;
 
       if (mounted) {
         Navigator.pop(context);

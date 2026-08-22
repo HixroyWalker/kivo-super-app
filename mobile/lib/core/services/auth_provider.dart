@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -11,14 +12,17 @@ class AuthProvider extends ChangeNotifier {
   String? _merchantParish;
   bool _isAdminUnlocked = false;
 
+  FirebaseAuth? get _auth => Firebase.apps.isNotEmpty ? FirebaseAuth.instance : null;
+  FirebaseFirestore? get _firestore => Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null;
+
   AuthProvider() {
     _initAuth();
   }
 
   void _initAuth() {
     try {
-      _user = FirebaseAuth.instance.currentUser;
-      FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      _user = _auth?.currentUser;
+      _auth?.authStateChanges().listen((User? user) {
         _user = user;
         _fetchUserRole();
         notifyListeners();
@@ -31,7 +35,8 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _fetchUserRole() async {
     if (_user == null) return;
     try {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(_user!.uid).get();
+      if (_firestore == null) return;
+      final doc = await _firestore!.collection('users').doc(_user!.uid).get();
       if (doc.exists) {
         final data = doc.data() ?? {};
         _userRole = data['role']?.toString() ?? 'user';
@@ -99,8 +104,8 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      if (_user != null) {
-        await FirebaseFirestore.instance.collection('users').doc(_user!.uid).set({
+      if (_user != null && _firestore != null) {
+        await _firestore!.collection('users').doc(_user!.uid).set({
           'role': 'merchant',
           'businessName': businessName,
           'trnNumber': trnNumber,
@@ -120,7 +125,7 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     try {
-      await FirebaseAuth.instance.signOut();
+      await _auth?.signOut();
     } catch (e) {
       debugPrint('Sign out fallback: $e');
     }

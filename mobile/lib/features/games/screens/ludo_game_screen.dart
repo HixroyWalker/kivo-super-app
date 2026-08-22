@@ -353,35 +353,25 @@ class _LudoGameScreenState extends State<LudoGameScreen> with SingleTickerProvid
                   ),
                   child: Stack(
                     children: [
-                      // Quadrants Layout
+                      // 15x15 Grid Layout
                       Column(
-                        children: [
-                          Expanded(
+                        children: List.generate(15, (row) {
+                          return Expanded(
                             child: Row(
-                              children: [
-                                _buildBaseQuadrant(LudoColor.red, 'Red (You)'),
-                                _buildTrackColumn(isVertical: true, isTop: true),
-                                _buildBaseQuadrant(LudoColor.green, 'Green (AI)'),
-                              ],
+                              children: List.generate(15, (col) {
+                                return Expanded(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      border: _isBoardCell(row, col) ? Border.all(color: Colors.white12, width: 0.5) : null,
+                                      color: _getCellColor(row, col),
+                                    ),
+                                    child: _buildCellTokens(row, col),
+                                  ),
+                                );
+                              }),
                             ),
-                          ),
-                          Row(
-                            children: [
-                              _buildTrackRow(isLeft: true),
-                              _buildCenterVictoryHome(),
-                              _buildTrackRow(isLeft: false),
-                            ],
-                          ),
-                          Expanded(
-                            child: Row(
-                              children: [
-                                _buildBaseQuadrant(LudoColor.blue, 'Blue (AI)'),
-                                _buildTrackColumn(isVertical: true, isTop: false),
-                                _buildBaseQuadrant(LudoColor.yellow, 'Yellow (AI)'),
-                              ],
-                            ),
-                          ),
-                        ],
+                          );
+                        }),
                       ),
                     ],
                   ),
@@ -454,93 +444,137 @@ class _LudoGameScreenState extends State<LudoGameScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildBaseQuadrant(LudoColor color, String label) {
-    final tokens = _tokens[color]!;
-    final baseTokens = tokens.where((t) => t.isAtBase).toList();
+  // --- Board Coordinate Engine --- //
+  
+  static const List<Point<int>> _redPath = [
+    Point(6,1), Point(6,2), Point(6,3), Point(6,4), Point(6,5),
+    Point(5,6), Point(4,6), Point(3,6), Point(2,6), Point(1,6), Point(0,6),
+    Point(0,7), Point(0,8),
+    Point(1,8), Point(2,8), Point(3,8), Point(4,8), Point(5,8),
+    Point(6,9), Point(6,10), Point(6,11), Point(6,12), Point(6,13), Point(6,14),
+    Point(7,14), Point(8,14),
+    Point(8,13), Point(8,12), Point(8,11), Point(8,10), Point(8,9),
+    Point(9,8), Point(10,8), Point(11,8), Point(12,8), Point(13,8), Point(14,8),
+    Point(14,7), Point(14,6),
+    Point(13,6), Point(12,6), Point(11,6), Point(10,6), Point(9,6),
+    Point(8,5), Point(8,4), Point(8,3), Point(8,2), Point(8,1), Point(8,0),
+    Point(7,0)
+  ];
 
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: _colorValue(color).withOpacity(0.18),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _colorValue(color), width: 2),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(label, style: TextStyle(color: _colorValue(color), fontWeight: FontWeight.bold, fontSize: 11)),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: tokens.map((token) {
-                final isTurn = token.color == _currentTurn;
-                final canMove = _hasRolled && _canMoveToken(token, _diceValue);
-                return GestureDetector(
-                  onTap: () => _onTokenTapped(token),
-                  child: Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: token.isAtBase ? _colorValue(color) : (token.isFinished ? Colors.white : _colorValue(color).withOpacity(0.5)),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: canMove ? const Color(0xFF00E676) : Colors.white,
-                        width: canMove ? 2.5 : 1,
-                      ),
-                      boxShadow: [
-                        if (canMove)
-                          const BoxShadow(color: Color(0xFF00E676), blurRadius: 6, spreadRadius: 1),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        token.isFinished ? '★' : '${token.id + 1}',
-                        style: TextStyle(color: token.isFinished ? Colors.black : Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+  static const List<Point<int>> _redHome = [
+    Point(7,1), Point(7,2), Point(7,3), Point(7,4), Point(7,5)
+  ];
+
+  Point<int> _rotate(Point<int> p, int turns) {
+    int r = p.x;
+    int c = p.y;
+    for (int i = 0; i < turns; i++) {
+      int newR = c;
+      int newC = 14 - r;
+      r = newR;
+      c = newC;
+    }
+    return Point(r, c);
+  }
+
+  Point<int>? _getTokenPosition(LudoToken token) {
+    if (token.isFinished) return Point(7,7); // Victory center
+    if (token.isAtBase) return _getBasePosition(token);
+    
+    int turns = 0;
+    if (token.color == LudoColor.green) turns = 1;
+    if (token.color == LudoColor.yellow) turns = 2;
+    if (token.color == LudoColor.blue) turns = 3;
+
+    if (token.step < 51) {
+      return _rotate(_redPath[token.step], turns);
+    } else if (token.step >= 52 && token.step <= 56) {
+      return _rotate(_redHome[token.step - 52], turns);
+    }
+    return Point(7,7);
+  }
+
+  Point<int> _getBasePosition(LudoToken token) {
+    int rBase = 0, cBase = 0;
+    if (token.color == LudoColor.red) { rBase = 2; cBase = 2; }
+    if (token.color == LudoColor.green) { rBase = 2; cBase = 11; }
+    if (token.color == LudoColor.yellow) { rBase = 11; cBase = 11; }
+    if (token.color == LudoColor.blue) { rBase = 11; cBase = 2; }
+    
+    // Offset by token id for a 2x2 grid inside the 6x6 base
+    int dr = token.id < 2 ? 0 : 1;
+    int dc = token.id % 2 == 0 ? 0 : 1;
+    return Point(rBase + dr, cBase + dc);
+  }
+
+  bool _isBoardCell(int row, int col) {
+    // 3x3 center, plus 6x3 arms
+    if (row >= 6 && row <= 8) return true;
+    if (col >= 6 && col <= 8) return true;
+    return false;
+  }
+
+  Color _getCellColor(int row, int col) {
+    if (row >= 6 && row <= 8 && col >= 6 && col <= 8) return const Color(0xFFFFD700); // Center victory
+    // Safe bases & home columns
+    if (row == 6 && col == 1) return _colorValue(LudoColor.red).withOpacity(0.3);
+    if (row == 1 && col == 8) return _colorValue(LudoColor.green).withOpacity(0.3);
+    if (row == 8 && col == 13) return _colorValue(LudoColor.yellow).withOpacity(0.3);
+    if (row == 13 && col == 6) return _colorValue(LudoColor.blue).withOpacity(0.3);
+    
+    // Home Columns
+    if (row == 7 && col >= 1 && col <= 5) return _colorValue(LudoColor.red).withOpacity(0.2);
+    if (col == 7 && row >= 1 && row <= 5) return _colorValue(LudoColor.green).withOpacity(0.2);
+    if (row == 7 && col >= 9 && col <= 13) return _colorValue(LudoColor.yellow).withOpacity(0.2);
+    if (col == 7 && row >= 9 && row <= 13) return _colorValue(LudoColor.blue).withOpacity(0.2);
+    
+    // Bases
+    if (row < 6 && col < 6) return _colorValue(LudoColor.red).withOpacity(0.1);
+    if (row < 6 && col > 8) return _colorValue(LudoColor.green).withOpacity(0.1);
+    if (row > 8 && col > 8) return _colorValue(LudoColor.yellow).withOpacity(0.1);
+    if (row > 8 && col < 6) return _colorValue(LudoColor.blue).withOpacity(0.1);
+
+    return Colors.transparent;
+  }
+
+  Widget _buildCellTokens(int row, int col) {
+    List<LudoToken> cellTokens = [];
+    for (final tokens in _tokens.values) {
+      for (final t in tokens) {
+        if (_getTokenPosition(t) == Point(row, col)) {
+          cellTokens.add(t);
+        }
+      }
+    }
+    if (cellTokens.isEmpty) return const SizedBox();
+
+    return Center(
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: cellTokens.map((t) {
+          final canMove = _hasRolled && t.color == _currentTurn && _canMoveToken(t, _diceValue);
+          return GestureDetector(
+            onTap: () => _onTokenTapped(t),
+            child: Container(
+              width: 18,
+              height: 18,
+              decoration: BoxDecoration(
+                color: _colorValue(t.color),
+                shape: BoxShape.circle,
+                border: Border.all(color: canMove ? const Color(0xFF00E676) : Colors.white, width: canMove ? 2 : 1),
+                boxShadow: [
+                  if (canMove) const BoxShadow(color: Color(0xFF00E676), blurRadius: 4, spreadRadius: 1),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  '${t.id + 1}',
+                  style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                ),
+              ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTrackColumn({required bool isVertical, required bool isTop}) {
-    return Container(
-      width: 44,
-      color: const Color(0xFF334155),
-      child: const Center(
-        child: Icon(Icons.arrow_upward, color: Colors.white24, size: 16),
-      ),
-    );
-  }
-
-  Widget _buildTrackRow({required bool isLeft}) {
-    return Container(
-      width: 100,
-      height: 44,
-      color: const Color(0xFF334155),
-      child: const Center(
-        child: Icon(Icons.arrow_forward, color: Colors.white24, size: 16),
-      ),
-    );
-  }
-
-  Widget _buildCenterVictoryHome() {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: const BoxDecoration(
-        color: Color(0xFFFFD700),
-        shape: BoxShape.circle,
-      ),
-      child: const Center(
-        child: Icon(Icons.star, color: Colors.black, size: 28),
+          );
+        }).toList(),
       ),
     );
   }

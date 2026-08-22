@@ -15,6 +15,13 @@ class DominoTile {
   DominoTile flipped() => DominoTile(left: right, right: left, id: id);
 }
 
+class PlayedDomino {
+  final DominoTile tile;
+  final Offset position;
+  final double angle;
+  PlayedDomino({required this.tile, required this.position, required this.angle});
+}
+
 class DominoesGameScreen extends StatefulWidget {
   final String gameMode; // 'vs_ai', 'pass_and_play'
 
@@ -31,7 +38,14 @@ class _DominoesGameScreenState extends State<DominoesGameScreen> {
   late List<DominoTile> _boneyard;
   late List<DominoTile> _playerHand;
   late List<DominoTile> _opponentHand;
-  late List<DominoTile> _boardChain;
+  List<PlayedDomino> _playedTiles = [];
+
+  Offset _leftEndPos = const Offset(2000, 2000);
+  int _leftEndDir = 2; // 0: Right, 1: Down, 2: Left, 3: Up
+  Offset _rightEndPos = const Offset(2000, 2000);
+  int _rightEndDir = 0; // 0: Right, 1: Down, 2: Left, 3: Up
+
+  final TransformationController _transformCtrl = TransformationController();
 
   int _openLeftEnd = -1;
   int _openRightEnd = -1;
@@ -64,7 +78,11 @@ class _DominoesGameScreenState extends State<DominoesGameScreen> {
     _playerHand = allTiles.sublist(0, 7);
     _opponentHand = allTiles.sublist(7, 14);
     _boneyard = allTiles.sublist(14);
-    _boardChain = [];
+    _playedTiles = [];
+    _leftEndPos = const Offset(2000, 2000);
+    _rightEndPos = const Offset(2000, 2000);
+    _leftEndDir = 2;
+    _rightEndDir = 0;
     _openLeftEnd = -1;
     _openRightEnd = -1;
     _isGameOver = false;
@@ -97,7 +115,7 @@ class _DominoesGameScreenState extends State<DominoesGameScreen> {
   }
 
   bool _canPlayTile(DominoTile tile) {
-    if (_boardChain.isEmpty) return true;
+    if (_playedTiles.isEmpty) return true;
     return tile.left == _openLeftEnd ||
         tile.right == _openLeftEnd ||
         tile.left == _openRightEnd ||
@@ -107,7 +125,7 @@ class _DominoesGameScreenState extends State<DominoesGameScreen> {
   void _onTileTapped(DominoTile tile) {
     if (!_isPlayerTurn || _isGameOver) return;
 
-    if (_boardChain.isEmpty) {
+    if (_playedTiles.isEmpty) {
       // First pose
       _playTileOnBoard(tile, isLeftEnd: true);
       return;
@@ -165,31 +183,107 @@ class _DominoesGameScreenState extends State<DominoesGameScreen> {
     );
   }
 
+  void _placeTile(DominoTile orientedTile, bool isLeftEnd) {
+    if (_playedTiles.isEmpty) {
+      _playedTiles.add(PlayedDomino(
+        tile: orientedTile,
+        position: const Offset(2000, 2000),
+        angle: orientedTile.isDouble ? 0.0 : pi / 2,
+      ));
+      _leftEndPos = const Offset(2000, 2000);
+      _rightEndPos = const Offset(2000, 2000);
+      _leftEndDir = 2;
+      _rightEndDir = 0;
+      _openLeftEnd = orientedTile.left;
+      _openRightEnd = orientedTile.right;
+      
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final size = MediaQuery.of(context).size;
+        _transformCtrl.value = Matrix4.identity()
+          ..translate(-2000.0 + size.width / 2, -2000.0 + size.height / 3);
+      });
+      return;
+    }
+
+    bool isDouble = orientedTile.isDouble;
+    
+    if (isLeftEnd) {
+      final prevTileObj = _playedTiles.lastWhere((p) => p.position == _leftEndPos);
+      bool prevIsDouble = prevTileObj.tile.isDouble;
+
+      double prevDist = prevIsDouble ? 22.0 : 38.0;
+      double newDist = isDouble ? 22.0 : 38.0;
+
+      if (_leftEndDir == 2 && _leftEndPos.dx < 1200) _leftEndDir = 3;
+      else if (_leftEndDir == 3 && _leftEndPos.dy < 1200) _leftEndDir = 0;
+      else if (_leftEndDir == 0 && _leftEndPos.dx > 2800) _leftEndDir = 1;
+      else if (_leftEndDir == 1 && _leftEndPos.dy > 2800) _leftEndDir = 2;
+
+      double step = prevDist + newDist + 4.0;
+      Offset newPos = _leftEndPos;
+      if (_leftEndDir == 0) newPos += Offset(step, 0);
+      else if (_leftEndDir == 1) newPos += Offset(0, step);
+      else if (_leftEndDir == 2) newPos += Offset(-step, 0);
+      else if (_leftEndDir == 3) newPos += Offset(0, -step);
+
+      double angle = 0.0;
+      if (_leftEndDir == 0 || _leftEndDir == 2) angle = isDouble ? 0.0 : pi / 2;
+      else if (_leftEndDir == 1 || _leftEndDir == 3) angle = isDouble ? pi / 2 : 0.0;
+
+      _playedTiles.add(PlayedDomino(tile: orientedTile, position: newPos, angle: angle));
+      _leftEndPos = newPos;
+      _openLeftEnd = orientedTile.left;
+    } else {
+      final prevTileObj = _playedTiles.lastWhere((p) => p.position == _rightEndPos);
+      bool prevIsDouble = prevTileObj.tile.isDouble;
+
+      double prevDist = prevIsDouble ? 22.0 : 38.0;
+      double newDist = isDouble ? 22.0 : 38.0;
+
+      if (_rightEndDir == 0 && _rightEndPos.dx > 2800) _rightEndDir = 1;
+      else if (_rightEndDir == 1 && _rightEndPos.dy > 2800) _rightEndDir = 2;
+      else if (_rightEndDir == 2 && _rightEndPos.dx < 1200) _rightEndDir = 3;
+      else if (_rightEndDir == 3 && _rightEndPos.dy < 1200) _rightEndDir = 0;
+
+      double step = prevDist + newDist + 4.0;
+      Offset newPos = _rightEndPos;
+      if (_rightEndDir == 0) newPos += Offset(step, 0);
+      else if (_rightEndDir == 1) newPos += Offset(0, step);
+      else if (_rightEndDir == 2) newPos += Offset(-step, 0);
+      else if (_rightEndDir == 3) newPos += Offset(0, -step);
+
+      double angle = 0.0;
+      if (_rightEndDir == 0 || _rightEndDir == 2) angle = isDouble ? 0.0 : pi / 2;
+      else if (_rightEndDir == 1 || _rightEndDir == 3) angle = isDouble ? pi / 2 : 0.0;
+
+      _playedTiles.add(PlayedDomino(tile: orientedTile, position: newPos, angle: angle));
+      _rightEndPos = newPos;
+      _openRightEnd = orientedTile.right;
+    }
+  }
+
   void _playTileOnBoard(DominoTile tile, {required bool isLeftEnd}) {
     _playerHand.removeWhere((t) => t.id == tile.id);
 
     DominoTile orientedTile = tile;
 
-    if (_boardChain.isEmpty) {
-      _boardChain.add(tile);
-      _openLeftEnd = tile.left;
-      _openRightEnd = tile.right;
+    if (_playedTiles.isEmpty) {
+      orientedTile = tile;
+      _placeTile(orientedTile, true);
     } else if (isLeftEnd) {
       if (tile.right == _openLeftEnd) {
         orientedTile = tile;
       } else {
         orientedTile = tile.flipped();
       }
-      _boardChain.insert(0, orientedTile);
-      _openLeftEnd = orientedTile.left;
+      _placeTile(orientedTile, true);
     } else {
       if (tile.left == _openRightEnd) {
         orientedTile = tile;
       } else {
         orientedTile = tile.flipped();
       }
-      _boardChain.add(orientedTile);
-      _openRightEnd = orientedTile.right;
+      _placeTile(orientedTile, false);
     }
 
     // Check Win
@@ -223,12 +317,10 @@ class _DominoesGameScreenState extends State<DominoesGameScreen> {
   void _makeOpponentMove() {
     if (_isGameOver) return;
 
-    if (_boardChain.isEmpty) {
+    if (_playedTiles.isEmpty) {
       final highest = _getHighestDouble(_opponentHand) ?? _opponentHand.first;
       _opponentHand.removeWhere((t) => t.id == highest.id);
-      _boardChain.add(highest);
-      _openLeftEnd = highest.left;
-      _openRightEnd = highest.right;
+      _placeTile(highest, true);
     } else {
       DominoTile? playableTile;
       bool playOnLeft = true;
@@ -255,16 +347,14 @@ class _DominoesGameScreenState extends State<DominoesGameScreen> {
           } else {
             orientedTile = playableTile.flipped();
           }
-          _boardChain.insert(0, orientedTile);
-          _openLeftEnd = orientedTile.left;
+          _placeTile(orientedTile, true);
         } else {
           if (playableTile.left == _openRightEnd) {
             orientedTile = playableTile;
           } else {
             orientedTile = playableTile.flipped();
           }
-          _boardChain.add(orientedTile);
-          _openRightEnd = orientedTile.right;
+          _placeTile(orientedTile, false);
         }
       } else {
         // Opponent must knock/pass
@@ -329,7 +419,7 @@ class _DominoesGameScreenState extends State<DominoesGameScreen> {
   }
 
   bool _isGameBlocked() {
-    if (_boardChain.isEmpty) return false;
+    if (_playedTiles.isEmpty) return false;
     final playerHasMove = _playerHand.any((t) => _canPlayTile(t));
     final oppHasMove = _opponentHand.any((t) => _canPlayTile(t));
     return !playerHasMove && !oppHasMove && _boneyard.isEmpty;
@@ -523,7 +613,7 @@ class _DominoesGameScreenState extends State<DominoesGameScreen> {
                   ),
 
                   // Open Ends Indicators
-                  if (_boardChain.isNotEmpty)
+                  if (_playedTiles.isNotEmpty)
                     Positioned(
                       top: 10,
                       left: 10,
@@ -545,20 +635,39 @@ class _DominoesGameScreenState extends State<DominoesGameScreen> {
                       ),
                     ),
 
-                  // Table Chain Scrollable View
-                  Center(
-                    child: _boardChain.isEmpty
-                        ? const Text('Pose First Domino', style: TextStyle(color: Colors.white54, fontSize: 16, fontWeight: FontWeight.bold))
-                        : SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: _boardChain.map((tile) {
-                                return _buildTableTile(tile);
-                              }).toList(),
-                            ),
-                          ),
+                  // Table Chain 2D View
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: InteractiveViewer(
+                      transformationController: _transformCtrl,
+                      constrained: false,
+                      boundaryMargin: const EdgeInsets.all(2000),
+                      minScale: 0.1,
+                      maxScale: 2.0,
+                      child: SizedBox(
+                        width: 4000,
+                        height: 4000,
+                        child: Stack(
+                          children: [
+                            if (_playedTiles.isEmpty)
+                              Positioned(
+                                left: 2000 - 80,
+                                top: 2000 - 20,
+                                child: const Text('Pose First Domino', style: TextStyle(color: Colors.white54, fontSize: 16, fontWeight: FontWeight.bold)),
+                              ),
+                            for (final pd in _playedTiles)
+                              Positioned(
+                                left: pd.position.dx - 22,
+                                top: pd.position.dy - 38,
+                                child: Transform.rotate(
+                                  angle: pd.angle,
+                                  child: _buildTableTile(pd.tile),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
 
                   // Game Status Pill

@@ -3,6 +3,7 @@ import '../../../core/theme/dark_theme.dart';
 import 'checkers_game_screen.dart';
 import 'dominoes_game_screen.dart';
 import 'ludo_game_screen.dart';
+import 'snakes_and_ladders_game_screen.dart';
 
 class GamesHubScreen extends StatelessWidget {
   const GamesHubScreen({super.key});
@@ -178,6 +179,66 @@ class GamesHubScreen extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => const LudoGameScreen(gameMode: 'pass_and_play')),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showSnakesModeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: KivoDarkTheme.surfaceElevated,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.directions_run, color: Color(0xFFE53935), size: 24),
+            SizedBox(width: 10),
+            Text('Snakes & Ladders 🐍 🇯🇲', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Race to 100 on the jungle board:', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 13)),
+            const SizedBox(height: 16),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: Color(0x26E53935),
+                child: Icon(Icons.smart_toy, color: Color(0xFFE53935)),
+              ),
+              title: const Text('Play vs Buju AI', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+              subtitle: const Text('Single player practice with intelligent moves', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFFE53935)),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SnakeAndLaddersGameScreen(gameMode: 'vs_ai')),
+                );
+              },
+            ),
+            const Divider(color: KivoDarkTheme.surfaceBorder),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(
+                backgroundColor: Color(0x261E88E5),
+                child: Icon(Icons.people, color: Color(0xFF1E88E5)),
+              ),
+              title: const Text('Pass & Play (2-Player)', style: TextStyle(color: KivoDarkTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14)),
+              subtitle: const Text('Play side-by-side with a friend on 1 phone', style: TextStyle(color: KivoDarkTheme.textSecondary, fontSize: 11)),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFF1E88E5)),
+              onTap: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SnakeAndLaddersGameScreen(gameMode: 'pass_and_play')),
                 );
               },
             ),
@@ -373,6 +434,67 @@ class GamesHubScreen extends StatelessWidget {
                       label: const Text('PLAY LUDO NOW', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 14)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: KivoDarkTheme.accentCyan,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // 4. Playable Game 4: Snakes & Ladders
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1B4332), Color(0xFF2E7D32)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.6)),
+                boxShadow: [
+                  BoxShadow(color: const Color(0xFF2E7D32).withOpacity(0.2), blurRadius: 15, offset: const Offset(0, 6)),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFD700),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text('NEW GAME', style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.bold)),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('🐍 Jungle Run', style: TextStyle(color: Color(0xFFFFD700), fontSize: 12, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Snakes & Ladders 🐍',
+                    style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Race to 100 on the treacherous jungle board! Climb the ladders and avoid sliding down the snakes.',
+                    style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                  ),
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _showSnakesModeDialog(context),
+                      icon: const Icon(Icons.directions_run, color: Colors.black, size: 22),
+                      label: const Text('PLAY SNAKES NOW', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 14)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFFD700),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                     ),

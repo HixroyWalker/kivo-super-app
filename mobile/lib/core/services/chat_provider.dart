@@ -32,6 +32,7 @@ class ChatThread {
   final bool isOnline;
   final int unreadCount;
   final List<ChatMessage> messages;
+  final List<String> crmTags;
 
   ChatThread({
     required this.id,
@@ -40,6 +41,7 @@ class ChatThread {
     this.isOnline = false,
     this.unreadCount = 0,
     required this.messages,
+    this.crmTags = const [],
   });
 
   ChatMessage get lastMessage => messages.last;

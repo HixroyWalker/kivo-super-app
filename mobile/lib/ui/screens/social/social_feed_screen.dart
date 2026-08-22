@@ -254,18 +254,17 @@ class _PostCardState extends State<_PostCard> with SingleTickerProviderStateMixi
                         amountJMD: amount,
                         walletProvider: walletProvider,
                       );
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: success ? const Color(0xFF00C853) : Colors.redAccent,
-                            content: Text(
-                              success
-                                  ? 'Tipped \$${amount.toStringAsFixed(0)} JMD to ${widget.post.authorName}! 🇯🇲'
-                                  : 'Tip failed. Please check your wallet balance.',
-                            ),
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          backgroundColor: success ? const Color(0xFF00C853) : Colors.redAccent,
+                          content: Text(
+                            success
+                                ? 'Tipped \$${amount.toStringAsFixed(0)} JMD to ${widget.post.authorName}! 🇯🇲'
+                                : 'Tip failed. Please check your wallet balance.',
                           ),
-                        );
-                      }
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFD700),

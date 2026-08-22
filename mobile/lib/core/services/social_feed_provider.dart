@@ -5,8 +5,8 @@ import '../models/post_model.dart';
 import 'wallet_provider.dart';
 
 class SocialFeedProvider extends ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
 
   List<PostModel> _posts = [];
   bool _isLoading = false;

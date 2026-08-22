@@ -162,6 +162,7 @@ class StandingOrdersScreen extends StatelessWidget {
                       note: noteController.text.trim(),
                     );
 
+                    if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         backgroundColor: const Color(0xFF00C853),
